@@ -1,0 +1,150 @@
+name: iOS Build and Test
+
+on:
+  push:
+    branches: [develop]
+    paths:
+      - 'ios/**'
+      - '.github/workflows/ios-build.yml'
+  pull_request:
+    branches: [develop, main]
+    paths:
+      - 'ios/**'
+      - '.github/workflows/ios-build.yml'
+
+env:
+  XCODE_VERSION: '15.0'
+  IOS_DESTINATION: 'platform=iOS Simulator,name=iPhone 15 Pro,OS=17.0'
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: macos-14
+    defaults:
+      run:
+        working-directory: ios
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: ${{ env.XCODE_VERSION }}
+
+      - name: Cache SPM packages
+        uses: actions/cache@v3
+        with:
+          path: ios/.build
+          key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-
+
+      - name: Create Secrets file
+        run: |
+          cat > BananaClock/App/Config/Secrets.swift << EOF
+          struct Secrets {
+              static let supabaseAnonKey = "${{ secrets.SUPABASE_ANON_KEY }}"
+              static let revenueCatAPIKey = "${{ secrets.REVENUECAT_API_KEY }}"
+          }
+          EOF
+
+      - name: Resolve SPM dependencies
+        run: |
+          xcodebuild -resolvePackageDependencies \
+            -project BananaClock.xcodeproj \
+            -scheme BananaClock
+
+      - name: Build for testing
+        run: |
+          xcodebuild build-for-testing \
+            -project BananaClock.xcodeproj \
+            -scheme BananaClock \
+            -destination "${{ env.IOS_DESTINATION }}" \
+            -configuration Debug \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO
+
+      - name: Run tests
+        run: |
+          xcodebuild test-without-building \
+            -project BananaClock.xcodeproj \
+            -scheme BananaClock \
+            -destination "${{ env.IOS_DESTINATION }}" \
+            -configuration Debug \
+            -resultBundlePath TestResults
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: test-results
+          path: ios/TestResults
+
+  lint:
+    name: Swift Lint
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: SwiftLint
+        uses: norio-nomura/action-swiftlint@3.2.1
+        with:
+          args: --strict
+        env:
+          WORKING_DIRECTORY: ios
+
+  # archive:
+  #   name: Archive for TestFlight
+  #   runs-on: macos-14
+  #   needs: [build-and-test]
+  #   if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+  #   defaults:
+  #     run:
+  #       working-directory: ios
+  #
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
+  #
+  #     - name: Setup Xcode
+  #       uses: maxim-lobanov/setup-xcode@v1
+  #       with:
+  #         xcode-version: ${{ env.XCODE_VERSION }}
+  #
+  #     - name: Install certificates
+  #       # Add certificate installation steps here when ready
+  #       run: echo "Certificate installation would go here"
+  #
+  #     - name: Create Secrets file
+  #       run: |
+  #         cat > BananaClock/App/Config/Secrets.swift << EOF
+  #         struct Secrets {
+  #             static let supabaseAnonKey = "${{ secrets.SUPABASE_ANON_KEY }}"
+  #             static let revenueCatAPIKey = "${{ secrets.REVENUECAT_API_KEY }}"
+  #         }
+  #         EOF
+  #
+  #     - name: Archive app
+  #       run: |
+  #         xcodebuild archive \
+  #           -project BananaClock.xcodeproj \
+  #           -scheme BananaClock \
+  #           -configuration Release \
+  #           -archivePath build/BananaClock.xcarchive \
+  #           CODE_SIGN_IDENTITY="Apple Distribution" \
+  #           DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}"
+  #
+  #     - name: Export IPA
+  #       run: |
+  #         xcodebuild -exportArchive \
+  #           -archivePath build/BananaClock.xcarchive \
+  #           -exportPath build/ipa \
+  #           -exportOptionsPlist ExportOptions.plist
+  #
+  #     - name: Upload to TestFlight
+  #       # Add TestFlight upload steps here when ready
+  #       run: echo "TestFlight upload would go here"

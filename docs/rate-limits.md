@@ -1,8 +1,8 @@
-# DayStart Rate Limits Documentation
+# Banana Clock Rate Limits Documentation
 
 ## 📊 Overview
 
-This document tracks all rate limits for external APIs, Supabase services, and edge functions used in the DayStart application. **You're on the Supabase Pro plan.**
+This document tracks all rate limits for external APIs, Supabase services, and edge functions used in the Banana Clock application. **You're on the Supabase Pro plan.**
 
 ## 🔑 External APIs
 

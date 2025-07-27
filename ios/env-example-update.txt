@@ -1,0 +1,25 @@
+# Supabase Configuration
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+SUPABASE_DB_PASSWORD=your-db-password
+
+# API Keys
+OPENAI_API_KEY=your-openai-key
+ELEVEN_LABS_API_KEY=your-elevenlabs-key
+GNEWS_API_KEY=your-gnews-key
+NEWS_API_KEY=your-newsapi-key
+CALENDARIFIC_API_KEY=your-calendarific-key
+RAPID_API_KEY=your-rapidapi-key
+RESEND_API_KEY=your-resend-key
+
+# iOS App Configuration
+REVENUECAT_API_KEY=your-revenuecat-key
+APPLE_TEAM_ID=your-apple-team-id
+
+# Environment
+HEALTH_CHECK_EMAIL_TO=your-email@example.com
+
+# Project References (for different environments)
+SUPABASE_PROJECT_REF_DEV=your-dev-project-ref
+SUPABASE_PROJECT_REF_PROD=your-prod-project-ref

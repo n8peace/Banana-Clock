@@ -1,4 +1,4 @@
-# DayStart Cron Job Setup for cron-job.org
+# Banana Clock Cron Job Setup for cron-job.org
 
 ## 🎯 Overview
 
@@ -294,7 +294,7 @@ For each function above:
 
 1. **Click "Create cronjob"**
 2. **Basic Settings**:
-   - **Title**: `DayStart - [function-name] - [environment]`
+   - **Title**: `Banana Clock - [function-name] - [environment]`
    - **URL**: Copy from the list above
    - **Schedule**: Copy from the list above
    - **Method**: POST

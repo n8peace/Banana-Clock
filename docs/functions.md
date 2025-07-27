@@ -1,8 +1,8 @@
-# DayStart Edge Functions Documentation
+# Banana Clock Edge Functions Documentation
 
 ## Overview
 
-DayStart uses 11 Supabase Edge Functions to power its AI-driven content generation system. These functions work together to create personalized morning messages with high-quality voice synthesis.
+Banana Clock uses 11 Supabase Edge Functions to power its AI-driven content generation system. These functions work together to create personalized morning messages with high-quality voice synthesis.
 
 **Deployment Strategy**: Functions are deployed using an update-only approach that ensures reliable deployments without authentication or project-specific issues.
 

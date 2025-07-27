@@ -1,8 +1,8 @@
-# DayStart Deployment Guide
+# Banana Clock Deployment Guide
 
-## 🎯 Overview
+## 🏁 Overview
 
-DayStart uses a dual-environment deployment system with automated CI/CD pipelines:
+Banana Clock uses a dual-environment deployment system with automated CI/CD pipelines:
 
 - **`main` branch** → Production environment (`project_ref`)
 - **`develop` branch** → Development environment (`project_ref`)
@@ -144,7 +144,7 @@ git push origin develop
 gh workflow run "Deploy to Development" --ref develop
 
 # 3. Monitor progress
-# Check: https://github.com/n8peace/DayStart/actions
+# Check: https://github.com/n8peace/Banana-Clock/actions
 ```
 
 ### **Iterative Development Process**
@@ -376,7 +376,7 @@ Example: `20240101120000_create_users_table.sql`
 **Verification**: Your functions ARE running the latest code from your repository, even though the dashboard shows the compiled version.
 
 **How to Verify Deployments Are Working:**
-1. Check GitHub Actions: `https://github.com/n8peace/DayStart/actions`
+1. Check GitHub Actions: `https://github.com/n8peace/Banana-Clock/actions`
 2. Look for `Deploy to Development` workflow runs with `✅ success`
 3. Test your functions - they'll execute your latest code
 4. Monitor function logs in Supabase Dashboard for execution details
@@ -507,7 +507,7 @@ The deployment script automates the deployment process and includes safety check
 
 **Example Output**:
 ```
-🚀 DayStart Deployment Script
+🚀 Banana Clock Deployment Script
 ==============================
 ✅ Pre-deployment checks passed
 📤 Pushing to develop branch...
@@ -516,7 +516,7 @@ The deployment script automates the deployment process and includes safety check
 ✅ Deployment triggered successfully!
 
 📊 Monitor deployment progress:
-   https://github.com/n8peace/DayStart/actions
+   https://github.com/n8peace/Banana-Clock/actions
 
 🔍 Check Supabase function logs:
    https://supabase.com/dashboard/project/[YOUR_PROJECT_ID]/functions

@@ -2,7 +2,7 @@
 
 ## Overview
 
-The DayStart iOS app is a hyper-personalized, AI-powered alarm clock built with SwiftUI that transforms the morning routine through intelligent content delivery and user engagement features.
+The Banana Clock iOS app is a hyper-personalized, AI-powered alarm clock built with SwiftUI that transforms the morning routine through intelligent content delivery and user engagement features.
 
 ## Core Features
 

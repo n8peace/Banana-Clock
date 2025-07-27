@@ -1,8 +1,8 @@
-# DayStart Troubleshooting Guide
+# Banana Clock Troubleshooting Guide
 
 ## 🎯 Overview
 
-This guide covers common issues and solutions for DayStart development and deployment. Issues are organized by category for easy navigation.
+This guide covers common issues and solutions for Banana Clock development and deployment. Issues are organized by category for easy navigation.
 
 ## 🔧 Setup Issues
 
@@ -260,4 +260,4 @@ supabase db diff
 
 ---
 
-*This troubleshooting guide covers the most common issues encountered during DayStart development and deployment. For specific setup instructions, see [supabase-setup.md](supabase-setup.md).* 
+*This troubleshooting guide covers the most common issues encountered during Banana Clock development and deployment. For specific setup instructions, see [supabase-setup.md](supabase-setup.md).* 

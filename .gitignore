@@ -1,7 +1,6 @@
-# Environment files
+# Environment
 .env
-.env.local
-.env.*.local
+.env.*
 
 # iOS
 ios-app/build/
@@ -12,8 +11,7 @@ ios-app/*.xcodeproj/project.xcworkspace/xcuserdata/
 ios-app/Pods/
 ios-app/Podfile.lock
 ios-app/*.ipa
-ios-app/*.dSYM.zip
-ios-app/*.dSYM
+ios-app/*.dSYM*
 
 # Node.js
 node_modules/
@@ -76,49 +74,44 @@ fastlane/test_output
 iOSInjectionProject/
 
 # Logs
-logs
+logs/
 *.log
 
 # Runtime data
-pids
+pids/
 *.pid
 *.seed
 *.pid.lock
 
-# Coverage directory used by tools like istanbul
+# Coverage
 coverage/
-
-# nyc test coverage
 .nyc_output
 
 # Dependency directories
 jspm_packages/
 
-# Optional npm cache directory
-.npm
-
-# Optional REPL history
+# REPL history
 .node_repl_history
 
 # Output of 'npm pack'
 *.tgz
 
-# Yarn Integrity file
+# Yarn Integrity
 .yarn-integrity
 
-# dotenv environment variables file
-.env
-
-# IDE
+# IDEs
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
-# Temporary files
+# Temp files
 *.tmp
 *.temp
 
-# Temporary troubleshooting workflows
-.github/workflows/other-workflows/ 
+# GitHub workflows (temporary)
+.github/workflows/other-workflows/
+
+# External Docs
+.external_docs/*.caf

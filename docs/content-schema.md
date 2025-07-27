@@ -1,3 +1,5 @@
-# [ARCHIVED] DayStart Content Schema
+# [DEPRECATED] DayStart Content Schema
 
-> **This file is deprecated. Please refer to `docs/schema.md` for the current schema.** 
+> **This file is deprecated and no longer maintained.**
+> 
+> Please refer to [`docs/schema.md`](schema.md) for the current, authoritative schema documentation. 

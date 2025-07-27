@@ -1,4 +1,4 @@
-# DayStart API Configuration
+# Banana Clock API Configuration
 
 ## 🔑 Required API Keys
 

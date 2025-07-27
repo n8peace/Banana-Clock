@@ -1,16 +1,16 @@
-# DayStart 🌅
+# Banana Clock 🌅
 
 A hyper-personalized, AI-powered alarm clock that improves the way people wake up. Each morning, it plays background music and a warm, emotionally intelligent voice that delivers a brief, personalized message using AI — like weather, news, encouragement, or reminders.
 
 ## 🚀 Vision
 
-DayStart transforms the morning routine by combining:
+Banana Clock transforms the morning routine by combining:
 - **Personalized AI Scripts**: GPT-4o generates unique morning messages
 - **Emotional Intelligence**: Context-aware content based on user preferences
 - **High-Quality Voice Synthesis**: ElevenLabs delivers warm, natural speech
 - **Seamless Integration**: SwiftUI + Supabase for smooth user experience
 
-## 🧱 Tech Stack
+## 🧑‍💻 Tech Stack
 
 - **Frontend**: SwiftUI iOS app
 - **Backend**: Supabase (PostgreSQL + Edge Functions + Storage)
@@ -22,7 +22,7 @@ DayStart transforms the morning routine by combining:
 ## 📁 Project Structure
 
 ```
-DayStart/
+Banana-Clock/
 ├── supabase/          # Supabase project files
 │   ├── migrations/    # Database migrations (5 tables + storage bucket)
 │   ├── functions/     # 7 content generation functions (6 deployed to production)
@@ -48,7 +48,7 @@ DayStart/
 1. **Clone and Setup**
    ```bash
    git clone <repository-url>
-   cd daystart
+   cd banana-clock
    cp .env.example .env
    # Edit .env with your API keys
    ```
@@ -59,7 +59,7 @@ DayStart/
    # Content generation system is fully operational
    # iOS app development can now begin
    # cd ios-app
-   # Open DayStart.xcodeproj in Xcode
+   # Open BananaClock.xcodeproj in Xcode
    # Configure signing and capabilities
    ```
 

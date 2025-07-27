@@ -1,8 +1,8 @@
-# DayStart Supabase Setup Guide
+# Banana Clock Supabase Setup Guide
 
 ## 🎯 Project Overview
 
-DayStart uses Supabase as the backend service for:
+Banana Clock uses Supabase as the backend service for:
 - **Authentication**: User signup/login
 - **Database**: PostgreSQL for user data, preferences, and alarm settings
 - **Storage**: Audio files and user assets
@@ -207,4 +207,4 @@ supabase migration list
 
 ---
 
-*This guide covers the essential steps to set up and connect to Supabase for DayStart development. For deployment workflows, see [deployment.md](deployment.md).* 
+*This guide covers the essential steps to set up and connect to Supabase for Banana Clock development. For deployment workflows, see [deployment.md](deployment.md).* 

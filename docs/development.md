@@ -1,8 +1,8 @@
-# DayStart Development Guide
+# Banana Clock Development Guide
 
-## 🎯 Overview
+## 🏁 Overview
 
-This guide covers the development workflow, best practices, and contribution guidelines for DayStart. It focuses on the development process, code standards, and team collaboration.
+This guide covers the development workflow, best practices, and contribution guidelines for Banana Clock. It focuses on the development process, code standards, and team collaboration.
 
 ## 🔄 Development Workflow
 
@@ -199,7 +199,7 @@ curl -X POST http://localhost:54321/functions/v1/example-function \
 ## 📁 Project Structure
 
 ```
-DayStart/
+Banana-Clock/
 ├── supabase/              # Backend configuration
 │   ├── functions/         # Edge functions
 │   │   ├── generate-script/      # Script generation
@@ -369,6 +369,6 @@ supabase functions serve --debug
 
 ---
 
-*This development guide provides the foundation for contributing to DayStart. For setup instructions, see [supabase-setup.md](supabase-setup.md). For deployment workflows, see [deployment.md](deployment.md).*
+*This development guide provides the foundation for contributing to Banana Clock. For setup instructions, see [supabase-setup.md](supabase-setup.md). For deployment workflows, see [deployment.md](deployment.md).*
 
 **Last Updated**: July 2024 
