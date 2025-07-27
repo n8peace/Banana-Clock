@@ -17,6 +17,15 @@ class AlarmsViewModel: ObservableObject {
     
     var navigationTitle: String { "Alarms" }
     
+    // Computed properties for sections
+    var wakeUpAlarm: Alarm? {
+        alarms.first { $0.isWakeUpAlarm }
+    }
+    
+    var otherAlarms: [Alarm] {
+        alarms.filter { !$0.isWakeUpAlarm }
+    }
+    
     private let coreDataManager = CoreDataManager.shared
     private let alarmService = AlarmKitService.shared
     private let supabaseService = SupabaseService.shared
@@ -28,6 +37,14 @@ class AlarmsViewModel: ObservableObject {
         do {
             // Load from Core Data (local + iCloud synced)
             alarms = try coreDataManager.fetchAlarms()
+            
+            // Ensure wake-up alarm exists (only if none exists)
+            if wakeUpAlarm == nil {
+                ensureWakeUpAlarmExists()
+            }
+            
+            // Clean up old alarms
+            cleanupOldAlarms()
             
             // Sync with AlarmKit
             for alarm in alarms where alarm.isEnabled {
@@ -47,10 +64,57 @@ class AlarmsViewModel: ObservableObject {
         }
     }
     
+
+    
+    private func ensureWakeUpAlarmExists() {
+        // Check if wake-up alarm already exists in memory
+        guard wakeUpAlarm == nil else { return }
+        
+        // Create default wake-up alarm at 7:00 AM, disabled, with AI enabled
+        let defaultWakeUpTime = Calendar.current.date(bySettingHour: 7, minute: 0, second: 0, of: Date()) ?? Date()
+
+        let wakeUpAlarm = Alarm(
+            time: defaultWakeUpTime,
+            label: "Wake Up",
+            isEnabled: false,
+            isAIEnabled: true,
+            isWakeUpAlarm: true,
+
+        )
+        
+        alarms.append(wakeUpAlarm)
+        
+        // Save to Core Data immediately
+        do {
+            _ = try coreDataManager.createAlarm(wakeUpAlarm)
+        } catch {
+            print("Failed to create wake-up alarm: \(error)")
+        }
+    }
+    
+    private func cleanupOldAlarms() {
+        let tenDaysAgo = Date().addingTimeInterval(-10 * 24 * 60 * 60)
+        let oldAlarmCount = alarms.count
+        
+        alarms.removeAll { alarm in
+            !alarm.isWakeUpAlarm && alarm.lastUsedAt < tenDaysAgo
+        }
+        
+        if alarms.count != oldAlarmCount {
+            // Save changes to Core Data
+            coreDataManager.save()
+        }
+    }
+    
     func addAlarm(_ alarm: Alarm) async {
         do {
             // Check permissions first (but don't fail if not authorized)
             let hasPermission = await alarmService.requestAuthorization()
+            
+            // For non-wake-up alarms, check for duplicates and delete old ones
+            if !alarm.isWakeUpAlarm {
+                await removeDuplicateAlarms(name: alarm.label, time: alarm.time)
+            }
             
             // Save to Core Data
             _ = try coreDataManager.createAlarm(alarm)
@@ -83,14 +147,20 @@ class AlarmsViewModel: ObservableObject {
     
     func updateAlarm(_ alarm: Alarm) async {
         do {
+            // Update lastUsedAt for non-wake-up alarms
+            var updatedAlarm = alarm
+            if !alarm.isWakeUpAlarm {
+                updatedAlarm.lastUsedAt = Date()
+            }
+            
             // Update in Core Data
-            try coreDataManager.updateAlarm(alarm)
+            try coreDataManager.updateAlarm(updatedAlarm)
             
             // Update AlarmKit (but don't fail if it doesn't work)
             do {
                 try await alarmService.cancelAlarm(withId: alarm.id)
                 if alarm.isEnabled {
-                    try await alarmService.scheduleAlarm(alarm)
+                    try await alarmService.scheduleAlarm(updatedAlarm)
                 }
             } catch {
                 print("AlarmKit update failed (continuing with Core Data update): \(error)")
@@ -113,6 +183,12 @@ class AlarmsViewModel: ObservableObject {
     }
     
     func deleteAlarm(_ alarm: Alarm) async {
+        // Prevent deletion of wake-up alarm
+        guard !alarm.isWakeUpAlarm else {
+            print("Cannot delete wake-up alarm")
+            return
+        }
+        
         do {
             // Delete from Core Data
             try coreDataManager.deleteAlarm(alarm.id)
@@ -133,13 +209,46 @@ class AlarmsViewModel: ObservableObject {
     func toggleAlarm(_ alarm: Alarm, isEnabled: Bool) async {
         var updatedAlarm = alarm
         updatedAlarm.isEnabled = isEnabled
+        
+        // Update lastUsedAt for non-wake-up alarms
+        if !alarm.isWakeUpAlarm {
+            updatedAlarm.lastUsedAt = Date()
+        }
+        
         await updateAlarm(updatedAlarm)
     }
     
     func deleteAlarms(at offsets: IndexSet) async {
-        for index in offsets {
-            let alarm = alarms[index]
+        let alarmsToDelete = offsets.map { otherAlarms[$0] }
+        
+        for alarm in alarmsToDelete {
             await deleteAlarm(alarm)
+        }
+    }
+    
+    // MARK: - Duplicate Prevention
+    
+    private func removeDuplicateAlarms(name: String, time: Date) async {
+        // Find existing alarms with the same name and time (excluding wake-up alarms)
+        let duplicateAlarms = alarms.filter { alarm in
+            !alarm.isWakeUpAlarm && 
+            alarm.label == name && 
+            Calendar.current.compare(alarm.time, to: time, toGranularity: .minute) == .orderedSame
+        }
+        
+        // Delete all duplicate alarms
+        for duplicateAlarm in duplicateAlarms {
+            do {
+                // Delete from Core Data
+                try coreDataManager.deleteAlarm(duplicateAlarm.id)
+                
+                // Cancel in AlarmKit
+                try await alarmService.cancelAlarm(withId: duplicateAlarm.id)
+                
+                print("Deleted duplicate alarm: \(duplicateAlarm.label) at \(duplicateAlarm.formattedTime)")
+            } catch {
+                print("Failed to delete duplicate alarm: \(error)")
+            }
         }
     }
 }

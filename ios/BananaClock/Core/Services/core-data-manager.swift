@@ -66,10 +66,12 @@ class CoreDataManager: ObservableObject {
         cdAlarm.isEnabled = alarm.isEnabled
         cdAlarm.isAIEnabled = alarm.isAIEnabled
         cdAlarm.soundIdentifier = alarm.soundIdentifier
-        cdAlarm.snoozeLength = Int16(alarm.snoozeLength)
+        cdAlarm.snoozeLength = Int16(alarm.snoozeLength ?? 9)
         cdAlarm.repeatDays = try JSONEncoder().encode(alarm.repeatDays)
         cdAlarm.volume = alarm.volume
-        cdAlarm.vibrationEnabled = alarm.vibrationEnabled
+
+        // Note: isWakeUpAlarm and lastUsedAt are not in Core Data model yet
+        // For now, we'll use a workaround by checking the label
         cdAlarm.createdAt = alarm.createdAt
         cdAlarm.updatedAt = alarm.updatedAt
         
@@ -92,6 +94,9 @@ class CoreDataManager: ObservableObject {
             
             let repeatDays = (try? JSONDecoder().decode([Alarm.Weekday].self, from: cdAlarm.repeatDays ?? Data())) ?? []
             
+            // Workaround: Check if this is the wake-up alarm by label
+            let isWakeUpAlarm = label == "Wake Up"
+            
             return Alarm(
                 id: id,
                 time: time,
@@ -99,10 +104,12 @@ class CoreDataManager: ObservableObject {
                 isEnabled: cdAlarm.isEnabled,
                 isAIEnabled: cdAlarm.isAIEnabled,
                 soundIdentifier: soundIdentifier,
-                snoozeLength: Int(cdAlarm.snoozeLength),
+                snoozeLength: cdAlarm.snoozeLength == 0 ? nil : Int(cdAlarm.snoozeLength),
                 repeatDays: repeatDays,
                 volume: cdAlarm.volume,
-                vibrationEnabled: cdAlarm.vibrationEnabled,
+                isWakeUpAlarm: isWakeUpAlarm,
+
+                lastUsedAt: updatedAt, // Use updatedAt as fallback for lastUsedAt
                 createdAt: createdAt,
                 updatedAt: updatedAt
             )
@@ -122,11 +129,12 @@ class CoreDataManager: ObservableObject {
         cdAlarm.isEnabled = alarm.isEnabled
         cdAlarm.isAIEnabled = alarm.isAIEnabled
         cdAlarm.soundIdentifier = alarm.soundIdentifier
-        cdAlarm.snoozeLength = Int16(alarm.snoozeLength)
+        cdAlarm.snoozeLength = Int16(alarm.snoozeLength ?? 9)
         cdAlarm.repeatDays = try JSONEncoder().encode(alarm.repeatDays)
         cdAlarm.volume = alarm.volume
-        cdAlarm.vibrationEnabled = alarm.vibrationEnabled
+
         cdAlarm.updatedAt = Date()
+        // Note: isWakeUpAlarm and lastUsedAt updates are not handled in Core Data yet
         
         save()
     }

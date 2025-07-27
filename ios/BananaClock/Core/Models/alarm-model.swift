@@ -15,10 +15,12 @@ struct Alarm: Identifiable, Codable, Equatable {
     var isEnabled: Bool
     var isAIEnabled: Bool
     var soundIdentifier: String
-    var snoozeLength: Int // minutes (1-15)
+    var snoozeLength: Int? // minutes (1-15), nil means snooze is disabled
     var repeatDays: [Weekday]
     var volume: Float // 0.0-1.0
-    var vibrationEnabled: Bool
+    var isWakeUpAlarm: Bool
+
+    var lastUsedAt: Date
     let createdAt: Date
     var updatedAt: Date
     
@@ -59,23 +61,36 @@ struct Alarm: Identifiable, Codable, Equatable {
         isEnabled: Bool = true,
         isAIEnabled: Bool = false,
         soundIdentifier: String = AlarmSound.default.rawValue,
-        snoozeLength: Int = 9,
-        repeatDays: [Weekday] = [],
-        volume: Float = 0.8,
-        vibrationEnabled: Bool = true,
+        snoozeLength: Int? = 9,
+        repeatDays: [Weekday]? = nil,
+        volume: Float = 0.7,
+        isWakeUpAlarm: Bool = false,
+
+        lastUsedAt: Date = Date(),
         createdAt: Date = Date(),
         updatedAt: Date = Date()
     ) {
+        // Set default repeat days based on alarm type
+        let defaultRepeatDays: [Weekday]
+        if let repeatDays = repeatDays {
+            defaultRepeatDays = repeatDays
+        } else if isWakeUpAlarm {
+            defaultRepeatDays = [.monday, .tuesday, .wednesday, .thursday, .friday] // Weekdays for wake-up alarms
+        } else {
+            defaultRepeatDays = [] // No repeat for regular alarms
+        }
         self.id = id
         self.time = time
         self.label = label
         self.isEnabled = isEnabled
         self.isAIEnabled = isAIEnabled
         self.soundIdentifier = soundIdentifier
-        self.snoozeLength = max(1, min(15, snoozeLength))
-        self.repeatDays = repeatDays
+        self.snoozeLength = snoozeLength.map { max(1, min(15, $0)) }
+        self.repeatDays = defaultRepeatDays
         self.volume = max(0, min(1, volume))
-        self.vibrationEnabled = vibrationEnabled
+        self.isWakeUpAlarm = isWakeUpAlarm
+
+        self.lastUsedAt = lastUsedAt
         self.createdAt = createdAt
         self.updatedAt = updatedAt
     }
@@ -111,7 +126,7 @@ struct Alarm: Identifiable, Codable, Equatable {
             if let matchingDay = Weekday(rawValue: weekday),
                repeatDays.contains(matchingDay) {
                 
-                var nextDate = calendar.date(bySettingHour: timeComponents.hour ?? 0,
+                let nextDate = calendar.date(bySettingHour: timeComponents.hour ?? 0,
                                            minute: timeComponents.minute ?? 0,
                                            second: 0,
                                            of: checkDate) ?? checkDate

@@ -1,0 +1,111 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Background gradient -->
+    <radialGradient id="bgGradient" cx="50%" cy="40%">
+      <stop offset="0%" style="stop-color:#1A1A1A;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#000000;stop-opacity:1" />
+    </radialGradient>
+    
+    <!-- Banana gradient -->
+    <linearGradient id="bananaGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFF59D;stop-opacity:1" />
+      <stop offset="30%" style="stop-color:#FDE043;stop-opacity:1" />
+      <stop offset="70%" style="stop-color:#F5D020;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#E4C008;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Highlight gradient -->
+    <linearGradient id="highlightGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:0.4" />
+      <stop offset="50%" style="stop-color:#FFFFFF;stop-opacity:0.1" />
+      <stop offset="100%" style="stop-color:#FFFFFF;stop-opacity:0" />
+    </linearGradient>
+    
+    <!-- Shadow blur -->
+    <filter id="softShadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="20"/>
+      <feOffset dx="0" dy="20" result="offsetblur"/>
+      <feFlood flood-color="#000000" flood-opacity="0.3"/>
+      <feComposite in2="offsetblur" operator="in"/>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <!-- Glow effect -->
+    <filter id="bananaGlow">
+      <feGaussianBlur stdDeviation="30" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background with subtle gradient -->
+  <rect width="1024" height="1024" fill="url(#bgGradient)"/>
+  
+  <!-- Subtle radial overlay for depth -->
+  <circle cx="512" cy="450" r="600" fill="#FDE043" opacity="0.05"/>
+  
+  <!-- Main banana shape with iOS 26 depth -->
+  <g transform="translate(512, 512)" filter="url(#softShadow)">
+    <!-- Banana body -->
+    <path d="M -180 -120 
+             C -180 -220, -80 -280, 20 -280
+             C 120 -280, 220 -220, 260 -80
+             C 300 60, 240 180, 120 240
+             C 0 300, -120 280, -200 200
+             C -280 120, -280 -20, -180 -120
+             Z" 
+          fill="url(#bananaGradient)" 
+          stroke="#E4C008" 
+          stroke-width="4"
+          opacity="0.95"/>
+    
+    <!-- Inner highlight for depth -->
+    <path d="M -140 -100 
+             C -140 -180, -60 -220, 20 -220
+             C 100 -220, 180 -180, 210 -60
+             C 240 40, 190 120, 100 160
+             C 10 200, -80 180, -140 120
+             C -200 60, -200 -20, -140 -100
+             Z" 
+          fill="url(#highlightGradient)" 
+          opacity="0.6"/>
+    
+    <!-- Characteristic banana ridges -->
+    <path d="M -100 -140 Q -80 -40, -60 60" 
+          stroke="#E4C008" 
+          stroke-width="3" 
+          fill="none" 
+          opacity="0.3"/>
+    <path d="M -40 -160 Q -20 -60, 0 40" 
+          stroke="#E4C008" 
+          stroke-width="3" 
+          fill="none" 
+          opacity="0.3"/>
+    <path d="M 20 -160 Q 40 -60, 60 40" 
+          stroke="#E4C008" 
+          stroke-width="3" 
+          fill="none" 
+          opacity="0.3"/>
+    
+    <!-- Stem with gradient -->
+    <g transform="rotate(-30)">
+      <rect x="-200" y="-140" width="50" height="25" rx="12" fill="#6B5B13">
+        <animate attributeName="opacity" values="0.8;1;0.8" dur="4s" repeatCount="indefinite"/>
+      </rect>
+    </g>
+    
+    <!-- Bottom tip -->
+    <ellipse cx="180" cy="180" rx="25" ry="30" fill="#6B5B13" transform="rotate(45 180 180)"/>
+    
+    <!-- Subtle specular highlight -->
+    <ellipse cx="-60" cy="-100" rx="80" ry="40" fill="#FFFFFF" opacity="0.3" transform="rotate(-30 -60 -100)"/>
+  </g>
+  
+  <!-- iOS 26 style subtle outer glow -->
+  <circle cx="512" cy="512" r="350" fill="none" stroke="#FDE043" stroke-width="1" opacity="0.1" filter="url(#bananaGlow)"/>
+</svg>

@@ -19,16 +19,34 @@ struct AlarmRow: View {
                             .foregroundColor(BananaTheme.Colors.textSecondary)
                     }
                     
-                    HStack(spacing: BananaTheme.Spacing.xs) {
-                        if alarm.isAIEnabled {
-                            Label("AI", systemImage: "sparkles")
-                                .font(.caption)
-                                .foregroundColor(BananaTheme.Colors.bananaYellow)
-                        }
-                        
-                        Text(alarm.label)
+                    if alarm.isWakeUpAlarm {
+                        // Today/Tomorrow directly below time
+                        Text(todayTomorrowText)
                             .font(.caption)
                             .foregroundColor(BananaTheme.Colors.textSecondary)
+                        
+                        // AI indicator below Today/Tomorrow
+                        if alarm.isAIEnabled {
+                            Text("🍌🧠 ON")
+                                .font(.caption)
+                                .foregroundColor(BananaTheme.Colors.bananaYellow)
+                        } else {
+                            Text("🍌🧠 OFF")
+                                .font(.caption)
+                                .foregroundColor(BananaTheme.Colors.textSecondary)
+                        }
+                    } else {
+                        HStack(spacing: BananaTheme.Spacing.xs) {
+                            if alarm.isAIEnabled {
+                                Label("AI", systemImage: "sparkles")
+                                    .font(.caption)
+                                    .foregroundColor(BananaTheme.Colors.bananaYellow)
+                            }
+                            
+                            Text(alarm.label)
+                                .font(.caption)
+                                .foregroundColor(BananaTheme.Colors.textSecondary)
+                        }
                     }
                     
                     if !alarm.repeatDays.isEmpty {
@@ -61,6 +79,20 @@ struct AlarmRow: View {
         formatter.dateFormat = "a"
         return formatter.string(from: alarm.time)
     }
+    
+    private var todayTomorrowText: String {
+        let calendar = Calendar.current
+        let now = Date()
+        let alarmDate = alarm.nextFireDate
+        
+        if calendar.isDate(alarmDate, inSameDayAs: now) {
+            return "Today"
+        } else {
+            return "Tomorrow"
+        }
+    }
+    
+
 }
 
 #Preview {
@@ -73,8 +105,7 @@ struct AlarmRow: View {
             soundIdentifier: "default",
             snoozeLength: 9,
             repeatDays: [.monday, .tuesday, .wednesday, .thursday, .friday],
-            volume: 0.8,
-            vibrationEnabled: true
+            volume: 0.7
         ),
         isEnabled: .constant(true),
         onTap: {}

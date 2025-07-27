@@ -24,17 +24,12 @@ class AlarmKitService: ObservableObject {
     // MARK: - Authorization
     
     func requestAuthorization() async -> Bool {
-        do {
-            // For development, always return true since we're using placeholder implementation
-            // This will be properly implemented when AlarmKit is available
-            isAuthorized = true
-            return true
-            // isAuthorized = try await AlarmManager.shared.requestAuthorization()
-            // return isAuthorized
-        } catch {
-            print("AlarmKit authorization error: \(error)")
-            return false
-        }
+        // For development, always return true since we're using placeholder implementation
+        // This will be properly implemented when AlarmKit is available
+        isAuthorized = true
+        return true
+        // isAuthorized = try await AlarmManager.shared.requestAuthorization()
+        // return isAuthorized
     }
     
     private func checkAuthorizationStatus() {
@@ -66,8 +61,8 @@ class AlarmKitService: ObservableObject {
             scheduledDate: alarm.nextFireDate,
             sound: AlarmSound(rawValue: alarm.soundIdentifier) ?? .default,
             volume: Double(alarm.volume),
-            vibrationEnabled: alarm.vibrationEnabled,
-            snoozeLength: TimeInterval(alarm.snoozeLength * 60),
+            vibrationEnabled: true, // Always enabled
+            snoozeLength: TimeInterval((alarm.snoozeLength ?? 9) * 60),
             repeatSchedule: createRepeatSchedule(from: alarm.repeatDays)
         )
         
@@ -180,7 +175,7 @@ struct AlarmConfiguration {
     let label: String
     let scheduledDate: Date
     var sound: AlarmSound?
-    var volume: Double = 0.8
+    var volume: Double = 0.7
     var vibrationEnabled: Bool = true
     var snoozeLength: TimeInterval = 540
     var repeatSchedule: AlarmRepeatSchedule?

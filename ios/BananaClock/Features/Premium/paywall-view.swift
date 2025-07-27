@@ -11,8 +11,7 @@ import RevenueCat
 
 struct PaywallView: View {
     @StateObject private var purchaseService = PurchaseService.shared
-    // @Environment(\.dismiss) private var dismiss  // Temporarily disabled
-    // @State private var selectedPackage: Package?
+    @State private var selectedPackage: Package?
     
     var body: some View {
         NavigationStack {
@@ -28,15 +27,18 @@ struct PaywallView: View {
                         featuresSection
                         
                         // Pricing
-                        // if let offerings = purchaseService.offerings {
-                        //     pricingSection(offerings)
-                        // }
+                        if let offerings = purchaseService.offerings {
+                            pricingSection(offerings)
+                        }
                         
                         // CTA Button
-                        // purchaseButton
+                        purchaseButton
                         
                         // Restore
-                        // restoreButton
+                        restoreButton
+                        
+                        // Terms and Privacy
+                        termsSection
                     }
                     .padding()
                 }
@@ -45,16 +47,18 @@ struct PaywallView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
-                        // dismiss()  // Temporarily disabled
+                    #if DEBUG
+                    Button("Debug: Skip") {
+                        purchaseService.bypassPaywallForTesting()
                     }
                     .foregroundColor(BananaTheme.Colors.bananaYellow)
+                    #endif
                 }
             }
         }
-        // .task {
-        //     await purchaseService.loadOfferings()
-        // }
+        .task {
+            await purchaseService.loadOfferings()
+        }
         .alert("Purchase Error", isPresented: .constant(purchaseService.purchaseError != nil)) {
             Button("OK") {
                 purchaseService.purchaseError = nil
@@ -121,57 +125,79 @@ struct PaywallView: View {
         .padding(.vertical)
     }
     
-    // private func pricingSection(_ offerings: Offerings) -> some View {
-    //     VStack(spacing: BananaTheme.Spacing.md) {
-    //         if let monthlyPackage = offerings.current?.monthly,
-    //            let yearlyPackage = offerings.current?.annual {
-    //             
-    //             PricingCard(
-    //                 package: monthlyPackage,
-    //                 isSelected: selectedPackage?.identifier == monthlyPackage.identifier,
-    //                 badge: nil
-    //             ) {
-    //                 selectedPackage = monthlyPackage
-    //             }
-    //             
-    //             PricingCard(
-    //                 package: yearlyPackage,
-    //                 isSelected: selectedPackage?.identifier == yearlyPackage.identifier,
-    //                 badge: "BEST VALUE"
-    //             ) {
-    //                 selectedPackage = yearlyPackage
-    //             }
-    //         }
-    //     }
-    // }
+    private func pricingSection(_ offerings: Offerings) -> some View {
+        VStack(spacing: BananaTheme.Spacing.md) {
+            if let monthlyPackage = offerings.current?.monthly,
+               let yearlyPackage = offerings.current?.annual {
+                
+                PricingCard(
+                    package: monthlyPackage,
+                    isSelected: selectedPackage?.identifier == monthlyPackage.identifier,
+                    badge: nil,
+                    trialDays: 3
+                ) {
+                    selectedPackage = monthlyPackage
+                }
+                
+                PricingCard(
+                    package: yearlyPackage,
+                    isSelected: selectedPackage?.identifier == yearlyPackage.identifier,
+                    badge: "BEST VALUE",
+                    trialDays: 7
+                ) {
+                    selectedPackage = yearlyPackage
+                }
+            }
+        }
+    }
     
-    // private var purchaseButton: some View {
-    //     BananaButton(
-    //         selectedPackage != nil ? "Start Free Trial" : "Choose a Plan",
-    //         icon: "sparkles"
-    //     ) {
-    //         if let package = selectedPackage {
-    //             Task {
-    //                 try await purchaseService.purchase(package: package)
-    //                 // dismiss()  // Temporarily disabled
-    //             }
-    //         }
-    //     }
-    //     .disabled(selectedPackage == nil || purchaseService.isLoading)
-    // }
+    private var purchaseButton: some View {
+        BananaButton(
+            selectedPackage != nil ? "Start Free Trial" : "Choose a Plan",
+            icon: "sparkles"
+        ) {
+            if let package = selectedPackage {
+                Task {
+                    try await purchaseService.purchase(package: package)
+                }
+            }
+        }
+        .disabled(selectedPackage == nil || purchaseService.isLoading)
+    }
     
-    // private var restoreButton: some View {
-    //     Button("Restore Purchases") {
-    //         Task {
-    //             try await purchaseService.restorePurchases()
-    //             if purchaseService.isSubscribed {
-    //                 // dismiss()  // Temporarily disabled
-    //             }
-    //         }
-    //     }
-    //     .font(.footnote)
-    //     .foregroundColor(BananaTheme.Colors.textSecondary)
-    // }
+    private var restoreButton: some View {
+        Button("Restore Purchases") {
+            Task {
+                try await purchaseService.restorePurchases()
+            }
+        }
+        .font(.footnote)
+        .foregroundColor(BananaTheme.Colors.textSecondary)
+    }
+    
+    private var termsSection: some View {
+        VStack(spacing: 8) {
+            Text("By continuing, you agree to our Terms of Service and Privacy Policy")
+                .font(.caption2)
+                .foregroundColor(BananaTheme.Colors.textSecondary)
+                .multilineTextAlignment(.center)
+            
+            HStack(spacing: 20) {
+                Button("Terms") {
+                    // TODO: Open terms
+                }
+                .font(.caption2)
+                .foregroundColor(BananaTheme.Colors.bananaYellow)
+                
+                Button("Privacy") {
+                    // TODO: Open privacy policy
+                }
+                .font(.caption2)
+                .foregroundColor(BananaTheme.Colors.bananaYellow)
+            }
+        }
+        .padding(.top)
+    }
 }
 
 // MARK: - Feature Row
@@ -203,53 +229,58 @@ private struct FeatureRow: View {
 }
 
 // MARK: - Pricing Card
-// private struct PricingCard: View {
-//     let package: Package
-//     let isSelected: Bool
-//     let badge: String?
-//     let action: () -> Void
-//     
-//     var body: some View {
-//         Button(action: action) {
-//             VStack(spacing: BananaTheme.Spacing.sm) {
-//                 if let badge = badge {
-//                     Text(badge)
-//                         .font(.caption.bold())
-//                         .foregroundColor(.black)
-//                         .padding(.horizontal, 12)
-//                         .padding(.vertical, 4)
-//                         .background(BananaTheme.Colors.bananaYellow)
-//                         .cornerRadius(12)
-//                 }
-//                 
-//                 HStack {
-//                     VStack(alignment: .leading, spacing: 4) {
-//                         Text(package.storeProduct.localizedTitle)
-//                             .font(.headline)
-//                             .foregroundColor(.white)
-//                         
-//                         Text(package.storeProduct.localizedPriceString)
-//                             .font(.title2.bold())
-//                             .foregroundColor(isSelected ? BananaTheme.Colors.bananaYellow : .white)
-//                     }
-//                     
-//                     Spacer()
-//                     
-//                     Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-//                         .font(.title2)
-//                         .foregroundColor(isSelected ? BananaTheme.Colors.bananaYellow : .gray)
-//                 }
-//                 .padding()
-//             }
-//             .bananaCard()
-//             .overlay(
-//                 RoundedRectangle(cornerRadius: BananaTheme.Layout.largeCornerRadius)
-//                     .stroke(
-//                         isSelected ? BananaTheme.Colors.bananaYellow : Color.clear,
-//                         lineWidth: 2
-//                     )
-//             )
-//         }
-//         .buttonStyle(PlainButtonStyle())
-//     }
-// }
+private struct PricingCard: View {
+    let package: Package
+    let isSelected: Bool
+    let badge: String?
+    let trialDays: Int
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: BananaTheme.Spacing.sm) {
+                if let badge = badge {
+                    Text(badge)
+                        .font(.caption.bold())
+                        .foregroundColor(.black)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 4)
+                        .background(BananaTheme.Colors.bananaYellow)
+                        .cornerRadius(12)
+                }
+                
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(package.storeProduct.localizedTitle)
+                            .font(.headline)
+                            .foregroundColor(.white)
+                        
+                        Text(package.storeProduct.localizedPriceString)
+                            .font(.title2.bold())
+                            .foregroundColor(isSelected ? BananaTheme.Colors.bananaYellow : .white)
+                        
+                        Text("\(trialDays)-day free trial")
+                            .font(.caption)
+                            .foregroundColor(BananaTheme.Colors.textSecondary)
+                    }
+                    
+                    Spacer()
+                    
+                    Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                        .font(.title2)
+                        .foregroundColor(isSelected ? BananaTheme.Colors.bananaYellow : .gray)
+                }
+                .padding()
+            }
+            .bananaCard()
+            .overlay(
+                RoundedRectangle(cornerRadius: BananaTheme.Layout.largeCornerRadius)
+                    .stroke(
+                        isSelected ? BananaTheme.Colors.bananaYellow : Color.clear,
+                        lineWidth: 2
+                    )
+            )
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+}

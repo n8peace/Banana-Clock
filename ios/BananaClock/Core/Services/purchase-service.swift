@@ -6,56 +6,207 @@
 //
 
 import Foundation
-// import RevenueCat  // Temporarily disabled
+import RevenueCat
 import SwiftUI
 
 @MainActor
-class PurchaseService: ObservableObject {
+class PurchaseService: NSObject, ObservableObject {
     static let shared = PurchaseService()
     
     @Published var isSubscribed = false
-    // @Published var offerings: Offerings?  // Temporarily disabled
     @Published var isLoading = false
     @Published var purchaseError: Error?
+    @Published var offerings: Offerings?
     
-    private init() {}
+    private let userDefaults = UserDefaults.standard
+    private let subscriptionStatusKey = "subscription_status"
+    private let lastCheckKey = "last_subscription_check"
+    
+    private override init() {
+        super.init()
+        loadCachedSubscriptionStatus()
+    }
     
     // MARK: - Configuration
     
     func configure() {
-        // Temporarily disabled until RevenueCat is properly configured
-        print("⚠️ RevenueCat temporarily disabled")
+        let apiKey = AppEnvironment.revenueCatAPIKey
+        print("🔑 RevenueCat API Key: \(apiKey)")
+        
+        // Validate API key format
+        if apiKey.isEmpty {
+            print("❌ RevenueCat API Key is empty!")
+        } else if !apiKey.hasPrefix("appl_") {
+            print("❌ RevenueCat API Key format is invalid (should start with 'appl_')")
+        } else {
+            print("✅ RevenueCat API Key format looks correct")
+        }
+        
+        // TEMPORARY: Skip RevenueCat configuration if API key is invalid
+        if apiKey.isEmpty || !apiKey.hasPrefix("appl_") {
+            print("⚠️ Skipping RevenueCat configuration due to invalid API key")
+            print("📱 App will run in demo mode without subscription features")
+            return
+        }
+        
+        Purchases.configure(
+            with: Configuration.Builder(withAPIKey: apiKey)
+                .with(storeKitVersion: .storeKit2)
+                .build()
+        )
+        
+        // Set up purchase listener
+        Purchases.shared.delegate = self
+        
+        // Check cached status on startup
+        loadCachedSubscriptionStatus()
+        
+        // Refresh status
+        Task {
+            await checkSubscriptionStatus()
+        }
     }
     
     // MARK: - Subscription Status
     
     func checkSubscriptionStatus() async {
-        // Temporarily disabled
-        isSubscribed = false
+        isLoading = true
+        print("🔍 Checking subscription status...")
+        
+        do {
+            let customerInfo = try await Purchases.shared.customerInfo()
+            let hasActiveSubscription = !customerInfo.entitlements.active.isEmpty
+            print("✅ Subscription check successful. Active subscription: \(hasActiveSubscription)")
+            
+            await MainActor.run {
+                self.isSubscribed = hasActiveSubscription
+                self.cacheSubscriptionStatus(hasActiveSubscription)
+                self.isLoading = false
+            }
+        } catch {
+            print("❌ Subscription check failed with error: \(error)")
+            print("🔍 Error type: \(type(of: error))")
+            print("🔍 Error description: \(error.localizedDescription)")
+            
+            await MainActor.run {
+                self.purchaseError = error
+                self.isLoading = false
+                // On error, assume not subscribed and show paywall
+                self.isSubscribed = false
+            }
+        }
     }
     
     func hasActiveSubscription() async -> Bool {
-        // Temporarily disabled
-        return false
+        do {
+            let customerInfo = try await Purchases.shared.customerInfo()
+            return !customerInfo.entitlements.active.isEmpty
+        } catch {
+            return false
+        }
+    }
+    
+    // MARK: - Caching
+    
+    private func loadCachedSubscriptionStatus() {
+        isSubscribed = userDefaults.bool(forKey: subscriptionStatusKey)
+    }
+    
+    private func cacheSubscriptionStatus(_ status: Bool) {
+        userDefaults.set(status, forKey: subscriptionStatusKey)
+        userDefaults.set(Date(), forKey: lastCheckKey)
+    }
+    
+    func shouldRefreshSubscriptionStatus() -> Bool {
+        guard let lastCheck = userDefaults.object(forKey: lastCheckKey) as? Date else {
+            return true
+        }
+        
+        // Refresh every 24 hours
+        return Date().timeIntervalSince(lastCheck) > 24 * 60 * 60
     }
     
     // MARK: - Offerings
     
     func loadOfferings() async {
-        // Temporarily disabled
-        isLoading = false
+        isLoading = true
+        
+        do {
+            let offerings = try await Purchases.shared.offerings()
+            await MainActor.run {
+                self.offerings = offerings
+                self.isLoading = false
+            }
+        } catch {
+            await MainActor.run {
+                self.purchaseError = error
+                self.isLoading = false
+            }
+        }
     }
     
     // MARK: - Purchase
     
-    func purchase(package: Any) async throws {
-        // Temporarily disabled
-        throw NSError(domain: "PurchaseService", code: 1, userInfo: [NSLocalizedDescriptionKey: "Purchases temporarily disabled"])
+    func purchase(package: Package) async throws {
+        isLoading = true
+        
+        do {
+            let result = try await Purchases.shared.purchase(package: package)
+            let hasActiveSubscription = !result.customerInfo.entitlements.active.isEmpty
+            
+            await MainActor.run {
+                self.isSubscribed = hasActiveSubscription
+                self.cacheSubscriptionStatus(hasActiveSubscription)
+                self.isLoading = false
+            }
+        } catch {
+            await MainActor.run {
+                self.purchaseError = error
+                self.isLoading = false
+            }
+            throw error
+        }
     }
     
     func restorePurchases() async throws {
-        // Temporarily disabled
-        throw NSError(domain: "PurchaseService", code: 1, userInfo: [NSLocalizedDescriptionKey: "Purchases temporarily disabled"])
+        isLoading = true
+        
+        do {
+            let customerInfo = try await Purchases.shared.restorePurchases()
+            let hasActiveSubscription = !customerInfo.entitlements.active.isEmpty
+            
+            await MainActor.run {
+                self.isSubscribed = hasActiveSubscription
+                self.cacheSubscriptionStatus(hasActiveSubscription)
+                self.isLoading = false
+            }
+        } catch {
+            await MainActor.run {
+                self.purchaseError = error
+                self.isLoading = false
+            }
+            throw error
+        }
+    }
+    
+    // MARK: - Development Bypass
+    
+    #if DEBUG
+    func bypassPaywallForTesting() {
+        isSubscribed = true
+        cacheSubscriptionStatus(true)
+    }
+    #endif
+}
+
+// MARK: - RevenueCat Delegate
+
+extension PurchaseService: PurchasesDelegate {
+    func purchases(_ purchases: Purchases, receivedUpdated customerInfo: CustomerInfo) {
+        let hasActiveSubscription = !customerInfo.entitlements.active.isEmpty
+        
+        self.isSubscribed = hasActiveSubscription
+        self.cacheSubscriptionStatus(hasActiveSubscription)
     }
 }
 

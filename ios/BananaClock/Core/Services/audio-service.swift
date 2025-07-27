@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import AVFoundation
+@preconcurrency import AVFoundation
 import MediaPlayer
 import SwiftUI
 
@@ -54,7 +54,7 @@ class AudioService: ObservableObject {
     func playAIWakeUpSequence(
         musicURL: URL,
         aiAudioURL: URL,
-        volume: Float = 0.8
+        volume: Float = 0.7
     ) async throws {
         isPlayingAIWakeUp = true
         
@@ -104,7 +104,7 @@ class AudioService: ObservableObject {
             
             // Start music at low volume
             musicMixer.volume = volume * 0.1
-            musicPlayer.play()
+            await musicPlayer.play()
             
             // Fade in music over 30 seconds
             await fadeVolume(
@@ -124,7 +124,7 @@ class AudioService: ObservableObject {
                     self?.handleAIVoiceCompletion()
                 }
             }
-            voicePlayer.play()
+            await voicePlayer.play()
             
             // Update now playing info
             updateNowPlayingInfo(title: "AI Wake-Up", artist: "BANANA")
@@ -174,7 +174,7 @@ class AudioService: ObservableObject {
     
     // MARK: - Standard Alarm Sounds
     
-    func playSound(_ soundIdentifier: String, volume: Float = 0.8) {
+    func playSound(_ soundIdentifier: String, volume: Float = 0.7) {
         do {
             try playAlarmSound(soundIdentifier, volume: volume)
         } catch {
@@ -182,7 +182,7 @@ class AudioService: ObservableObject {
         }
     }
     
-    func playAlarmSound(_ soundIdentifier: String, volume: Float = 0.8) throws {
+    func playAlarmSound(_ soundIdentifier: String, volume: Float = 0.7) throws {
         guard let soundURL = Bundle.main.url(
             forResource: soundIdentifier,
             withExtension: "caf"
@@ -217,7 +217,7 @@ class AudioService: ObservableObject {
             ) else { return }
             
             let player = try AVAudioPlayer(contentsOf: soundURL)
-            player.volume = 0.8
+            player.volume = 0.7
             player.play()
         } catch {
             print("Failed to play timer sound: \(error)")
@@ -246,7 +246,7 @@ class AudioService: ObservableObject {
     private func setupRemoteControls() {
         let commandCenter = MPRemoteCommandCenter.shared()
         
-        commandCenter.playCommand.addTarget { [weak self] _ in
+        commandCenter.playCommand.addTarget { _ in
             // Handle play
             return .success
         }

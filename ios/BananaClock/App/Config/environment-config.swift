@@ -22,18 +22,28 @@ enum AppEnvironment {
     
     // MARK: - API Keys (from environment or Info.plist)
     static var supabaseAnonKey: String {
-        // First try environment variable
+        // First try Secrets.swift (for local development)
+        if !Secrets.supabaseAnonKey.contains("YOUR_") {
+            return Secrets.supabaseAnonKey
+        }
+        // Then try environment variable
         if let key = ProcessInfo.processInfo.environment["SUPABASE_ANON_KEY"] {
             return key
         }
-        // Fallback to Info.plist
+        // Finally fallback to Info.plist
         return Bundle.main.object(forInfoDictionaryKey: "SUPABASE_ANON_KEY") as? String ?? ""
     }
     
     static var revenueCatAPIKey: String {
+        // First try Secrets.swift (for local development)
+        if !Secrets.revenueCatAPIKey.contains("YOUR_") {
+            return Secrets.revenueCatAPIKey
+        }
+        // Then try environment variable
         if let key = ProcessInfo.processInfo.environment["REVENUECAT_API_KEY"] {
             return key
         }
+        // Finally fallback to Info.plist
         return Bundle.main.object(forInfoDictionaryKey: "REVENUECAT_API_KEY") as? String ?? ""
     }
     
@@ -65,7 +75,7 @@ enum AppEnvironment {
     // MARK: - Audio Configuration
     static let maxAudioDuration: TimeInterval = 300 // 5 minutes
     static let audioFadeInDuration: TimeInterval = 30 // 30 seconds
-    static let defaultAlarmVolume: Float = 0.8
+    static let defaultAlarmVolume: Float = 0.7
     
     // MARK: - Subscription
     static let monthlyProductID = "banana_plus_monthly"

@@ -78,58 +78,65 @@ struct WorldClockView: View {
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.horizontal, BananaTheme.Spacing.md)
             
-            // Date Picker with Reset Button
-            HStack(spacing: BananaTheme.Spacing.sm) {
-                DatePicker(
-                    "Select Date",
-                    selection: $viewModel.selectedDate,
-                    displayedComponents: .date
-                )
-                .datePickerStyle(.compact)
-                .labelsHidden()
-                .colorScheme(.dark)
-                .accentColor(viewModel.isConverterActive ? BananaTheme.Colors.bananaYellow : .gray)
-                
-                // Reset button - only show when date isn't today
-                if !viewModel.isToday {
-                    Button {
-                        viewModel.selectedDate = Date()
-                        HapticManager.shared.impact(.light)
-                    } label: {
-                        Image(systemName: "gobackward")
-                            .font(.caption)
-                            .foregroundColor(viewModel.isConverterActive ? BananaTheme.Colors.bananaYellow : .gray)
-                    }
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .center)
-            .padding(.horizontal, BananaTheme.Spacing.md)
-            
-            // Time Slider
+            // Converter Box
             VStack(spacing: 8) {
-                // Time display with countdown
+                // Top row with date picker and time display
                 HStack {
-                    Text(viewModel.selectedTimeString)
-                        .font(.title2.weight(.medium))
-                        .foregroundColor(viewModel.isConverterActive ? BananaTheme.Colors.bananaYellow : .gray)
-                        .monospacedDigit()
+                    // Date Picker in top left
+                    VStack(alignment: .leading, spacing: 4) {
+                        DatePicker(
+                            "Select Date",
+                            selection: $viewModel.selectedDate,
+                            displayedComponents: .date
+                        )
+                        .datePickerStyle(.compact)
+                        .labelsHidden()
+                        .colorScheme(.dark)
+                        .accentColor(viewModel.isConverterActive ? BananaTheme.Colors.bananaYellow : .gray)
+                        
+                        // Reset button - only show when date isn't today
+                        if !viewModel.isToday {
+                            Button {
+                                viewModel.selectedDate = Date()
+                                HapticManager.shared.impact(.light)
+                            } label: {
+                                HStack(spacing: 2) {
+                                    Image(systemName: "gobackward")
+                                        .font(.caption2)
+                                    Text("Today")
+                                        .font(.caption2)
+                                }
+                                .foregroundColor(viewModel.isConverterActive ? BananaTheme.Colors.bananaYellow : .gray)
+                            }
+                        }
+                    }
                     
-                    // Countdown circle
-                    if viewModel.isConverterActive && viewModel.countdownSeconds > 0 {
-                        ZStack {
-                            Circle()
-                                .stroke(Color.gray.opacity(0.3), lineWidth: 2)
-                                .frame(width: 24, height: 24)
-                            
-                            Circle()
-                                .trim(from: 0, to: viewModel.countdownProgress)
-                                .stroke(Color.gray, lineWidth: 2)
-                                .frame(width: 24, height: 24)
-                                .rotationEffect(.degrees(-90))
-                            
-                            Text("\(viewModel.countdownSeconds)")
-                                .font(.caption2)
-                                .foregroundColor(.gray)
+                    Spacer()
+                    
+                    // Time display with countdown
+                    HStack {
+                        Text(viewModel.selectedTimeString)
+                            .font(.title2.weight(.medium))
+                            .foregroundColor(viewModel.isConverterActive ? BananaTheme.Colors.bananaYellow : .gray)
+                            .monospacedDigit()
+                        
+                        // Countdown circle
+                        if viewModel.isConverterActive && viewModel.countdownSeconds > 0 {
+                            ZStack {
+                                Circle()
+                                    .stroke(Color.gray.opacity(0.3), lineWidth: 2)
+                                    .frame(width: 24, height: 24)
+                                
+                                Circle()
+                                    .trim(from: 0, to: viewModel.countdownProgress)
+                                    .stroke(Color.gray, lineWidth: 2)
+                                    .frame(width: 24, height: 24)
+                                    .rotationEffect(.degrees(-90))
+                                
+                                Text("\(viewModel.countdownSeconds)")
+                                    .font(.caption2)
+                                    .foregroundColor(.gray)
+                            }
                         }
                     }
                 }
@@ -177,9 +184,16 @@ struct WorldClockView: View {
                 .font(.title2)
                 .foregroundColor(.white)
             
-            Text("Add cities to track time around the world")
+            (Text("Add cities to track and convert time around the ")
+                .font(.body)
+                .foregroundColor(.gray) +
+             Text("world")
                 .font(.body)
                 .foregroundColor(.gray)
+                .strikethrough() +
+             Text(" universe.")
+                .font(.body)
+                .foregroundColor(.gray))
                 .multilineTextAlignment(.center)
             
             // Quick presets
@@ -370,12 +384,12 @@ struct WorldClockRow: View {
         if clock.cityName.contains("🧠") || clock.cityName.contains("💖") || clock.cityName.contains("🌍") || 
            clock.cityName.contains("🛡️") || clock.cityName.contains("👑") || clock.cityName.contains("🪐") || 
            clock.cityName.contains("🔭") || clock.cityName.contains("🌊") {
-            return isCurrentTimezone ? BananaTheme.Colors.bananaYellow : .white
+            return .white
         }
         
-        // In realtime mode: only user's timezone is yellow, others are white
+        // In realtime mode: all times are white
         if !viewModel.isConverterActive {
-            return isCurrentTimezone ? BananaTheme.Colors.bananaYellow : .white
+            return .white
         }
         
         // In converter mode: color code based on meeting time acceptability
@@ -404,18 +418,92 @@ struct WorldClockRow: View {
 struct CityPickerView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var searchText = ""
+    @State private var sortMode: SortMode = .utc
+    @State private var scrollTarget: String?
     let onSelect: (City) -> Void
     
+    enum SortMode: String, CaseIterable {
+        case utc = "UTC +/-"
+        case alphabetical = "A-Z"
+    }
+    
     private var filteredCities: [City] {
-        if searchText.isEmpty {
-            // Show cities first, then planets at the bottom
-            return City.popularCities + City.planets
-        } else {
-            return City.allCities.filter { 
-                $0.name.localizedCaseInsensitiveContains(searchText) ||
-                $0.country.localizedCaseInsensitiveContains(searchText)
-            }
+        let regularCities = searchText.isEmpty ? City.popularCities : City.allCities.filter { 
+            $0.name.localizedCaseInsensitiveContains(searchText) ||
+            $0.country.localizedCaseInsensitiveContains(searchText)
         }
+        
+        let planets = City.planets
+        
+        switch sortMode {
+        case .utc:
+            let sortedRegularCities = regularCities.sorted { city1, city2 in
+                let offset1 = city1.timeZone.secondsFromGMT() / 3600
+                let offset2 = city2.timeZone.secondsFromGMT() / 3600
+                return offset1 < offset2
+            }
+            return sortedRegularCities + planets
+        case .alphabetical:
+            let sortedRegularCities = regularCities.sorted { $0.name < $1.name }
+            return sortedRegularCities + planets
+        }
+    }
+    
+    private var groupedCities: [(String, [City])] {
+        let regularCities = filteredCities.filter { !$0.isPlanet }
+        let planets = filteredCities.filter { $0.isPlanet }
+        
+        var groups: [(String, [City])] = []
+        
+        switch sortMode {
+        case .utc:
+            let grouped = Dictionary(grouping: regularCities) { city in
+                let offset = city.timeZone.secondsFromGMT() / 3600
+                let sign = offset >= 0 ? "+" : ""
+                return "\(sign)\(offset)"
+            }
+            groups = grouped.sorted { group1, group2 in
+                let offset1 = Int(group1.key.replacingOccurrences(of: "+", with: "")) ?? 0
+                let offset2 = Int(group2.key.replacingOccurrences(of: "+", with: "")) ?? 0
+                return offset1 < offset2
+            }
+        case .alphabetical:
+            let grouped = Dictionary(grouping: regularCities) { city in
+                String(city.name.prefix(1).uppercased())
+            }
+            groups = grouped.sorted { $0.key < $1.key }
+        }
+        
+        // Add planets at the end
+        if !planets.isEmpty {
+            groups.append(("🪐 Planets", planets))
+        }
+        
+        return groups
+    }
+    
+    private var sectionIndexTitles: [String] {
+        var titles: [String] = []
+        
+        switch sortMode {
+        case .utc:
+            titles = Array(-12...14).map { offset in
+                let sign = offset >= 0 ? "+" : ""
+                return "\(sign)\(offset)"
+            }
+        case .alphabetical:
+            titles = Array("ABCDEFGHIJKLMNOPQRSTUVWXYZ").map(String.init)
+        }
+        
+        // Add planets section to index
+        titles.append("🪐")
+        
+        return titles
+    }
+    
+    private func scrollToSection(_ section: String) {
+        scrollTarget = section
+        HapticManager.shared.impact(.light)
     }
     
     var body: some View {
@@ -423,35 +511,113 @@ struct CityPickerView: View {
             ZStack {
                 Color.black.ignoresSafeArea()
                 
-                List(filteredCities) { city in
-                    Button {
-                        onSelect(city)
-                        dismiss()
-                    } label: {
-                        HStack {
-                            VStack(alignment: .leading) {
-                                Text(city.name)
+                VStack(spacing: 0) {
+                    // Sort Mode Toggle
+                    HStack(spacing: 0) {
+                        ForEach(SortMode.allCases, id: \.self) { mode in
+                            Button {
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    sortMode = mode
+                                }
+                            } label: {
+                                Text(mode.rawValue)
                                     .font(.headline)
-                                    .foregroundColor(.white)
-                                
-                                Text(city.country)
-                                    .font(.caption)
-                                    .foregroundColor(BananaTheme.Colors.textSecondary)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(sortMode == mode ? .black : .white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 12)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .fill(sortMode == mode ? BananaTheme.Colors.bananaYellow : Color.clear)
+                                    )
                             }
-                            
-                            Spacer()
-                            
-                            Text(city.currentTimeString)
-                                .font(.body)
-                                .foregroundColor(BananaTheme.Colors.textSecondary)
-                                .monospacedDigit()
                         }
-                        .padding(.vertical, 8)
                     }
-                    .listRowBackground(Color.clear)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                    
+                    // Cities List
+                    ScrollViewReader { proxy in
+                        List {
+                            ForEach(groupedCities, id: \.0) { section, cities in
+                                Section(header: 
+                                    Text(section)
+                                        .font(.headline)
+                                        .foregroundColor(BananaTheme.Colors.bananaYellow)
+                                        .textCase(nil)
+                                        .padding(.horizontal, 16)
+                                        .padding(.vertical, 8)
+                                        .id(section)
+                                ) {
+                                    ForEach(cities) { city in
+                                        Button {
+                                            onSelect(city)
+                                            dismiss()
+                                        } label: {
+                                            HStack {
+                                                VStack(alignment: .leading) {
+                                                    Text(city.name)
+                                                        .font(.headline)
+                                                        .foregroundColor(.white)
+                                                    
+                                                    Text(city.country)
+                                                        .font(.caption)
+                                                        .foregroundColor(BananaTheme.Colors.textSecondary)
+                                                }
+                                                
+                                                Spacer()
+                                                
+                                                Text(city.currentTimeString)
+                                                    .font(.body)
+                                                    .foregroundColor(BananaTheme.Colors.textSecondary)
+                                                    .monospacedDigit()
+                                            }
+                                            .padding(.vertical, 8)
+                                            .padding(.trailing, 40) // Add padding to avoid overlap with section index
+                                        }
+                                        .listRowBackground(Color.clear)
+                                    }
+                                }
+                            }
+                        }
+                        .onChange(of: scrollTarget) { target in
+                            if let target = target {
+                                withAnimation(.easeInOut(duration: 0.3)) {
+                                    proxy.scrollTo(target, anchor: .top)
+                                }
+                                scrollTarget = nil
+                            }
+                        }
+                    }
+                    .listStyle(.plain)
+                    .searchable(text: $searchText, prompt: "Search cities")
+                    .environment(\.defaultMinListRowHeight, 44)
+                    .scrollIndicators(.hidden)
+                    .overlay(
+                        // Section Index
+                        VStack {
+                            Spacer()
+                            HStack {
+                                Spacer()
+                                VStack(spacing: 2) {
+                                    ForEach(sectionIndexTitles, id: \.self) { title in
+                                        Button {
+                                            scrollToSection(title)
+                                        } label: {
+                                            Text(title)
+                                                .font(.caption2)
+                                                .fontWeight(.medium)
+                                                .foregroundColor(BananaTheme.Colors.bananaYellow)
+                                                .frame(width: 20, height: 16)
+                                        }
+                                    }
+                                }
+                                .padding(.trailing, 8)
+                            }
+                            Spacer()
+                        }
+                    )
                 }
-                .listStyle(.plain)
-                .searchable(text: $searchText, prompt: "Search cities")
             }
             .navigationTitle("Add City")
             .navigationBarTitleDisplayMode(.inline)
@@ -524,16 +690,170 @@ struct City: Identifiable {
     }
     
     static let popularCities = [
+        // UTC/GMT
+        City(name: "UTC", country: "UTC", timeZoneIdentifier: "UTC", isPlanet: false),
+        
+        // North America
         City(name: "New York", country: "United States", timeZoneIdentifier: "America/New_York", isPlanet: false),
+        City(name: "Los Angeles", country: "United States", timeZoneIdentifier: "America/Los_Angeles", isPlanet: false),
+        City(name: "Chicago", country: "United States", timeZoneIdentifier: "America/Chicago", isPlanet: false),
+        City(name: "Denver", country: "United States", timeZoneIdentifier: "America/Denver", isPlanet: false),
+        City(name: "Phoenix", country: "United States", timeZoneIdentifier: "America/Phoenix", isPlanet: false),
+        City(name: "Anchorage", country: "United States", timeZoneIdentifier: "America/Anchorage", isPlanet: false),
+        City(name: "Honolulu", country: "United States", timeZoneIdentifier: "Pacific/Honolulu", isPlanet: false),
+        City(name: "Toronto", country: "Canada", timeZoneIdentifier: "America/Toronto", isPlanet: false),
+        City(name: "Vancouver", country: "Canada", timeZoneIdentifier: "America/Vancouver", isPlanet: false),
+        City(name: "Mexico City", country: "Mexico", timeZoneIdentifier: "America/Mexico_City", isPlanet: false),
+        
+        // South America
+        City(name: "São Paulo", country: "Brazil", timeZoneIdentifier: "America/Sao_Paulo", isPlanet: false),
+        City(name: "Buenos Aires", country: "Argentina", timeZoneIdentifier: "America/Argentina/Buenos_Aires", isPlanet: false),
+        City(name: "Santiago", country: "Chile", timeZoneIdentifier: "America/Santiago", isPlanet: false),
+        City(name: "Lima", country: "Peru", timeZoneIdentifier: "America/Lima", isPlanet: false),
+        City(name: "Bogotá", country: "Colombia", timeZoneIdentifier: "America/Bogota", isPlanet: false),
+        City(name: "Caracas", country: "Venezuela", timeZoneIdentifier: "America/Caracas", isPlanet: false),
+        
+        // Europe
         City(name: "London", country: "United Kingdom", timeZoneIdentifier: "Europe/London", isPlanet: false),
         City(name: "Paris", country: "France", timeZoneIdentifier: "Europe/Paris", isPlanet: false),
+        City(name: "Berlin", country: "Germany", timeZoneIdentifier: "Europe/Berlin", isPlanet: false),
+        City(name: "Rome", country: "Italy", timeZoneIdentifier: "Europe/Rome", isPlanet: false),
+        City(name: "Madrid", country: "Spain", timeZoneIdentifier: "Europe/Madrid", isPlanet: false),
+        City(name: "Amsterdam", country: "Netherlands", timeZoneIdentifier: "Europe/Amsterdam", isPlanet: false),
+        City(name: "Stockholm", country: "Sweden", timeZoneIdentifier: "Europe/Stockholm", isPlanet: false),
+        City(name: "Oslo", country: "Norway", timeZoneIdentifier: "Europe/Oslo", isPlanet: false),
+        City(name: "Copenhagen", country: "Denmark", timeZoneIdentifier: "Europe/Copenhagen", isPlanet: false),
+        City(name: "Helsinki", country: "Finland", timeZoneIdentifier: "Europe/Helsinki", isPlanet: false),
+        City(name: "Warsaw", country: "Poland", timeZoneIdentifier: "Europe/Warsaw", isPlanet: false),
+        City(name: "Prague", country: "Czech Republic", timeZoneIdentifier: "Europe/Prague", isPlanet: false),
+        City(name: "Vienna", country: "Austria", timeZoneIdentifier: "Europe/Vienna", isPlanet: false),
+        City(name: "Budapest", country: "Hungary", timeZoneIdentifier: "Europe/Budapest", isPlanet: false),
+        City(name: "Bucharest", country: "Romania", timeZoneIdentifier: "Europe/Bucharest", isPlanet: false),
+        City(name: "Sofia", country: "Bulgaria", timeZoneIdentifier: "Europe/Sofia", isPlanet: false),
+        City(name: "Athens", country: "Greece", timeZoneIdentifier: "Europe/Athens", isPlanet: false),
+        City(name: "Istanbul", country: "Turkey", timeZoneIdentifier: "Europe/Istanbul", isPlanet: false),
+        City(name: "Moscow", country: "Russia", timeZoneIdentifier: "Europe/Moscow", isPlanet: false),
+        City(name: "Kiev", country: "Ukraine", timeZoneIdentifier: "Europe/Kiev", isPlanet: false),
+        City(name: "Minsk", country: "Belarus", timeZoneIdentifier: "Europe/Minsk", isPlanet: false),
+        City(name: "Riga", country: "Latvia", timeZoneIdentifier: "Europe/Riga", isPlanet: false),
+        City(name: "Tallinn", country: "Estonia", timeZoneIdentifier: "Europe/Tallinn", isPlanet: false),
+        City(name: "Vilnius", country: "Lithuania", timeZoneIdentifier: "Europe/Vilnius", isPlanet: false),
+        
+        // Africa
+        City(name: "Cairo", country: "Egypt", timeZoneIdentifier: "Africa/Cairo", isPlanet: false),
+        City(name: "Johannesburg", country: "South Africa", timeZoneIdentifier: "Africa/Johannesburg", isPlanet: false),
+        City(name: "Lagos", country: "Nigeria", timeZoneIdentifier: "Africa/Lagos", isPlanet: false),
+        City(name: "Nairobi", country: "Kenya", timeZoneIdentifier: "Africa/Nairobi", isPlanet: false),
+        City(name: "Casablanca", country: "Morocco", timeZoneIdentifier: "Africa/Casablanca", isPlanet: false),
+        City(name: "Algiers", country: "Algeria", timeZoneIdentifier: "Africa/Algiers", isPlanet: false),
+        City(name: "Tunis", country: "Tunisia", timeZoneIdentifier: "Africa/Tunis", isPlanet: false),
+        City(name: "Tripoli", country: "Libya", timeZoneIdentifier: "Africa/Tripoli", isPlanet: false),
+        City(name: "Khartoum", country: "Sudan", timeZoneIdentifier: "Africa/Khartoum", isPlanet: false),
+        City(name: "Addis Ababa", country: "Ethiopia", timeZoneIdentifier: "Africa/Addis_Ababa", isPlanet: false),
+        City(name: "Dar es Salaam", country: "Tanzania", timeZoneIdentifier: "Africa/Dar_es_Salaam", isPlanet: false),
+        City(name: "Kampala", country: "Uganda", timeZoneIdentifier: "Africa/Kampala", isPlanet: false),
+        City(name: "Kinshasa", country: "DR Congo", timeZoneIdentifier: "Africa/Kinshasa", isPlanet: false),
+        City(name: "Luanda", country: "Angola", timeZoneIdentifier: "Africa/Luanda", isPlanet: false),
+        City(name: "Windhoek", country: "Namibia", timeZoneIdentifier: "Africa/Windhoek", isPlanet: false),
+        City(name: "Harare", country: "Zimbabwe", timeZoneIdentifier: "Africa/Harare", isPlanet: false),
+        City(name: "Lusaka", country: "Zambia", timeZoneIdentifier: "Africa/Lusaka", isPlanet: false),
+        City(name: "Maputo", country: "Mozambique", timeZoneIdentifier: "Africa/Maputo", isPlanet: false),
+        City(name: "Antananarivo", country: "Madagascar", timeZoneIdentifier: "Indian/Antananarivo", isPlanet: false),
+        
+        // Asia
         City(name: "Tokyo", country: "Japan", timeZoneIdentifier: "Asia/Tokyo", isPlanet: false),
-        City(name: "Sydney", country: "Australia", timeZoneIdentifier: "Australia/Sydney", isPlanet: false),
-        City(name: "Dubai", country: "UAE", timeZoneIdentifier: "Asia/Dubai", isPlanet: false),
-        City(name: "Singapore", country: "Singapore", timeZoneIdentifier: "Asia/Singapore", isPlanet: false),
+        City(name: "Beijing", country: "China", timeZoneIdentifier: "Asia/Shanghai", isPlanet: false),
         City(name: "Hong Kong", country: "China", timeZoneIdentifier: "Asia/Hong_Kong", isPlanet: false),
-        City(name: "Los Angeles", country: "United States", timeZoneIdentifier: "America/Los_Angeles", isPlanet: false),
-        City(name: "Chicago", country: "United States", timeZoneIdentifier: "America/Chicago", isPlanet: false)
+        City(name: "Seoul", country: "South Korea", timeZoneIdentifier: "Asia/Seoul", isPlanet: false),
+        City(name: "Singapore", country: "Singapore", timeZoneIdentifier: "Asia/Singapore", isPlanet: false),
+        City(name: "Bangkok", country: "Thailand", timeZoneIdentifier: "Asia/Bangkok", isPlanet: false),
+        City(name: "Jakarta", country: "Indonesia", timeZoneIdentifier: "Asia/Jakarta", isPlanet: false),
+        City(name: "Manila", country: "Philippines", timeZoneIdentifier: "Asia/Manila", isPlanet: false),
+        City(name: "Kuala Lumpur", country: "Malaysia", timeZoneIdentifier: "Asia/Kuala_Lumpur", isPlanet: false),
+        City(name: "Hanoi", country: "Vietnam", timeZoneIdentifier: "Asia/Ho_Chi_Minh", isPlanet: false),
+        City(name: "Yangon", country: "Myanmar", timeZoneIdentifier: "Asia/Yangon", isPlanet: false),
+        City(name: "Phnom Penh", country: "Cambodia", timeZoneIdentifier: "Asia/Phnom_Penh", isPlanet: false),
+        City(name: "Vientiane", country: "Laos", timeZoneIdentifier: "Asia/Vientiane", isPlanet: false),
+        City(name: "Dhaka", country: "Bangladesh", timeZoneIdentifier: "Asia/Dhaka", isPlanet: false),
+        City(name: "Kathmandu", country: "Nepal", timeZoneIdentifier: "Asia/Kathmandu", isPlanet: false),
+        City(name: "Colombo", country: "Sri Lanka", timeZoneIdentifier: "Asia/Colombo", isPlanet: false),
+        City(name: "Mumbai", country: "India", timeZoneIdentifier: "Asia/Kolkata", isPlanet: false),
+        City(name: "New Delhi", country: "India", timeZoneIdentifier: "Asia/Kolkata", isPlanet: false),
+        City(name: "Karachi", country: "Pakistan", timeZoneIdentifier: "Asia/Karachi", isPlanet: false),
+        City(name: "Tashkent", country: "Uzbekistan", timeZoneIdentifier: "Asia/Tashkent", isPlanet: false),
+        City(name: "Almaty", country: "Kazakhstan", timeZoneIdentifier: "Asia/Almaty", isPlanet: false),
+        City(name: "Bishkek", country: "Kyrgyzstan", timeZoneIdentifier: "Asia/Bishkek", isPlanet: false),
+        City(name: "Dushanbe", country: "Tajikistan", timeZoneIdentifier: "Asia/Dushanbe", isPlanet: false),
+        City(name: "Ashgabat", country: "Turkmenistan", timeZoneIdentifier: "Asia/Ashgabat", isPlanet: false),
+        City(name: "Baku", country: "Azerbaijan", timeZoneIdentifier: "Asia/Baku", isPlanet: false),
+        City(name: "Tbilisi", country: "Georgia", timeZoneIdentifier: "Asia/Tbilisi", isPlanet: false),
+        City(name: "Yerevan", country: "Armenia", timeZoneIdentifier: "Asia/Yerevan", isPlanet: false),
+        City(name: "Tehran", country: "Iran", timeZoneIdentifier: "Asia/Tehran", isPlanet: false),
+        City(name: "Baghdad", country: "Iraq", timeZoneIdentifier: "Asia/Baghdad", isPlanet: false),
+        City(name: "Riyadh", country: "Saudi Arabia", timeZoneIdentifier: "Asia/Riyadh", isPlanet: false),
+        City(name: "Kuwait City", country: "Kuwait", timeZoneIdentifier: "Asia/Kuwait", isPlanet: false),
+        City(name: "Doha", country: "Qatar", timeZoneIdentifier: "Asia/Qatar", isPlanet: false),
+        City(name: "Abu Dhabi", country: "UAE", timeZoneIdentifier: "Asia/Dubai", isPlanet: false),
+        City(name: "Muscat", country: "Oman", timeZoneIdentifier: "Asia/Muscat", isPlanet: false),
+        City(name: "Sana'a", country: "Yemen", timeZoneIdentifier: "Asia/Aden", isPlanet: false),
+        City(name: "Amman", country: "Jordan", timeZoneIdentifier: "Asia/Amman", isPlanet: false),
+        City(name: "Beirut", country: "Lebanon", timeZoneIdentifier: "Asia/Beirut", isPlanet: false),
+        City(name: "Damascus", country: "Syria", timeZoneIdentifier: "Asia/Damascus", isPlanet: false),
+        City(name: "Jerusalem", country: "Israel", timeZoneIdentifier: "Asia/Jerusalem", isPlanet: false),
+        City(name: "Nicosia", country: "Cyprus", timeZoneIdentifier: "Asia/Nicosia", isPlanet: false),
+        City(name: "Yekaterinburg", country: "Russia", timeZoneIdentifier: "Asia/Yekaterinburg", isPlanet: false),
+        City(name: "Novosibirsk", country: "Russia", timeZoneIdentifier: "Asia/Novosibirsk", isPlanet: false),
+        City(name: "Krasnoyarsk", country: "Russia", timeZoneIdentifier: "Asia/Krasnoyarsk", isPlanet: false),
+        City(name: "Irkutsk", country: "Russia", timeZoneIdentifier: "Asia/Irkutsk", isPlanet: false),
+        City(name: "Yakutsk", country: "Russia", timeZoneIdentifier: "Asia/Yakutsk", isPlanet: false),
+        City(name: "Vladivostok", country: "Russia", timeZoneIdentifier: "Asia/Vladivostok", isPlanet: false),
+        City(name: "Magadan", country: "Russia", timeZoneIdentifier: "Asia/Magadan", isPlanet: false),
+        City(name: "Kamchatka", country: "Russia", timeZoneIdentifier: "Asia/Kamchatka", isPlanet: false),
+        
+        // Oceania
+        City(name: "Sydney", country: "Australia", timeZoneIdentifier: "Australia/Sydney", isPlanet: false),
+        City(name: "Melbourne", country: "Australia", timeZoneIdentifier: "Australia/Melbourne", isPlanet: false),
+        City(name: "Brisbane", country: "Australia", timeZoneIdentifier: "Australia/Brisbane", isPlanet: false),
+        City(name: "Perth", country: "Australia", timeZoneIdentifier: "Australia/Perth", isPlanet: false),
+        City(name: "Adelaide", country: "Australia", timeZoneIdentifier: "Australia/Adelaide", isPlanet: false),
+        City(name: "Darwin", country: "Australia", timeZoneIdentifier: "Australia/Darwin", isPlanet: false),
+        City(name: "Auckland", country: "New Zealand", timeZoneIdentifier: "Pacific/Auckland", isPlanet: false),
+        City(name: "Wellington", country: "New Zealand", timeZoneIdentifier: "Pacific/Auckland", isPlanet: false),
+        City(name: "Port Moresby", country: "Papua New Guinea", timeZoneIdentifier: "Pacific/Port_Moresby", isPlanet: false),
+        City(name: "Fiji", country: "Fiji", timeZoneIdentifier: "Pacific/Fiji", isPlanet: false),
+        City(name: "Noumea", country: "New Caledonia", timeZoneIdentifier: "Pacific/Noumea", isPlanet: false),
+        City(name: "Port Vila", country: "Vanuatu", timeZoneIdentifier: "Pacific/Efate", isPlanet: false),
+        City(name: "Honiara", country: "Solomon Islands", timeZoneIdentifier: "Pacific/Guadalcanal", isPlanet: false),
+        City(name: "Palikir", country: "Micronesia", timeZoneIdentifier: "Pacific/Pohnpei", isPlanet: false),
+        City(name: "Majuro", country: "Marshall Islands", timeZoneIdentifier: "Pacific/Majuro", isPlanet: false),
+        City(name: "Tarawa", country: "Kiribati", timeZoneIdentifier: "Pacific/Tarawa", isPlanet: false),
+        City(name: "Funafuti", country: "Tuvalu", timeZoneIdentifier: "Pacific/Funafuti", isPlanet: false),
+        City(name: "Apia", country: "Samoa", timeZoneIdentifier: "Pacific/Apia", isPlanet: false),
+        City(name: "Nuku'alofa", country: "Tonga", timeZoneIdentifier: "Pacific/Tongatapu", isPlanet: false),
+        City(name: "Papeete", country: "French Polynesia", timeZoneIdentifier: "Pacific/Tahiti", isPlanet: false),
+        City(name: "Honolulu", country: "United States", timeZoneIdentifier: "Pacific/Honolulu", isPlanet: false),
+        City(name: "Anchorage", country: "United States", timeZoneIdentifier: "America/Anchorage", isPlanet: false),
+        
+        // Atlantic Islands
+        City(name: "Reykjavik", country: "Iceland", timeZoneIdentifier: "Atlantic/Reykjavik", isPlanet: false),
+        City(name: "Azores", country: "Portugal", timeZoneIdentifier: "Atlantic/Azores", isPlanet: false),
+        City(name: "Cape Verde", country: "Cape Verde", timeZoneIdentifier: "Atlantic/Cape_Verde", isPlanet: false),
+        City(name: "Canary Islands", country: "Spain", timeZoneIdentifier: "Atlantic/Canary", isPlanet: false),
+        City(name: "Madeira", country: "Portugal", timeZoneIdentifier: "Atlantic/Madeira", isPlanet: false),
+        City(name: "St. Helena", country: "St. Helena", timeZoneIdentifier: "Atlantic/St_Helena", isPlanet: false),
+        City(name: "South Georgia", country: "South Georgia", timeZoneIdentifier: "Atlantic/South_Georgia", isPlanet: false),
+        City(name: "Falkland Islands", country: "Falkland Islands", timeZoneIdentifier: "Atlantic/Stanley", isPlanet: false),
+        
+        // Indian Ocean
+        City(name: "Mauritius", country: "Mauritius", timeZoneIdentifier: "Indian/Mauritius", isPlanet: false),
+        City(name: "Seychelles", country: "Seychelles", timeZoneIdentifier: "Indian/Mahe", isPlanet: false),
+        City(name: "Comoros", country: "Comoros", timeZoneIdentifier: "Indian/Comoro", isPlanet: false),
+        City(name: "Mayotte", country: "Mayotte", timeZoneIdentifier: "Indian/Mayotte", isPlanet: false),
+        City(name: "Reunion", country: "Reunion", timeZoneIdentifier: "Indian/Reunion", isPlanet: false),
+        City(name: "Chagos", country: "British Indian Ocean Territory", timeZoneIdentifier: "Indian/Chagos", isPlanet: false),
+        City(name: "Maldives", country: "Maldives", timeZoneIdentifier: "Indian/Maldives", isPlanet: false),
+        City(name: "Cocos Islands", country: "Cocos Islands", timeZoneIdentifier: "Indian/Cocos", isPlanet: false),
+        City(name: "Christmas Island", country: "Christmas Island", timeZoneIdentifier: "Indian/Christmas", isPlanet: false)
     ]
     
     static let planets = [
@@ -771,6 +1091,13 @@ class WorldClockViewModel: ObservableObject {
     }
     
     func addClock(for city: City) {
+        // Check if a clock with the same timezone already exists
+        if clocks.contains(where: { $0.timeZoneIdentifier == city.timeZoneIdentifier }) {
+            // City already exists, don't add duplicate
+            HapticManager.shared.impact(.medium)
+            return
+        }
+        
         let clock = WorldClock(city: city, displayOrder: clocks.count)
         clocks.append(clock)
         updateDisplayOrder()

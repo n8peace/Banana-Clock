@@ -8,28 +8,38 @@
 import SwiftUI
 import CoreData
 // import Supabase  // Temporarily disabled until package is added
-// import RevenueCat  // Temporarily disabled until package is added
+import RevenueCat
 
 @main
 struct BananaClockApp: App {
     @StateObject private var coreDataManager = CoreDataManager.shared
     @StateObject private var appState = AppState()
+    @StateObject private var purchaseService = PurchaseService.shared
     // @Environment(\.scenePhase) private var scenePhase  // Temporarily disabled
-    
-    init() {
-        configureApp()
-    }
     
     var body: some Scene {
         WindowGroup {
-            MainTabView()
-                .environment(\.managedObjectContext, coreDataManager.viewContext)
-                .environmentObject(coreDataManager)
-                .environmentObject(appState)
-                .preferredColorScheme(.dark)
-                // .onChange(of: scenePhase) { oldPhase, newPhase in
-                //     handleScenePhaseChange(from: oldPhase, to: newPhase)
-                // }
+            Group {
+                if purchaseService.isSubscribed {
+                    MainTabView()
+                        .environment(\.managedObjectContext, coreDataManager.viewContext)
+                        .environmentObject(coreDataManager)
+                        .environmentObject(appState)
+                } else {
+                    // Show main interface in demo mode if RevenueCat isn't configured
+                    MainTabView()
+                        .environment(\.managedObjectContext, coreDataManager.viewContext)
+                        .environmentObject(coreDataManager)
+                        .environmentObject(appState)
+                }
+            }
+            .preferredColorScheme(.dark)
+            .onAppear {
+                configureApp()
+            }
+            // .onChange(of: scenePhase) { oldPhase, newPhase in
+            //     handleScenePhaseChange(from: oldPhase, to: newPhase)
+            // }
         }
     }
     
@@ -38,7 +48,7 @@ struct BananaClockApp: App {
         // SupabaseService.shared.configure()  // Temporarily disabled
         
         // Configure RevenueCat
-        // PurchaseService.shared.configure()  // Temporarily disabled
+        purchaseService.configure()
         
         // Configure appearance
         configureAppearance()
@@ -98,7 +108,6 @@ struct BananaClockApp: App {
 // MARK: - App State
 @MainActor
 class AppState: ObservableObject {
-    @Published var isSubscribed = false
     @Published var selectedTab: MainTabView.Tab = .alarms
     
     private let userDefaults = UserDefaults.standard
@@ -108,13 +117,9 @@ class AppState: ObservableObject {
     }
     
     func refreshData() async {
-        // Refresh user subscription status
-        // isSubscribed = await PurchaseService.shared.hasActiveSubscription()  // Temporarily disabled
-        
         // Trigger AI content generation for tomorrow's AI alarms
-        if isSubscribed {
-            await generateAIContentForTomorrow()
-        }
+        // This will only run if user is subscribed (checked in main app)
+        await generateAIContentForTomorrow()
     }
     
     private func generateAIContentForTomorrow() async {

@@ -79,7 +79,7 @@ struct AlarmsView: View {
             
             Text("A banana a day keeps the doctor away")
                 .font(.body)
-                .foregroundColor(BananaTheme.Colors.textSecondary)
+                .foregroundColor(.gray)
                 .multilineTextAlignment(.center)
             
             BananaButton("Add Alarm", icon: "plus") {
@@ -92,32 +92,114 @@ struct AlarmsView: View {
     
     private var alarmsList: some View {
         List {
-            ForEach(viewModel.alarms) { alarm in
+            // Wake Up section
+            if let wakeUpAlarm = viewModel.wakeUpAlarm {
+                // Section header
+                HStack {
+                    Text("Wake Up")
+                        .font(BananaTheme.Typography.title3)
+                        .foregroundColor(BananaTheme.Colors.textPrimary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .padding(.vertical, BananaTheme.Spacing.sm)
+                .padding(.horizontal, BananaTheme.Spacing.md)
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+                
+                // Wake Up alarm row
                 let isEnabledBinding = Binding(
-                    get: { alarm.isEnabled },
+                    get: { wakeUpAlarm.isEnabled },
                     set: { newValue in
                         Task {
-                            await viewModel.toggleAlarm(alarm, isEnabled: newValue)
+                            await viewModel.toggleAlarm(wakeUpAlarm, isEnabled: newValue)
                         }
                     }
                 )
                 
                 AlarmRow(
-                    alarm: alarm,
+                    alarm: wakeUpAlarm,
                     isEnabled: isEnabledBinding,
                     onTap: {
-                        selectedAlarm = alarm
+                        selectedAlarm = wakeUpAlarm
                     }
                 )
                 .listRowBackground(Color.clear)
                 .listRowSeparator(.hidden)
                 .listRowInsets(EdgeInsets())
             }
-            .onDelete { indexSet in
-                Task {
-                    await viewModel.deleteAlarms(at: indexSet)
+            
+            // Other alarms section
+            if !viewModel.otherAlarms.isEmpty {
+                // Section header
+                HStack {
+                    Text("Other")
+                        .font(BananaTheme.Typography.title3)
+                        .foregroundColor(BananaTheme.Colors.textPrimary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
+                .padding(.vertical, BananaTheme.Spacing.sm)
+                .padding(.horizontal, BananaTheme.Spacing.md)
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+                
+                // Other alarm rows
+                ForEach(viewModel.otherAlarms) { alarm in
+                    let isEnabledBinding = Binding(
+                        get: { alarm.isEnabled },
+                        set: { newValue in
+                            Task {
+                                await viewModel.toggleAlarm(alarm, isEnabled: newValue)
+                            }
+                        }
+                    )
+                    
+                    AlarmRow(
+                        alarm: alarm,
+                        isEnabled: isEnabledBinding,
+                        onTap: {
+                            selectedAlarm = alarm
+                        }
+                    )
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets())
+                }
+                .onDelete { indexSet in
+                    Task {
+                        await viewModel.deleteAlarms(at: indexSet)
+                    }
+                }
+            } else if viewModel.wakeUpAlarm != nil {
+                // Empty state for Other section when only wake-up alarm exists
+                VStack(spacing: BananaTheme.Spacing.lg) {
+                    Image(systemName: "alarm")
+                        .font(.system(size: 64))
+                        .foregroundColor(BananaTheme.Colors.textTertiary)
+                    
+                    Text("No Other Alarms")
+                        .font(.title2)
+                        .foregroundColor(BananaTheme.Colors.textPrimary)
+                    
+                    Text("A banana a day keeps the doctor away")
+                        .font(.body)
+                        .foregroundColor(.gray)
+                        .multilineTextAlignment(.center)
+                    
+                    BananaButton("Add Alarm", icon: "plus") {
+                        showingAddAlarm = true
+                    }
+                    .frame(width: 200)
+                }
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding()
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets())
             }
+            
+
         }
         .listStyle(.plain)
         .environment(\.editMode, isEditing ? .constant(.active) : .constant(.inactive))
@@ -128,7 +210,7 @@ struct AlarmsView: View {
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .navigationBarLeading) {
-            if !viewModel.alarms.isEmpty {
+            if !viewModel.otherAlarms.isEmpty {
                 Button(isEditing ? "Done" : "Edit") {
                     withAnimation {
                         isEditing.toggle()

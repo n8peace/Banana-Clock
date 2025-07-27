@@ -12,6 +12,7 @@ ios-app/Pods/
 ios-app/Podfile.lock
 ios-app/*.ipa
 ios-app/*.dSYM*
+ios/BananaClock/App/Config/Secrets.swift
 
 # Node.js
 node_modules/

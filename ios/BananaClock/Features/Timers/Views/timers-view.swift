@@ -12,7 +12,7 @@ struct TimersView: View {
     @StateObject private var viewModel = TimersViewModel()
     @EnvironmentObject var appState: AppState
     @State private var showingAddTimer = false
-    @State private var showingPaywall = false
+
     @State private var isEditing = false
     
     var body: some View {
@@ -94,9 +94,7 @@ struct TimersView: View {
                 viewModel.startTimer(duration: duration, label: label, soundIdentifier: soundIdentifier)
             }
         }
-        .sheet(isPresented: $showingPaywall) {
-            PaywallView()
-        }
+
         .onAppear {
             viewModel.cleanupOldTimers()
         }

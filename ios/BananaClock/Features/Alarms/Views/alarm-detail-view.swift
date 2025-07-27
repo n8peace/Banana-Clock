@@ -15,16 +15,20 @@ struct AlarmDetailView: View {
     @State private var label: String
     @State private var isAIEnabled: Bool
     @State private var selectedSound: AlarmSound
-    @State private var snoozeLength: Int
+    @State private var snoozeLength: Int?
     @State private var repeatDays: Set<Alarm.Weekday>
     @State private var volume: Float
-    @State private var vibrationEnabled: Bool
-    @State private var showingPaywall = false
+
     @State private var showingDeleteConfirmation = false
     
     let alarm: Alarm?
     let onSave: (Alarm) -> Void
     let onDelete: ((Alarm) -> Void)?
+    
+    // Computed property to check if this is a wake-up alarm
+    private var isWakeUpAlarm: Bool {
+        alarm?.isWakeUpAlarm ?? false
+    }
     
     init(alarm: Alarm?, onSave: @escaping (Alarm) -> Void, onDelete: ((Alarm) -> Void)? = nil) {
         self.alarm = alarm
@@ -38,8 +42,7 @@ struct AlarmDetailView: View {
         _selectedSound = State(initialValue: AlarmSound(rawValue: alarm?.soundIdentifier ?? "default") ?? .default)
         _snoozeLength = State(initialValue: alarm?.snoozeLength ?? 9)
         _repeatDays = State(initialValue: Set(alarm?.repeatDays ?? []))
-        _volume = State(initialValue: alarm?.volume ?? 0.8)
-        _vibrationEnabled = State(initialValue: alarm?.vibrationEnabled ?? true)
+        _volume = State(initialValue: alarm?.volume ?? 0.7)
     }
     
     var body: some View {
@@ -58,36 +61,37 @@ struct AlarmDetailView: View {
                         
                         // Options
                         VStack(spacing: 0) {
-                            // Label
-                            SettingsRow(title: "Label") {
-                                TextField("Alarm", text: $label)
-                                    .multilineTextAlignment(.trailing)
-                                    .foregroundColor(.white)
-                            }
-                            
-                            Divider().background(BananaTheme.Colors.divider)
-                            
-                            // AI Wake-up
-                            HStack {
-                                HStack {
-                                    Image(systemName: "sparkles")
-                                        .foregroundColor(BananaTheme.Colors.bananaYellow)
-                                    Text("AI Wake-up")
-                                        .foregroundColor(.textPrimary)
-                                    Spacer()
+                            // Label - only for non-wake-up alarms
+                            if !isWakeUpAlarm {
+                                SettingsRow(title: "Label") {
+                                    TextField("Alarm", text: $label)
+                                        .multilineTextAlignment(.trailing)
+                                        .foregroundColor(.white)
                                 }
-                                Toggle("", isOn: $isAIEnabled)
-                                    .labelsHidden()
-                                    .onChange(of: isAIEnabled) { _, newValue in
-                                        if newValue && !appState.isSubscribed {
-                                            isAIEnabled = false
-                                            showingPaywall = true
-                                        }
-                                    }
+                                
+                                Divider().background(BananaTheme.Colors.divider)
                             }
-                            .padding(.vertical, BSpacing.sm)
                             
-                            Divider().background(BananaTheme.Colors.divider)
+                            // AI Wake-up - only show for wake-up alarms
+                            if isWakeUpAlarm {
+                                HStack {
+                                    HStack {
+                                        Text("🍌🧠")
+                                            .font(.title2)
+                                        Text("Wake Up")
+                                            .foregroundColor(.textPrimary)
+                                        Spacer()
+                                    }
+                                    Toggle("", isOn: $isAIEnabled)
+                                        .labelsHidden()
+                                        .onChange(of: isAIEnabled) { _, newValue in
+                                            // AI features are now available to all subscribed users
+                                        }
+                                }
+                                .padding(.vertical, BSpacing.sm)
+                                
+                                Divider().background(BananaTheme.Colors.divider)
+                            }
                             
                             // Sound
                             NavigationLink {
@@ -114,12 +118,13 @@ struct AlarmDetailView: View {
                                     .foregroundColor(.textPrimary)
                                 Spacer()
                                 Picker("", selection: $snoozeLength) {
+                                    Text("Off").tag(nil as Int?)
                                     ForEach(1...15, id: \.self) { minutes in
-                                        Text("\(minutes) min").tag(minutes)
+                                        Text("\(minutes) min").tag(minutes as Int?)
                                     }
                                 }
                                 .pickerStyle(.menu)
-                                .accentColor(BananaTheme.Colors.bananaYellow)
+                                .accentColor(BananaTheme.Colors.textSecondary)
                             }
                             .padding(.vertical, BSpacing.sm)
                             
@@ -161,22 +166,12 @@ struct AlarmDetailView: View {
                             }
                             
                             Divider().background(BananaTheme.Colors.divider)
-                            
-                            // Vibration
-                            HStack {
-                                Text("Vibration")
-                                    .foregroundColor(.textPrimary)
-                                Spacer()
-                                Toggle("", isOn: $vibrationEnabled)
-                                    .labelsHidden()
-                            }
-                            .padding(.vertical, BSpacing.sm)
                         }
                         .bananaCard()
                         .padding()
                         
-                        // Delete button (for existing alarms)
-                        if alarm != nil {
+                        // Delete button (for existing alarms, but not wake-up alarms)
+                        if alarm != nil && !isWakeUpAlarm {
                             Button {
                                 showingDeleteConfirmation = true
                             } label: {
@@ -208,9 +203,7 @@ struct AlarmDetailView: View {
                 }
             }
         }
-        .sheet(isPresented: $showingPaywall) {
-            PaywallView()
-        }
+
         .alert("Delete Alarm", isPresented: $showingDeleteConfirmation) {
             Button("Delete", role: .destructive) {
                 if let alarm = alarm, let onDelete = onDelete {
@@ -246,14 +239,16 @@ struct AlarmDetailView: View {
         let newAlarm = Alarm(
             id: alarm?.id ?? UUID(),
             time: time,
-            label: label,
+            label: isWakeUpAlarm ? "Wake Up" : label, // Use fixed label for wake-up alarms
             isEnabled: true,
             isAIEnabled: isAIEnabled,
             soundIdentifier: selectedSound.rawValue,
             snoozeLength: snoozeLength,
             repeatDays: Array(repeatDays),
             volume: volume,
-            vibrationEnabled: vibrationEnabled,
+            isWakeUpAlarm: isWakeUpAlarm,
+
+            lastUsedAt: alarm?.lastUsedAt ?? Date(),
             createdAt: alarm?.createdAt ?? Date(),
             updatedAt: Date()
         )
