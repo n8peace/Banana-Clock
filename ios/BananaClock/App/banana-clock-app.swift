@@ -7,7 +7,7 @@
 
 import SwiftUI
 import CoreData
-// import Supabase  // Temporarily disabled until package is added
+import Supabase
 import RevenueCat
 
 @main
@@ -45,7 +45,7 @@ struct BananaClockApp: App {
     
     private func configureApp() {
         // Configure Supabase (for AI features only)
-        // SupabaseService.shared.configure()  // Temporarily disabled
+        SupabaseService.shared.configure()
         
         // Configure RevenueCat
         purchaseService.configure()

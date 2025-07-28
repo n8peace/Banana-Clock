@@ -221,11 +221,57 @@ struct AlarmsView: View {
         }
         
         ToolbarItem(placement: .navigationBarTrailing) {
-            Button {
-                showingAddAlarm = true
-            } label: {
-                Image(systemName: "plus")
-                    .foregroundColor(BananaTheme.Colors.bananaYellow)
+            HStack(spacing: 16) {
+                // Test Supabase button
+                Button("Test Supabase") {
+                    Task {
+                        await testSupabaseConnection()
+                    }
+                }
+                .font(.caption)
+                .foregroundColor(BananaTheme.Colors.bananaYellow)
+                
+                Button {
+                    showingAddAlarm = true
+                } label: {
+                    Image(systemName: "plus")
+                        .foregroundColor(BananaTheme.Colors.bananaYellow)
+                }
+            }
+        }
+    }
+    
+    private func testSupabaseConnection() async {
+        let supabaseService = SupabaseService.shared
+        
+        print("🔍 Testing Supabase connection...")
+        print("📱 Is configured: \(supabaseService.isConfigured)")
+        print("👤 Is authenticated: \(supabaseService.isAuthenticated)")
+        
+        if let currentUser = supabaseService.currentUser {
+            print("✅ Current user: \(currentUser.email)")
+        } else {
+            print("❌ No current user")
+            
+            // Try to sign up a test user
+            do {
+                let testEmail = "testuser_\(Int(Date().timeIntervalSince1970))@example.com"
+                let testPassword = "TestPassword123!"
+                
+                print("🔄 Attempting to sign up test user: \(testEmail)")
+                
+                let user = try await supabaseService.signUp(email: testEmail, password: testPassword)
+                print("✅ Successfully signed up user: \(user.email)")
+                
+                // Try to sync preferences
+                if let preferences = try await supabaseService.syncUserPreferences() {
+                    print("✅ Successfully synced preferences: \(preferences.timezone)")
+                } else {
+                    print("⚠️ No preferences found (this is normal for new users)")
+                }
+                
+            } catch {
+                print("❌ Supabase test failed: \(error.localizedDescription)")
             }
         }
     }
