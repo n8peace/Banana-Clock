@@ -48,15 +48,13 @@ class SupabaseService: ObservableObject {
             password: password
         )
         
-        guard let user = response.user else {
-            throw SupabaseError.authenticationFailed
-        }
+        let user = response.user
         
         currentUser = User(
             id: user.id,
             email: user.email ?? "",
             hasActiveSubscription: false,
-            createdAt: user.createdAt ?? Date()
+            createdAt: user.createdAt
         )
         isAuthenticated = true
         
@@ -71,15 +69,13 @@ class SupabaseService: ObservableObject {
             password: password
         )
         
-        guard let user = response.user else {
-            throw SupabaseError.registrationFailed
-        }
+        let user = response.user
         
         currentUser = User(
             id: user.id,
             email: user.email ?? "",
             hasActiveSubscription: false,
-            createdAt: user.createdAt ?? Date()
+            createdAt: user.createdAt
         )
         isAuthenticated = true
         
@@ -103,15 +99,14 @@ class SupabaseService: ObservableObject {
         Task {
             do {
                 let session = try await client.auth.session
-                if let user = session.user {
-                    currentUser = User(
-                        id: user.id,
-                        email: user.email ?? "",
-                        hasActiveSubscription: false,
-                        createdAt: user.createdAt ?? Date()
-                    )
-                    isAuthenticated = true
-                }
+                let user = session.user
+                currentUser = User(
+                    id: user.id,
+                    email: user.email ?? "",
+                    hasActiveSubscription: false,
+                    createdAt: user.createdAt
+                )
+                isAuthenticated = true
             } catch {
                 print("Authentication check failed: \(error)")
             }
@@ -159,18 +154,18 @@ class SupabaseService: ObservableObject {
             throw SupabaseError.notAuthenticated
         }
         
-        let updateData: [String: Any] = [
-            "timezone": preferences.timezone,
-            "location_zip": preferences.locationZip ?? "",
-            "name": preferences.name ?? "",
-            "city": preferences.city ?? "",
-            "state": preferences.state ?? "",
-            "voice": preferences.voice.rawValue,
-            "weather_enabled": preferences.weatherEnabled,
-            "headlines_categories": preferences.headlinesCategories,
-            "sports_categories": preferences.sportsCategories,
-            "last_sync_at": ISO8601DateFormatter().string(from: Date())
-        ]
+        let updateData = UpdateUserPreferencesRequest(
+            timezone: preferences.timezone,
+            locationZip: preferences.locationZip ?? "",
+            name: preferences.name ?? "",
+            city: preferences.city ?? "",
+            state: preferences.state ?? "",
+            voice: preferences.voice.rawValue,
+            weatherEnabled: preferences.weatherEnabled,
+            headlinesCategories: preferences.headlinesCategories,
+            sportsCategories: preferences.sportsCategories,
+            lastSyncAt: ISO8601DateFormatter().string(from: Date())
+        )
         
         try await client
             .from("user_preferences")
@@ -182,16 +177,16 @@ class SupabaseService: ObservableObject {
     private func createUserPreferences(userId: UUID) async throws {
         guard let client = client else { throw SupabaseError.notConfigured }
         
-        let preferences: [String: Any] = [
-            "user_id": userId.uuidString,
-            "timezone": TimeZone.current.identifier,
-            "location_zip": "",
-            "voice": AIVoiceOption.voice1.rawValue,
-            "weather_enabled": false,
-            "headlines_categories": ["business", "technology"],
-            "sports_categories": ["football", "basketball"],
-            "last_sync_at": ISO8601DateFormatter().string(from: Date())
-        ]
+        let preferences = CreateUserPreferencesRequest(
+            userId: userId.uuidString,
+            timezone: TimeZone.current.identifier,
+            locationZip: "",
+            voice: AIVoiceOption.voice1.rawValue,
+            weatherEnabled: false,
+            headlinesCategories: ["business", "technology"],
+            sportsCategories: ["football", "basketball"],
+            lastSyncAt: ISO8601DateFormatter().string(from: Date())
+        )
         
         try await client
             .from("user_preferences")
@@ -483,6 +478,55 @@ struct LogEvent: Codable {
         case status
         case message
         case metadata
+    }
+}
+
+// MARK: - Request Models
+struct CreateUserPreferencesRequest: Codable {
+    let userId: String
+    let timezone: String
+    let locationZip: String
+    let voice: String
+    let weatherEnabled: Bool
+    let headlinesCategories: [String]
+    let sportsCategories: [String]
+    let lastSyncAt: String
+    
+    private enum CodingKeys: String, CodingKey {
+        case userId = "user_id"
+        case timezone
+        case locationZip = "location_zip"
+        case voice
+        case weatherEnabled = "weather_enabled"
+        case headlinesCategories = "headlines_categories"
+        case sportsCategories = "sports_categories"
+        case lastSyncAt = "last_sync_at"
+    }
+}
+
+struct UpdateUserPreferencesRequest: Codable {
+    let timezone: String
+    let locationZip: String
+    let name: String
+    let city: String
+    let state: String
+    let voice: String
+    let weatherEnabled: Bool
+    let headlinesCategories: [String]
+    let sportsCategories: [String]
+    let lastSyncAt: String
+    
+    private enum CodingKeys: String, CodingKey {
+        case timezone
+        case locationZip = "location_zip"
+        case name
+        case city
+        case state
+        case voice
+        case weatherEnabled = "weather_enabled"
+        case headlinesCategories = "headlines_categories"
+        case sportsCategories = "sports_categories"
+        case lastSyncAt = "last_sync_at"
     }
 }
 
