@@ -44,8 +44,12 @@ struct BananaClockApp: App {
     }
     
     private func configureApp() {
+        print("🚀 App starting configuration...")
+        
         // Configure Supabase (for AI features only)
+        print("🔧 About to configure Supabase...")
         SupabaseService.shared.configure()
+        print("🔧 Supabase configuration completed")
         
         // Configure RevenueCat
         purchaseService.configure()
