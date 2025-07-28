@@ -22,16 +22,31 @@ enum AppEnvironment {
     
     // MARK: - API Keys (from environment or Info.plist)
     static var supabaseAnonKey: String {
+        print("🔍 Loading Supabase key...")
+        
         // First try environment variable (for CI/CD with GitHub secrets)
         if let key = ProcessInfo.processInfo.environment["SUPABASE_ANON_KEY"] {
+            print("✅ Found key in environment variable")
             return key
         }
+        
         // Then try Secrets.swift (for local development)
+        print("🔍 Checking Secrets.swift...")
+        print("🔍 Secrets.supabaseAnonKey: \(Secrets.supabaseAnonKey)")
+        print("🔍 Contains 'YOUR_': \(Secrets.supabaseAnonKey.contains("YOUR_"))")
+        
         if !Secrets.supabaseAnonKey.contains("YOUR_") {
+            print("✅ Using key from Secrets.swift")
             return Secrets.supabaseAnonKey
         }
+        
         // Finally fallback to Info.plist
-        return Bundle.main.object(forInfoDictionaryKey: "SUPABASE_ANON_KEY") as? String ?? ""
+        print("🔍 Checking Info.plist...")
+        let plistKey = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_ANON_KEY") as? String ?? ""
+        print("🔍 Info.plist key: \(plistKey)")
+        
+        print("❌ No valid key found, returning empty string")
+        return ""
     }
     
     static var revenueCatAPIKey: String {
