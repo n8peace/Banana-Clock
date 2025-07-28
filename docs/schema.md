@@ -129,6 +129,10 @@ A unified approach to content management that separates content generation from 
 | `city` | VARCHAR(100) | User's city for location-based content matching |
 | `state` | VARCHAR(2) | User's state (2-letter code) for location-based content matching |
 | `voice` | VARCHAR(100) | ElevenLabs voice identifier for user preference |
+| `weather_enabled` | BOOLEAN | Whether weather content is enabled for AI wake-up |
+| `headlines_categories` | JSONB | Array of headlines categories for AI wake-up content |
+| `sports_categories` | JSONB | Array of sports categories for AI wake-up content |
+| `last_sync_at` | TIMESTAMP WITH TIME ZONE | Last time preferences were synced from iOS app |
 | `created_at` | TIMESTAMP WITH TIME ZONE | When the record was created |
 | `updated_at` | TIMESTAMP WITH TIME ZONE | Last modification to the record |
 
@@ -140,6 +144,13 @@ The following preferences are managed by the app and passed as parameters during
 - **Philosophical approach** - Stoic, Buddhist, Christian, etc.
 - **Challenge preferences** - Math, logic, trivia, etc.
 
+**iOS AI Preferences**:
+The following preferences are managed by the iOS app for AI wake-up functionality:
+- **Weather enabled** - Boolean toggle for weather content inclusion
+- **Headlines categories** - JSONB array of selected news categories (business, technology, etc.)
+- **Sports categories** - JSONB array of selected sports categories (football, basketball, etc.)
+- **Last sync timestamp** - Tracks when preferences were last synced from iOS app
+
 **Indexes**:
 - Primary key on `user_id`
 - Index on `location_zip` for location-based content matching
@@ -147,6 +158,10 @@ The following preferences are managed by the app and passed as parameters during
 - Index on `name` for name-based queries
 - Index on `city` for city-based content matching
 - Index on `state` for state-based content matching
+- Index on `weather_enabled` for weather content filtering
+- GIN index on `headlines_categories` for JSONB queries
+- GIN index on `sports_categories` for JSONB queries
+- Index on `last_sync_at` for sync tracking
 
 **Constraints**:
 - `user_id` references `users.id`
@@ -155,6 +170,8 @@ The following preferences are managed by the app and passed as parameters during
 - `name` cannot be empty if provided
 - `city` cannot be empty if provided
 - `state` must be exactly 2 characters if provided
+- `headlines_categories` cannot be null
+- `sports_categories` cannot be null
 
 **RLS Policies**:
 - Users can only read/write their own preferences (user_id = auth.uid())

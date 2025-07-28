@@ -68,11 +68,12 @@ The Banana Clock iOS app is a hyper-personalized, AI-powered alarm clock built w
 - **Positive Framing**: Optimistic outlook for the day ahead
 
 ### 🔌 Offline Support
-- **Cached Content**: Pre-downloaded messages for offline use
+- **Cached Content**: Pre-downloaded messages for offline use (72-hour cache)
 - **Local Storage**: Core functionality without internet connection
 - **Sync on Reconnect**: Automatic data synchronization when online
 - **Fallback Content**: Default messages when AI generation unavailable
 - **Battery Optimization**: Efficient offline operation
+- **Content Prefetching**: Background content generation 24 hours before alarms
 
 ## Technical Architecture
 
@@ -87,6 +88,8 @@ The Banana Clock iOS app is a hyper-personalized, AI-powered alarm clock built w
 - **Supabase Integration**: Cloud synchronization and user accounts
 - **Keychain**: Secure storage for sensitive information
 - **UserDefaults**: App settings and configuration
+- **AI Preferences Sync**: Weather, headlines, and sports category preferences
+- **Content Caching**: 72-hour content cache using existing content_blocks table
 
 ### Audio System
 - **AVFoundation**: High-quality audio playback and mixing

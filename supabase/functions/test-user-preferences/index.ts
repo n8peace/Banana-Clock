@@ -67,6 +67,10 @@ serve(async (req: Request) => {
     city: 'New York',
     state: 'NY',
     voice: 'voice_1',
+    weather_enabled: true,
+    headlines_categories: ['business', 'technology', 'health'],
+    sports_categories: ['football', 'basketball'],
+    last_sync_at: new Date().toISOString(),
   }
 
   try {

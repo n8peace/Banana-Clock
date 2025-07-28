@@ -38,7 +38,8 @@ Banana Clock uses 11 Supabase Edge Functions to power its AI-driven content gene
 
 ### generate-weather-content
 **Purpose**: Creates weather reports for user locations  
-**Priority**: 2*Frequency**: Hourly  
+**Priority**: 2  
+**Frequency**: Hourly  
 **Data Source**: Weather Kit API (via user_weather_data cache)  
 **Status**: `content_ready` on success
 
@@ -47,6 +48,7 @@ Banana Clock uses 11 Supabase Edge Functions to power its AI-driven content gene
 - Supports multiple locations per execution
 - Includes temperature, conditions, sunrise/sunset
 - Handles missing weather data gracefully
+- **iOS Integration**: Respects user `weather_enabled` preference from `user_preferences` table
 
 ### generate-headlines-content
 **Purpose**: Creates news headlines summaries  
@@ -60,6 +62,8 @@ Banana Clock uses 11 Supabase Edge Functions to power its AI-driven content gene
 - Combines headlines from both APIs
 - Handles API failures with fallback content
 - Includes error information in parameters
+- **iOS Integration**: Respects user `headlines_categories` preference from `user_preferences` table
+- **Enhanced Content**: Uses importance scoring and category classification for better content selection
 
 ### generate-sports-content
 **Purpose**: Creates enhanced sports updates with dates, locations, and sports news  
@@ -77,6 +81,7 @@ Banana Clock uses 11 Supabase Edge Functions to power its AI-driven content gene
 - **Fetches data from ESPN APIs** for major US sports (NFL, NBA, MLB, NHL, NCAA Football, NCAA Basketball)
 - **Handles API failures gracefully** with fallback content
 - **Provides comprehensive sports summaries** with scores, schedules, and news
+- **iOS Integration**: Respects user `sports_categories` preference from `user_preferences` table
 
 ### generate-markets-content
 **Purpose**: Creates enhanced financial market updates with trend analysis  
