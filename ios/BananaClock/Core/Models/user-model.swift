@@ -61,6 +61,12 @@ struct UserPreferences: Identifiable, Codable {
     var contentPreferences: ContentPreferences
     var updatedAt: Date
     
+    // AI Wake-Up Preferences (iOS Integration)
+    var weatherEnabled: Bool
+    var headlinesCategories: [String]
+    var sportsCategories: [String]
+    var lastSyncAt: Date?
+    
     init(
         id: UUID = UUID(),
         timezone: String = TimeZone.current.identifier,
@@ -71,7 +77,11 @@ struct UserPreferences: Identifiable, Codable {
         voice: AIVoiceOption = .voice1,
         wakeUpTime: Date? = nil,
         contentPreferences: ContentPreferences = ContentPreferences(),
-        updatedAt: Date = Date()
+        updatedAt: Date = Date(),
+        weatherEnabled: Bool = false,
+        headlinesCategories: [String] = ["business", "technology"],
+        sportsCategories: [String] = ["football", "basketball"],
+        lastSyncAt: Date? = nil
     ) {
         self.id = id
         self.timezone = timezone
@@ -83,6 +93,10 @@ struct UserPreferences: Identifiable, Codable {
         self.wakeUpTime = wakeUpTime
         self.contentPreferences = contentPreferences
         self.updatedAt = updatedAt
+        self.weatherEnabled = weatherEnabled
+        self.headlinesCategories = headlinesCategories
+        self.sportsCategories = sportsCategories
+        self.lastSyncAt = lastSyncAt
     }
     
     struct ContentPreferences: Codable {

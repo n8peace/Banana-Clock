@@ -2,7 +2,7 @@
 //  SupabaseService.swift
 //  BananaClock
 //
-//  Supabase integration for AI content only
+//  Enhanced Supabase integration for iOS app
 //
 
 import Foundation
@@ -15,25 +15,189 @@ class SupabaseService: ObservableObject {
     
     // private var client: SupabaseClient?
     @Published var isConfigured = false
+    @Published var currentUser: User?
+    @Published var isAuthenticated = false
     
     private init() {}
     
     // MARK: - Configuration
     
     func configure() {
-        // guard !Environment.supabaseURL.isEmpty,
-        //       !Environment.supabaseAnonKey.isEmpty else {
+        // guard !AppEnvironment.supabaseURL.isEmpty,
+        //       !AppEnvironment.supabaseAnonKey.isEmpty else {
         //     print("⚠️ Supabase credentials not configured")
         //     return
         // }
         
         // client = SupabaseClient(
-        //     supabaseURL: URL(string: Environment.supabaseURL)!,
-        //     supabaseKey: Environment.supabaseAnonKey
+        //     supabaseURL: URL(string: AppEnvironment.supabaseURL)!,
+        //     supabaseKey: AppEnvironment.supabaseAnonKey
         // )
         
         // isConfigured = true
+        // checkAuthenticationStatus()
     }
+    
+    // MARK: - Authentication
+    
+    // func signIn(email: String, password: String) async throws -> User {
+    //     guard let client = client else { throw SupabaseError.notConfigured }
+    //     
+    //     let response = try await client.auth.signIn(
+    //         email: email,
+    //         password: password
+    //     )
+    //     
+    //     guard let user = response.user else {
+    //         throw SupabaseError.authenticationFailed
+    //     }
+    //     
+    //     currentUser = User(
+    //         id: user.id,
+    //         email: user.email ?? "",
+    //         hasActiveSubscription: false,
+    //         createdAt: user.createdAt ?? Date()
+    //     )
+    //     isAuthenticated = true
+    //     
+    //     return currentUser!
+    // }
+    // 
+    // func signUp(email: String, password: String) async throws -> User {
+    //     guard let client = client else { throw SupabaseError.notConfigured }
+    //     
+    //     let response = try await client.auth.signUp(
+    //         email: email,
+    //         password: password
+    //     )
+    //     
+    //     guard let user = response.user else {
+    //         throw SupabaseError.registrationFailed
+    //     }
+    //     
+    //     currentUser = User(
+    //         id: user.id,
+    //         email: user.email ?? "",
+    //         hasActiveSubscription: false,
+    //         createdAt: user.createdAt ?? Date()
+    //     )
+    //     isAuthenticated = true
+    //     
+    //     // Create initial user preferences
+    //     try await createUserPreferences(userId: user.id)
+    //     
+    //     return currentUser!
+    // }
+    // 
+    // func signOut() async throws {
+    //     guard let client = client else { throw SupabaseError.notConfigured }
+    //     
+    //     try await client.auth.signOut()
+    //     currentUser = nil
+    //     isAuthenticated = false
+    // }
+    // 
+    // func checkAuthenticationStatus() {
+    //     guard let client = client else { return }
+    //     
+    //     Task {
+    //         do {
+    //                 let session = try await client.auth.getSession()
+    //                 if let user = session.user {
+    //                     currentUser = User(
+    //                         id: user.id,
+    //                         email: user.email ?? "",
+    //                         hasActiveSubscription: false,
+    //                         createdAt: user.createdAt ?? Date()
+    //                     )
+    //                     isAuthenticated = true
+    //                 }
+    //             } catch {
+    //                 print("Authentication check failed: \(error)")
+    //             }
+    //         }
+    //     }
+    
+    // MARK: - User Preferences Sync
+    
+    // func syncUserPreferences() async throws -> UserPreferences? {
+    //     guard let client = client,
+    //           let currentUser = currentUser else {
+    //         throw SupabaseError.notAuthenticated
+    //     }
+    //     
+    //     let response: [UserPreferencesResponse] = try await client
+    //         .from("user_preferences")
+    //         .select()
+    //         .eq("user_id", value: currentUser.id.uuidString)
+    //         .single()
+    //         .execute()
+    //         .value
+    //     
+    //     guard let preferences = response.first else {
+    //         return nil
+    //     }
+    //     
+    //     return UserPreferences(
+    //         id: preferences.id,
+    //         timezone: preferences.timezone,
+    //         locationZip: preferences.locationZip,
+    //         name: preferences.name,
+    //         city: preferences.city,
+    //         state: preferences.state,
+    //         voice: AIVoiceOption(rawValue: preferences.voice) ?? .voice1,
+    //         weatherEnabled: preferences.weatherEnabled,
+    //         headlinesCategories: preferences.headlinesCategories,
+    //         sportsCategories: preferences.sportsCategories,
+    //         lastSyncAt: preferences.lastSyncAt
+    //     )
+    // }
+    // 
+    // func updateUserPreferences(_ preferences: UserPreferences) async throws {
+    //     guard let client = client,
+    //           let currentUser = currentUser else {
+    //         throw SupabaseError.notAuthenticated
+    //     }
+    //     
+    //     let updateData: [String: Any] = [
+    //         "timezone": preferences.timezone,
+    //         "location_zip": preferences.locationZip,
+    //         "name": preferences.name,
+    //         "city": preferences.city,
+    //         "state": preferences.state,
+    //         "voice": preferences.voice.rawValue,
+    //         "weather_enabled": preferences.weatherEnabled,
+    //         "headlines_categories": preferences.headlinesCategories,
+    //         "sports_categories": preferences.sportsCategories,
+    //         "last_sync_at": ISO8601DateFormatter().string(from: Date())
+    //     ]
+    //     
+    //     try await client
+    //         .from("user_preferences")
+    //         .update(updateData)
+    //         .eq("user_id", value: currentUser.id.uuidString)
+    //         .execute()
+    // }
+    // 
+    // private func createUserPreferences(userId: UUID) async throws {
+    //     guard let client = client else { throw SupabaseError.notConfigured }
+    //     
+    //     let preferences: [String: Any] = [
+    //         "user_id": userId.uuidString,
+    //         "timezone": TimeZone.current.identifier,
+    //         "location_zip": "",
+    //         "voice": AIVoiceOption.voice1.rawValue,
+    //         "weather_enabled": false,
+    //         "headlines_categories": ["business", "technology"],
+    //         "sports_categories": ["football", "basketball"],
+    //         "last_sync_at": ISO8601DateFormatter().string(from: Date())
+    //     ]
+    //     
+    //     try await client
+    //         .from("user_preferences")
+    //         .insert(preferences)
+    //         .execute()
+    // }
     
     // MARK: - AI Content Generation
     
@@ -270,6 +434,55 @@ struct ContentBlock: Codable {
         case voice
         case durationSeconds = "duration_seconds"
         case audioDuration = "audio_duration"
+    }
+}
+
+// MARK: - Supabase Response Models
+struct UserPreferencesResponse: Codable {
+    let id: UUID
+    let userId: String
+    let timezone: String
+    let locationZip: String?
+    let name: String?
+    let city: String?
+    let state: String?
+    let voice: String?
+    let weatherEnabled: Bool
+    let headlinesCategories: [String]
+    let sportsCategories: [String]
+    let lastSyncAt: String?
+    let createdAt: String
+    let updatedAt: String
+    
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case userId = "user_id"
+        case timezone
+        case locationZip = "location_zip"
+        case name
+        case city
+        case state
+        case voice
+        case weatherEnabled = "weather_enabled"
+        case headlinesCategories = "headlines_categories"
+        case sportsCategories = "sports_categories"
+        case lastSyncAt = "last_sync_at"
+        case createdAt = "created_at"
+        case updatedAt = "updated_at"
+    }
+}
+
+struct LogEvent: Codable {
+    let eventType: String
+    let status: String
+    let message: String?
+    let metadata: [String: Any]?
+    
+    private enum CodingKeys: String, CodingKey {
+        case eventType = "event_type"
+        case status
+        case message
+        case metadata
     }
 }
 

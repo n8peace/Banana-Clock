@@ -11,9 +11,14 @@ import Foundation
 enum SupabaseError: LocalizedError {
     case notConfigured
     case notAuthenticated
+    case authenticationFailed
+    case registrationFailed
     case networkError(String)
     case invalidResponse
     case userNotFound
+    case invalidURL
+    case downloadFailed
+    case functionError
     
     var errorDescription: String? {
         switch self {
@@ -21,12 +26,22 @@ enum SupabaseError: LocalizedError {
             return "Supabase is not configured"
         case .notAuthenticated:
             return "User is not authenticated"
+        case .authenticationFailed:
+            return "Authentication failed"
+        case .registrationFailed:
+            return "User registration failed"
         case .networkError(let message):
             return "Network error: \(message)"
         case .invalidResponse:
             return "Invalid response from server"
         case .userNotFound:
             return "User not found"
+        case .invalidURL:
+            return "Invalid URL"
+        case .downloadFailed:
+            return "Download failed"
+        case .functionError:
+            return "Supabase function error"
         }
     }
 }
