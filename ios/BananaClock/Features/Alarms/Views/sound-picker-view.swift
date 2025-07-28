@@ -3,7 +3,7 @@ import AVFoundation
 
 struct SoundPickerView: View {
     @Binding var selectedSound: AlarmSound
-    // @Environment(\.dismiss) private var dismiss  // Temporarily disabled
+    @Environment(\.dismiss) private var dismiss
     @State private var audioPlayer: AVAudioPlayer?
     
     var body: some View {
@@ -36,7 +36,7 @@ struct SoundPickerView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") {
-                        // dismiss()  // Temporarily disabled
+                        dismiss()
                     }
                     .foregroundColor(.bananaYellow)
                 }

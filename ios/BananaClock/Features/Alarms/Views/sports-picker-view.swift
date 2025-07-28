@@ -1,39 +1,39 @@
 //
-//  RepeatPickerView.swift
+//  SportsPickerView.swift
 //  BananaClock
 //
-//  Repeat day picker view
+//  Sports categories picker view for AI wake-up
 //
 
 import SwiftUI
 
-struct RepeatPickerView: View {
-    @Binding var selectedDays: Set<Alarm.Weekday>
+struct SportsPickerView: View {
+    @Binding var selectedCategories: Set<SportsCategory>
     @Environment(\.dismiss) private var dismiss
     
-    private let weekdays: [Alarm.Weekday] = [
-        .sunday, .monday, .tuesday, .wednesday, .thursday, .friday, .saturday
+    private let categories: [SportsCategory] = [
+        .football, .basketball, .baseball, .hockey, .soccer, .tennis, .golf
     ]
     
     var body: some View {
         NavigationStack {
             List {
-                ForEach(weekdays, id: \.self) { weekday in
+                ForEach(categories, id: \.self) { category in
                     Button {
-                        if selectedDays.contains(weekday) {
-                            selectedDays.remove(weekday)
+                        if selectedCategories.contains(category) {
+                            selectedCategories.remove(category)
                         } else {
-                            selectedDays.insert(weekday)
+                            selectedCategories.insert(category)
                         }
                         HapticManager.shared.impact(.light)
                     } label: {
                         HStack {
-                            Text(weekday.fullName)
+                            Text(category.displayName)
                                 .foregroundColor(.textPrimary)
                             
                             Spacer()
                             
-                            if selectedDays.contains(weekday) {
+                            if selectedCategories.contains(category) {
                                 Image(systemName: "checkmark")
                                     .foregroundColor(.bananaYellow)
                             }
@@ -45,7 +45,7 @@ struct RepeatPickerView: View {
             .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
             .background(Color.backgroundPrimary)
-            .navigationTitle("Repeat")
+            .navigationTitle("Sports Categories")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -60,5 +60,5 @@ struct RepeatPickerView: View {
 }
 
 // #Preview {
-//     RepeatPickerView(selectedDays: .constant([.monday, .wednesday, .friday]))
+//     SportsPickerView(selectedCategories: .constant([.football, .basketball]))
 // } 

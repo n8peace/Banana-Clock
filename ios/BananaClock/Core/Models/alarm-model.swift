@@ -19,6 +19,16 @@ struct Alarm: Identifiable, Codable, Equatable {
     var repeatDays: [Weekday]
     var volume: Float // 0.0-1.0
     var isWakeUpAlarm: Bool
+    
+    // AI Wake-Up Preferences
+    var aiVoice: AIVoiceOption
+    var aiMusic: MusicOption
+    var aiWeatherEnabled: Bool
+    var aiHeadlinesCategories: Set<HeadlinesCategory>
+    var aiSportsCategories: Set<SportsCategory>
+    var aiLocationLatitude: Double?
+    var aiLocationLongitude: Double?
+    var aiPreferredName: String?
 
     var lastUsedAt: Date
     let createdAt: Date
@@ -65,7 +75,14 @@ struct Alarm: Identifiable, Codable, Equatable {
         repeatDays: [Weekday]? = nil,
         volume: Float = 0.7,
         isWakeUpAlarm: Bool = false,
-
+        aiVoice: AIVoiceOption = .voice1,
+        aiMusic: MusicOption = .chillVibes,
+        aiWeatherEnabled: Bool = false,
+        aiHeadlinesCategories: Set<HeadlinesCategory> = [.business, .technology],
+        aiSportsCategories: Set<SportsCategory> = [.football, .basketball],
+        aiLocationLatitude: Double? = nil,
+        aiLocationLongitude: Double? = nil,
+        aiPreferredName: String? = nil,
         lastUsedAt: Date = Date(),
         createdAt: Date = Date(),
         updatedAt: Date = Date()
@@ -89,7 +106,14 @@ struct Alarm: Identifiable, Codable, Equatable {
         self.repeatDays = defaultRepeatDays
         self.volume = max(0, min(1, volume))
         self.isWakeUpAlarm = isWakeUpAlarm
-
+        self.aiVoice = aiVoice
+        self.aiMusic = aiMusic
+        self.aiWeatherEnabled = aiWeatherEnabled
+        self.aiHeadlinesCategories = aiHeadlinesCategories
+        self.aiSportsCategories = aiSportsCategories
+        self.aiLocationLatitude = aiLocationLatitude
+        self.aiLocationLongitude = aiLocationLongitude
+        self.aiPreferredName = aiPreferredName
         self.lastUsedAt = lastUsedAt
         self.createdAt = createdAt
         self.updatedAt = updatedAt
@@ -203,6 +227,86 @@ enum AIVoiceOption: String, CaseIterable, Codable {
         case .voice1: return "Calm and peaceful morning guidance"
         case .voice2: return "Energetic motivation to start your day"
         case .voice3: return "Friendly companion for your morning"
+        }
+    }
+}
+
+// MARK: - Music Options
+enum MusicOption: String, CaseIterable, Codable {
+    case chillVibes = "chill_vibes"
+    case upbeat = "upbeat"
+    case natureSounds = "nature_sounds"
+    case ambient = "ambient"
+    case classical = "classical"
+    case jazz = "jazz"
+    
+    var displayName: String {
+        switch self {
+        case .chillVibes: return "Chill Vibes"
+        case .upbeat: return "Upbeat"
+        case .natureSounds: return "Nature Sounds"
+        case .ambient: return "Ambient"
+        case .classical: return "Classical"
+        case .jazz: return "Jazz"
+        }
+    }
+    
+    var description: String {
+        switch self {
+        case .chillVibes: return "Relaxing background music"
+        case .upbeat: return "Energetic morning tunes"
+        case .natureSounds: return "Peaceful nature ambience"
+        case .ambient: return "Atmospheric background"
+        case .classical: return "Classical morning music"
+        case .jazz: return "Smooth jazz vibes"
+        }
+    }
+}
+
+// MARK: - Headlines Categories
+enum HeadlinesCategory: String, CaseIterable, Codable {
+    case politics = "politics"
+    case business = "business"
+    case technology = "technology"
+    case health = "health"
+    case sports = "sports"
+    case entertainment = "entertainment"
+    case science = "science"
+    case world = "world"
+    
+    var displayName: String {
+        switch self {
+        case .politics: return "Politics"
+        case .business: return "Business"
+        case .technology: return "Technology"
+        case .health: return "Health"
+        case .sports: return "Sports"
+        case .entertainment: return "Entertainment"
+        case .science: return "Science"
+        case .world: return "World"
+        }
+    }
+}
+
+// MARK: - Sports Categories
+enum SportsCategory: String, CaseIterable, Codable {
+    case football = "football"
+    case basketball = "basketball"
+    case baseball = "baseball"
+    case hockey = "hockey"
+    case soccer = "soccer"
+    case tennis = "tennis"
+    case golf = "golf"
+    
+    var displayName: String {
+        switch self {
+        case .football: return "Football"
+        case .basketball: return "Basketball"
+        case .baseball: return "Baseball"
+        case .hockey: return "Hockey"
+        case .soccer: return "Soccer"
+        case .tennis: return "Tennis"
+        case .golf: return "Golf"
         }
     }
 }
