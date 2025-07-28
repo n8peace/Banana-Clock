@@ -23,9 +23,16 @@ class SupabaseService: ObservableObject {
     // MARK: - Configuration
     
     func configure() {
+        print("🔧 Configuring Supabase...")
+        print("🌐 URL: \(AppEnvironment.supabaseURL)")
+        print("🔑 Key length: \(AppEnvironment.supabaseAnonKey.count)")
+        print("🔑 Key starts with: \(String(AppEnvironment.supabaseAnonKey.prefix(20)))...")
+        
         guard !AppEnvironment.supabaseURL.isEmpty,
               !AppEnvironment.supabaseAnonKey.isEmpty else {
             print("⚠️ Supabase credentials not configured")
+            print("❌ URL empty: \(AppEnvironment.supabaseURL.isEmpty)")
+            print("❌ Key empty: \(AppEnvironment.supabaseAnonKey.isEmpty)")
             return
         }
         
@@ -35,6 +42,7 @@ class SupabaseService: ObservableObject {
         )
         
         isConfigured = true
+        print("✅ Supabase configured successfully")
         checkAuthenticationStatus()
     }
     
