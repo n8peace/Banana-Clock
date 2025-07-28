@@ -255,7 +255,8 @@ struct AlarmsView: View {
             
             // Try to sign up a test user
             do {
-                let testEmail = "testuser_\(Int(Date().timeIntervalSince1970))@example.com"
+                let timestamp = Int(Date().timeIntervalSince1970)
+                let testEmail = "test\(timestamp)@bananaclock.test"
                 let testPassword = "TestPassword123!"
                 
                 print("🔄 Attempting to sign up test user: \(testEmail)")
