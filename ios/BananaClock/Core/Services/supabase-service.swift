@@ -102,7 +102,7 @@ class SupabaseService: ObservableObject {
         
         Task {
             do {
-                let session = try await client.auth.getSession()
+                let session = try await client.auth.session
                 if let user = session.user {
                     currentUser = User(
                         id: user.id,
@@ -145,11 +145,11 @@ class SupabaseService: ObservableObject {
             name: preferences.name,
             city: preferences.city,
             state: preferences.state,
-            voice: AIVoiceOption(rawValue: preferences.voice) ?? .voice1,
+            voice: AIVoiceOption(rawValue: preferences.voice ?? "") ?? .voice1,
             weatherEnabled: preferences.weatherEnabled,
             headlinesCategories: preferences.headlinesCategories,
             sportsCategories: preferences.sportsCategories,
-            lastSyncAt: preferences.lastSyncAt
+            lastSyncAt: preferences.lastSyncAt.flatMap { ISO8601DateFormatter().date(from: $0) }
         )
     }
     
@@ -161,10 +161,10 @@ class SupabaseService: ObservableObject {
         
         let updateData: [String: Any] = [
             "timezone": preferences.timezone,
-            "location_zip": preferences.locationZip,
-            "name": preferences.name,
-            "city": preferences.city,
-            "state": preferences.state,
+            "location_zip": preferences.locationZip ?? "",
+            "name": preferences.name ?? "",
+            "city": preferences.city ?? "",
+            "state": preferences.state ?? "",
             "voice": preferences.voice.rawValue,
             "weather_enabled": preferences.weatherEnabled,
             "headlines_categories": preferences.headlinesCategories,
@@ -476,7 +476,7 @@ struct LogEvent: Codable {
     let eventType: String
     let status: String
     let message: String?
-    let metadata: [String: Any]?
+    let metadata: [String: String]?
     
     private enum CodingKeys: String, CodingKey {
         case eventType = "event_type"
