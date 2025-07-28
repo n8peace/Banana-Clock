@@ -22,13 +22,13 @@ enum AppEnvironment {
     
     // MARK: - API Keys (from environment or Info.plist)
     static var supabaseAnonKey: String {
-        // First try Secrets.swift (for local development)
-        if !Secrets.supabaseAnonKey.contains("YOUR_") {
-            return Secrets.supabaseAnonKey
-        }
-        // Then try environment variable
+        // First try environment variable (for CI/CD with GitHub secrets)
         if let key = ProcessInfo.processInfo.environment["SUPABASE_ANON_KEY"] {
             return key
+        }
+        // Then try Secrets.swift (for local development)
+        if !Secrets.supabaseAnonKey.contains("YOUR_") {
+            return Secrets.supabaseAnonKey
         }
         // Finally fallback to Info.plist
         return Bundle.main.object(forInfoDictionaryKey: "SUPABASE_ANON_KEY") as? String ?? ""
