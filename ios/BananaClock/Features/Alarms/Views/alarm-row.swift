@@ -4,68 +4,95 @@ struct AlarmRow: View {
     let alarm: Alarm
     @Binding var isEnabled: Bool
     let onTap: () -> Void
+    let isSelected: Bool
+    let showSelection: Bool
+    
+    init(
+        alarm: Alarm,
+        isEnabled: Binding<Bool>,
+        onTap: @escaping () -> Void,
+        isSelected: Bool = false,
+        showSelection: Bool = false
+    ) {
+        self.alarm = alarm
+        self._isEnabled = isEnabled
+        self.onTap = onTap
+        self.isSelected = isSelected
+        self.showSelection = showSelection
+    }
     
     var body: some View {
-        Button(action: onTap) {
-            HStack {
-                VStack(alignment: .leading, spacing: BananaTheme.Spacing.xxs) {
-                    HStack(alignment: .firstTextBaseline, spacing: BananaTheme.Spacing.xs) {
-                        Text(timeString)
-                            .font(.largeTitle)
-                            .foregroundColor(.white)
-                            .monospacedDigit()
-                        Text(periodString)
-                            .font(.title2)
-                            .foregroundColor(BananaTheme.Colors.textSecondary)
-                    }
+        HStack {
+            // Selection checkbox (only shown in edit mode)
+            if showSelection {
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    .font(.title2)
+                    .foregroundColor(isSelected ? BananaTheme.Colors.bananaYellow : BananaTheme.Colors.textSecondary)
+                    .frame(width: 24, height: 24)
+            }
+            
+            VStack(alignment: .leading, spacing: BananaTheme.Spacing.xxs) {
+                HStack(alignment: .firstTextBaseline, spacing: BananaTheme.Spacing.xs) {
+                    Text(timeString)
+                        .font(.largeTitle)
+                        .foregroundColor(.white)
+                        .monospacedDigit()
+                    Text(periodString)
+                        .font(.title2)
+                        .foregroundColor(BananaTheme.Colors.textSecondary)
+                }
+                
+                if alarm.isWakeUpAlarm {
+                    // Today/Tomorrow directly below time
+                    Text(todayTomorrowText)
+                        .font(.caption)
+                        .foregroundColor(BananaTheme.Colors.textSecondary)
                     
-                    if alarm.isWakeUpAlarm {
-                        // Today/Tomorrow directly below time
-                        Text(todayTomorrowText)
+                    // AI indicator below Today/Tomorrow
+                    if alarm.isAIEnabled {
+                        Text("🍌🧠 ON")
+                            .font(.caption)
+                            .foregroundColor(BananaTheme.Colors.bananaYellow)
+                    } else {
+                        Text("🍌🧠 OFF")
                             .font(.caption)
                             .foregroundColor(BananaTheme.Colors.textSecondary)
-                        
-                        // AI indicator below Today/Tomorrow
+                    }
+                } else {
+                    HStack(spacing: BananaTheme.Spacing.xs) {
                         if alarm.isAIEnabled {
-                            Text("🍌🧠 ON")
+                            Label("AI", systemImage: "sparkles")
                                 .font(.caption)
                                 .foregroundColor(BananaTheme.Colors.bananaYellow)
-                        } else {
-                            Text("🍌🧠 OFF")
-                                .font(.caption)
-                                .foregroundColor(BananaTheme.Colors.textSecondary)
                         }
-                    } else {
-                        HStack(spacing: BananaTheme.Spacing.xs) {
-                            if alarm.isAIEnabled {
-                                Label("AI", systemImage: "sparkles")
-                                    .font(.caption)
-                                    .foregroundColor(BananaTheme.Colors.bananaYellow)
-                            }
-                            
-                            Text(alarm.label)
-                                .font(.caption)
-                                .foregroundColor(BananaTheme.Colors.textSecondary)
-                        }
-                    }
-                    
-                    if !alarm.repeatDays.isEmpty {
-                        Text(alarm.repeatDescription)
+                        
+                        Text(alarm.label)
                             .font(.caption)
-                            .foregroundColor(BananaTheme.Colors.textTertiary)
+                            .foregroundColor(BananaTheme.Colors.textSecondary)
                     }
                 }
                 
-                Spacer()
-                
+                if !alarm.repeatDays.isEmpty {
+                    Text(alarm.repeatDescription)
+                        .font(.caption)
+                        .foregroundColor(BananaTheme.Colors.textTertiary)
+                }
+            }
+            
+            Spacer()
+            
+            // Only show toggle when not in selection mode
+            if !showSelection {
                 Toggle("", isOn: $isEnabled)
                     .toggleStyle(SwitchToggleStyle(tint: BananaTheme.Colors.bananaYellow))
                     .labelsHidden()
             }
-            .padding(.vertical, BananaTheme.Spacing.sm)
-            .padding(.horizontal, BananaTheme.Spacing.md)
         }
-        .buttonStyle(PlainButtonStyle())
+        .padding(.vertical, BananaTheme.Spacing.sm)
+        .padding(.horizontal, BananaTheme.Spacing.md)
+        .onTapGesture {
+            onTap()
+        }
     }
     
     private var timeString: String {

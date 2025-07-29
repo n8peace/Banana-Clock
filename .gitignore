@@ -116,3 +116,6 @@ jspm_packages/
 
 # External Docs
 .external_docs/*.caf
+
+# Test credentials
+test-credentials.md

@@ -14,45 +14,92 @@ struct WorldClockView: View {
     @State private var showingAddCity = false
     @State private var isEditing = false
     
-
-    
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
             
             VStack(spacing: 0) {
-                // Page title - positioned at top of screen
-                Text(viewModel.navigationTitle)
-                    .font(.title)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, BSpacing.md)
-                    .padding(.top, BSpacing.sm)
-                    .padding(.bottom, BSpacing.lg)
+                // Fixed user time section at top
+                if let currentClock = viewModel.currentTimezoneClock {
+                    VStack(spacing: 0) {
+                        // Page title - positioned above user time
+                        Text(viewModel.navigationTitle)
+                            .font(.title)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, BSpacing.md)
+                            .padding(.top, BSpacing.sm)
+                            .padding(.bottom, BSpacing.lg)
+                        
+                        // User's time - sticky at top
+                        WorldClockRow(clock: currentClock, viewModel: viewModel)
+                    }
+                    .background(Color.black)
+                }
                 
                 NavigationStack {
-                    VStack(spacing: 0) {
-                        // Current timezone always at top
-                        if let currentClock = viewModel.currentTimezoneClock {
-                            WorldClockRow(clock: currentClock, viewModel: viewModel)
-                        }
-                        
-                        // Empty state or other clocks
-                        if viewModel.otherClocks.isEmpty {
-                            ScrollView {
-                                emptyStateView()
-                                    .frame(maxWidth: .infinity, minHeight: 400)
-                            }
-                        } else {
-                            clocksList
-                        }
+                    // Scrollable content for other timezones
+                    if viewModel.otherClocks.isEmpty {
+                        emptyStateView()
+                            .frame(maxWidth: .infinity, minHeight: 400)
+                    } else {
+                        clocksList
                     }
                 }
-                .navigationTitle("BANANA")
+                .navigationTitle(dynamicTitle)
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     toolbarContent
+                }
+            }
+            
+            // Floating elements positioned absolutely
+            VStack {
+                Spacer()
+                
+                // Timezone converter (when multiple clocks exist)
+                if viewModel.clocks.count >= 2 {
+                    timezoneConverterView
+                        .padding(.horizontal, BSpacing.md)
+                        .padding(.bottom, BSpacing.md)
+                }
+                
+                // Selection mode action bar
+                if isEditing && !viewModel.selectableClocks.isEmpty {
+                    HStack(spacing: 16) {
+                        Button {
+                            if viewModel.selectedClocksCount == viewModel.selectableClocks.count {
+                                viewModel.deselectAll()
+                            } else {
+                                viewModel.selectAll()
+                            }
+                        } label: {
+                            Text(viewModel.selectedClocksCount == viewModel.selectableClocks.count ? "Deselect All" : "Select All")
+                                .font(.body.weight(.medium))
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 12)
+                                .background(BananaTheme.Colors.backgroundSecondary)
+                                .cornerRadius(BananaTheme.Layout.cornerRadius)
+                        }
+                        
+                        if viewModel.selectedClocksCount > 0 {
+                            Button {
+                                viewModel.deleteSelectedClocks()
+                            } label: {
+                                Text("Delete Selected (\(viewModel.selectedClocksCount))")
+                                    .font(.body.weight(.medium))
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 12)
+                                    .background(BananaTheme.Colors.error)
+                                    .cornerRadius(BananaTheme.Layout.cornerRadius)
+                            }
+                        }
+                    }
+                    .padding(.horizontal, BSpacing.md)
+                    .padding(.bottom, BSpacing.md)
                 }
             }
         }
@@ -64,115 +111,108 @@ struct WorldClockView: View {
         .onDisappear {
             // Reset date to today when leaving the page
             viewModel.selectedDate = Date()
+            // Clear AI recommendation when leaving the page
+            viewModel.aiService.clearRecommendation()
         }
+        .onChange(of: isEditing) { _, newValue in
+            if !newValue {
+                // Clear selection when exiting edit mode
+                viewModel.deselectAll()
+            }
+        }
+    }
+    
+
+    // MARK: - Dynamic Title Properties
+    
+    private var dynamicTitle: String {
+        // Since user's time is now sticky, always show "Banana Clock"
+        return "Banana Clock"
     }
     
     // MARK: - Views
     
     private var timezoneConverterView: some View {
-        VStack(spacing: BananaTheme.Spacing.md) {
-            // Timezone Converter Label - centered
-            Text("Timezone Converter")
-                .font(.headline)
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.horizontal, BananaTheme.Spacing.md)
-            
-            // Converter Box
-            VStack(spacing: 8) {
-                // Top row with date picker and time display
-                HStack {
-                    // Date Picker in top left
-                    VStack(alignment: .leading, spacing: 4) {
-                        DatePicker(
-                            "Select Date",
-                            selection: $viewModel.selectedDate,
-                            displayedComponents: .date
-                        )
-                        .datePickerStyle(.compact)
-                        .labelsHidden()
-                        .colorScheme(.dark)
-                        .accentColor(viewModel.isConverterActive ? BananaTheme.Colors.bananaYellow : .gray)
+        VStack(spacing: 8) {
+            // Title and countdown row
+            HStack {
+                Text("🍌🧠 Timezone Converter")
+                    .font(.headline)
+                    .foregroundColor(.white)
+                
+                Spacer()
+                
+                // Countdown circle on the right (when active)
+                if viewModel.isConverterActive && viewModel.countdownSeconds > 0 {
+                    ZStack {
+                        Circle()
+                            .stroke(Color.gray.opacity(0.3), lineWidth: 2)
+                            .frame(width: 24, height: 24)
                         
-                        // Reset button - only show when date isn't today
-                        if !viewModel.isToday {
-                            Button {
-                                viewModel.selectedDate = Date()
-                                HapticManager.shared.impact(.light)
-                            } label: {
-                                HStack(spacing: 2) {
-                                    Image(systemName: "gobackward")
-                                        .font(.caption2)
-                                    Text("Today")
-                                        .font(.caption2)
-                                }
-                                .foregroundColor(viewModel.isConverterActive ? BananaTheme.Colors.bananaYellow : .gray)
-                            }
-                        }
-                    }
-                    
-                    Spacer()
-                    
-                    // Time display with countdown
-                    HStack {
-                        Text(viewModel.selectedTimeString)
-                            .font(.title2.weight(.medium))
-                            .foregroundColor(viewModel.isConverterActive ? BananaTheme.Colors.bananaYellow : .gray)
-                            .monospacedDigit()
+                        Circle()
+                            .trim(from: 0, to: viewModel.countdownProgress)
+                            .stroke(Color.gray, lineWidth: 2)
+                            .frame(width: 24, height: 24)
+                            .rotationEffect(.degrees(-90))
                         
-                        // Countdown circle
-                        if viewModel.isConverterActive && viewModel.countdownSeconds > 0 {
-                            ZStack {
-                                Circle()
-                                    .stroke(Color.gray.opacity(0.3), lineWidth: 2)
-                                    .frame(width: 24, height: 24)
-                                
-                                Circle()
-                                    .trim(from: 0, to: viewModel.countdownProgress)
-                                    .stroke(Color.gray, lineWidth: 2)
-                                    .frame(width: 24, height: 24)
-                                    .rotationEffect(.degrees(-90))
-                                
-                                Text("\(viewModel.countdownSeconds)")
-                                    .font(.caption2)
-                                    .foregroundColor(.gray)
-                            }
-                        }
+                        Text("\(viewModel.countdownSeconds)")
+                            .font(.caption2)
+                            .foregroundColor(.gray)
                     }
                 }
-                
-                // Slider
-                Slider(
-                    value: $viewModel.timeSliderValue,
-                    in: 0...1,
-                    step: 1.0/96 // 15-minute intervals (24 hours * 4 intervals per hour)
-                ) { editing in
-                    viewModel.handleSliderEditing(editing)
-                }
-                .accentColor(viewModel.isConverterActive ? BananaTheme.Colors.bananaYellow : .gray)
-                
-                // Time range labels
-                HStack {
-                    Text("00:00")
-                        .font(.caption)
-                        .foregroundColor(BananaTheme.Colors.textSecondary)
-                    
-                    Spacer()
-                    
-                    Text("23:59")
-                        .font(.caption)
-                        .foregroundColor(BananaTheme.Colors.textSecondary)
-                }
-                .padding(.horizontal, BananaTheme.Spacing.sm)
             }
-            .padding(.horizontal, BananaTheme.Spacing.md)
-            .padding(.vertical, BananaTheme.Spacing.sm)
-            .background(BananaTheme.Colors.backgroundSecondary)
-            .cornerRadius(BananaTheme.Layout.cornerRadius)
-            .padding(.horizontal, BananaTheme.Spacing.md)
+            
+            // Slider
+            Slider(
+                value: $viewModel.timeSliderValue,
+                in: 0...1,
+                step: 1.0/96 // 15-minute intervals (24 hours * 4 intervals per hour)
+            ) { editing in
+                viewModel.handleSliderEditing(editing)
+            }
+            .accentColor(viewModel.isConverterActive ? BananaTheme.Colors.bananaYellow : .gray)
+            
+            // Today button row below slider
+            HStack {
+                Spacer()
+                
+                // Today button to the right when applicable
+                if !viewModel.isToday {
+                    Button {
+                        viewModel.selectedDate = Date()
+                        HapticManager.shared.impact(.light)
+                    } label: {
+                        HStack(spacing: 2) {
+                            Image(systemName: "gobackward")
+                                .font(.caption2)
+                            Text("Today")
+                                .font(.caption2)
+                        }
+                        .foregroundColor(viewModel.isConverterActive ? BananaTheme.Colors.bananaYellow : .gray)
+                    }
+                }
+                
+                Spacer()
+            }
+            
+            // AI Recommendation row
+            if !viewModel.aiRecommendation.isEmpty {
+                Text(viewModel.aiRecommendation)
+                    .font(.caption)
+                    .foregroundColor(.gray)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, 4)
+            }
         }
-        .padding(.vertical, BananaTheme.Spacing.md)
+        .padding(.horizontal, BananaTheme.Spacing.md)
+        .padding(.vertical, BananaTheme.Spacing.sm)
+        .background(BananaTheme.Colors.backgroundSecondary)
+        .cornerRadius(BananaTheme.Layout.cornerRadius)
+        .animation(.easeInOut(duration: 0.3), value: viewModel.isConverterActive)
     }
+    
+
     
     private func emptyStateView() -> some View {
         VStack(spacing: BananaTheme.Spacing.lg) {
@@ -226,49 +266,71 @@ struct WorldClockView: View {
     private var clocksList: some View {
         List {
             ForEach(viewModel.otherClocks) { clock in
-                WorldClockRow(clock: clock, viewModel: viewModel)
-                    .listRowBackground(Color.clear)
-                    .listRowSeparator(.hidden)
-                    .listRowInsets(EdgeInsets())
+                WorldClockRow(
+                    clock: clock, 
+                    viewModel: viewModel,
+                    onTap: {
+                        if isEditing {
+                            // In edit mode, toggle selection instead of doing nothing
+                            viewModel.toggleSelection(for: clock)
+                        }
+                    },
+                    isSelected: viewModel.isSelected(clock),
+                    showSelection: isEditing
+                )
+                .onLongPressGesture {
+                    if !isEditing {
+                        withAnimation {
+                            isEditing = true
+                        }
+                    }
+                }
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets())
+            }
+            .onMove { from, to in
+                viewModel.moveClocks(from: from, to: to)
             }
             .onDelete { indexSet in
                 viewModel.deleteClocks(at: indexSet)
             }
-            .onMove { source, destination in
-                viewModel.moveClocks(from: source, to: destination)
-            }
-            
-            // Timezone Converter (shows when additional timezones exist) - after last timezone
-            if !viewModel.otherClocks.isEmpty {
-                timezoneConverterView
-                    .listRowBackground(Color.clear)
-                    .listRowSeparator(.hidden)
-                    .listRowInsets(EdgeInsets())
-            }
         }
         .listStyle(.plain)
-        .environment(\.editMode, isEditing ? .constant(.active) : .constant(.inactive))
+        .scrollContentBackground(.hidden)
+        .scrollIndicators(.hidden)
+        .environment(\.editMode, .constant(isEditing ? .active : .inactive))
+        .padding(.bottom, viewModel.clocks.count >= 2 ? 160 : 60)
     }
     
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .navigationBarLeading) {
-            if !viewModel.otherClocks.isEmpty {
-                Button(isEditing ? "Done" : "Edit") {
+            if !viewModel.selectableClocks.isEmpty {
+                Button {
                     withAnimation {
                         isEditing.toggle()
                     }
+                } label: {
+                    if isEditing {
+                        Image(systemName: "checkmark")
+                            .foregroundColor(BananaTheme.Colors.bananaYellow)
+                    } else {
+                        Text("Edit")
+                            .foregroundColor(BananaTheme.Colors.bananaYellow)
+                    }
                 }
-                .foregroundColor(BananaTheme.Colors.bananaYellow)
             }
         }
         
         ToolbarItem(placement: .navigationBarTrailing) {
-            Button {
-                showingAddCity = true
-            } label: {
-                Image(systemName: "plus")
-                    .foregroundColor(BananaTheme.Colors.bananaYellow)
+            if !isEditing {
+                Button {
+                    showingAddCity = true
+                } label: {
+                    Image(systemName: "plus")
+                        .foregroundColor(BananaTheme.Colors.bananaYellow)
+                }
             }
         }
     }
@@ -278,9 +340,34 @@ struct WorldClockView: View {
 struct WorldClockRow: View {
     let clock: WorldClock
     @ObservedObject var viewModel: WorldClockViewModel
+    let onTap: () -> Void
+    let isSelected: Bool
+    let showSelection: Bool
+    
+    init(
+        clock: WorldClock,
+        viewModel: WorldClockViewModel,
+        onTap: @escaping () -> Void = {},
+        isSelected: Bool = false,
+        showSelection: Bool = false
+    ) {
+        self.clock = clock
+        self.viewModel = viewModel
+        self.onTap = onTap
+        self.isSelected = isSelected
+        self.showSelection = showSelection
+    }
     
     var body: some View {
         HStack {
+            // Selection checkbox (only shown in edit mode)
+            if showSelection {
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    .font(.title2)
+                    .foregroundColor(isSelected ? BananaTheme.Colors.bananaYellow : BananaTheme.Colors.textSecondary)
+                    .frame(width: 24, height: 24)
+            }
+            
             VStack(alignment: .leading, spacing: 4) {
                 Text(clock.cityName)
                     .font(.headline)
@@ -306,6 +393,9 @@ struct WorldClockRow: View {
         }
         .padding(.horizontal, BananaTheme.Spacing.md)
         .padding(.vertical, BananaTheme.Spacing.sm)
+        .onTapGesture {
+            onTap()
+        }
     }
     
     private var timeString: String {
@@ -323,7 +413,18 @@ struct WorldClockRow: View {
             // Use converter time only when converter is active, otherwise current time
             let baseTime = viewModel.isConverterActive ? viewModel.converterTime : viewModel.currentTime
             let formatter = DateFormatter()
-            formatter.timeStyle = .medium
+            
+            // Check if this is the current timezone (user's time)
+            let isCurrentTimezone = clock.timeZoneIdentifier == TimeZone.current.identifier
+            
+            if isCurrentTimezone {
+                // Keep seconds for user's time
+                formatter.timeStyle = .medium
+            } else {
+                // Remove seconds for additional world clocks
+                formatter.timeStyle = .short
+            }
+            
             formatter.timeZone = clock.timeZone
             return formatter.string(from: baseTime)
         }
@@ -338,10 +439,54 @@ struct WorldClockRow: View {
         } else {
             // Use converter date only when converter is active, otherwise current date
             let baseTime = viewModel.isConverterActive ? viewModel.converterTime : viewModel.currentTime
-            let formatter = DateFormatter()
-            formatter.dateFormat = "E, MMM d"
-            formatter.timeZone = clock.timeZone
-            return formatter.string(from: baseTime)
+            
+            // Check if this is the current timezone (user's time)
+            let isCurrentTimezone = clock.timeZoneIdentifier == TimeZone.current.identifier
+            
+            if isCurrentTimezone {
+                // Keep full date for user's time
+                let formatter = DateFormatter()
+                formatter.dateFormat = "E, MMM d"
+                formatter.timeZone = clock.timeZone
+                return formatter.string(from: baseTime)
+            } else {
+                // Show "Today", "Tomorrow", "Yesterday", or date for additional world clocks
+                let calendar = Calendar.current
+                let userToday = Date() // User's current date
+                let userTodayDate = calendar.startOfDay(for: userToday)
+                
+                // Get the actual time in the clock's timezone
+                let formatter = DateFormatter()
+                formatter.timeZone = clock.timeZone
+                formatter.dateFormat = "yyyy-MM-dd"
+                let clockTimeInClockTimezone = formatter.string(from: baseTime)
+                
+                // Convert that to a date in the user's timezone for comparison
+                let userFormatter = DateFormatter()
+                userFormatter.timeZone = TimeZone.current
+                userFormatter.dateFormat = "yyyy-MM-dd"
+                let clockDateInUserTimezone = userFormatter.date(from: clockTimeInClockTimezone) ?? userTodayDate
+                let clockDateStartOfDay = calendar.startOfDay(for: clockDateInUserTimezone)
+                
+                let daysDifference = calendar.dateComponents([.day], from: userTodayDate, to: clockDateStartOfDay).day ?? 0
+                
+
+                
+                switch daysDifference {
+                case -1:
+                    return "Yesterday"
+                case 0:
+                    return "Today"
+                case 1:
+                    return "Tomorrow"
+                default:
+                    // For dates beyond yesterday/tomorrow, show the date
+                    let dateFormatter = DateFormatter()
+                    dateFormatter.dateFormat = "E, MMM d"
+                    dateFormatter.timeZone = clock.timeZone
+                    return dateFormatter.string(from: baseTime)
+                }
+            }
         }
     }
     
@@ -366,15 +511,18 @@ struct WorldClockRow: View {
             ]
             return dayLengths[clock.cityName] ?? "Planetary Time"
         } else {
-            // Regular city offset
-            let offset = clock.timeZone.secondsFromGMT() - TimeZone.current.secondsFromGMT()
+            // Regular city offset - show absolute UTC offset
+            let offset = clock.timeZone.secondsFromGMT()
             let hours = offset / 3600
             
-            if hours == 0 {
-                return "Your Time"
+            if clock.timeZoneIdentifier == TimeZone.current.identifier {
+                let userOffset = TimeZone.current.secondsFromGMT()
+                let userHours = userOffset / 3600
+                let userSign = userHours >= 0 ? "+" : ""
+                return "Your Time, UTC\(userSign)\(userHours)"
             } else {
-                let sign = hours > 0 ? "+" : ""
-                return "\(sign)\(hours) hours"
+                let sign = hours >= 0 ? "+" : ""
+                return "UTC\(sign)\(hours)"
             }
         }
     }
@@ -413,6 +561,8 @@ struct WorldClockRow: View {
         }
     }
 }
+
+
 
 // MARK: - City Picker
 struct CityPickerView: View {
@@ -621,6 +771,15 @@ struct CityPickerView: View {
             }
             .navigationTitle("Add City")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbarColorScheme(.dark, for: .navigationBar)
+            .onAppear {
+                // Set navigation title color to white
+                UINavigationBar.appearance().titleTextAttributes = [
+                    .foregroundColor: UIColor.white,
+                    .font: UIFont.systemFont(ofSize: 17, weight: .regular)
+                ]
+            }
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") {
@@ -663,6 +822,8 @@ struct WorldClock: Identifiable, Codable {
     }
 }
 
+
+
 struct City: Identifiable {
     let id = UUID()
     let name: String
@@ -695,49 +856,121 @@ struct City: Identifiable {
         
         // North America
         City(name: "New York", country: "United States", timeZoneIdentifier: "America/New_York", isPlanet: false),
+        City(name: "Boston", country: "United States", timeZoneIdentifier: "America/New_York", isPlanet: false),
+        City(name: "Philadelphia", country: "United States", timeZoneIdentifier: "America/New_York", isPlanet: false),
         City(name: "Los Angeles", country: "United States", timeZoneIdentifier: "America/Los_Angeles", isPlanet: false),
+        City(name: "San Francisco", country: "United States", timeZoneIdentifier: "America/Los_Angeles", isPlanet: false),
+        City(name: "Seattle", country: "United States", timeZoneIdentifier: "America/Los_Angeles", isPlanet: false),
         City(name: "Chicago", country: "United States", timeZoneIdentifier: "America/Chicago", isPlanet: false),
+        City(name: "Houston", country: "United States", timeZoneIdentifier: "America/Chicago", isPlanet: false),
+        City(name: "Dallas", country: "United States", timeZoneIdentifier: "America/Chicago", isPlanet: false),
         City(name: "Denver", country: "United States", timeZoneIdentifier: "America/Denver", isPlanet: false),
         City(name: "Phoenix", country: "United States", timeZoneIdentifier: "America/Phoenix", isPlanet: false),
         City(name: "Anchorage", country: "United States", timeZoneIdentifier: "America/Anchorage", isPlanet: false),
         City(name: "Honolulu", country: "United States", timeZoneIdentifier: "Pacific/Honolulu", isPlanet: false),
         City(name: "Toronto", country: "Canada", timeZoneIdentifier: "America/Toronto", isPlanet: false),
+        City(name: "Montreal", country: "Canada", timeZoneIdentifier: "America/Toronto", isPlanet: false),
+        City(name: "Ottawa", country: "Canada", timeZoneIdentifier: "America/Toronto", isPlanet: false),
         City(name: "Vancouver", country: "Canada", timeZoneIdentifier: "America/Vancouver", isPlanet: false),
+        City(name: "Calgary", country: "Canada", timeZoneIdentifier: "America/Edmonton", isPlanet: false),
+        City(name: "Edmonton", country: "Canada", timeZoneIdentifier: "America/Edmonton", isPlanet: false),
         City(name: "Mexico City", country: "Mexico", timeZoneIdentifier: "America/Mexico_City", isPlanet: false),
+        City(name: "Guadalajara", country: "Mexico", timeZoneIdentifier: "America/Mexico_City", isPlanet: false),
+        City(name: "Monterrey", country: "Mexico", timeZoneIdentifier: "America/Mexico_City", isPlanet: false),
         
         // South America
         City(name: "São Paulo", country: "Brazil", timeZoneIdentifier: "America/Sao_Paulo", isPlanet: false),
+        City(name: "Rio de Janeiro", country: "Brazil", timeZoneIdentifier: "America/Sao_Paulo", isPlanet: false),
+        City(name: "Brasília", country: "Brazil", timeZoneIdentifier: "America/Sao_Paulo", isPlanet: false),
         City(name: "Buenos Aires", country: "Argentina", timeZoneIdentifier: "America/Argentina/Buenos_Aires", isPlanet: false),
+        City(name: "Córdoba", country: "Argentina", timeZoneIdentifier: "America/Argentina/Buenos_Aires", isPlanet: false),
+        City(name: "Rosario", country: "Argentina", timeZoneIdentifier: "America/Argentina/Buenos_Aires", isPlanet: false),
         City(name: "Santiago", country: "Chile", timeZoneIdentifier: "America/Santiago", isPlanet: false),
+        City(name: "Valparaíso", country: "Chile", timeZoneIdentifier: "America/Santiago", isPlanet: false),
+        City(name: "Concepción", country: "Chile", timeZoneIdentifier: "America/Santiago", isPlanet: false),
         City(name: "Lima", country: "Peru", timeZoneIdentifier: "America/Lima", isPlanet: false),
+        City(name: "Arequipa", country: "Peru", timeZoneIdentifier: "America/Lima", isPlanet: false),
+        City(name: "Trujillo", country: "Peru", timeZoneIdentifier: "America/Lima", isPlanet: false),
         City(name: "Bogotá", country: "Colombia", timeZoneIdentifier: "America/Bogota", isPlanet: false),
+        City(name: "Medellín", country: "Colombia", timeZoneIdentifier: "America/Bogota", isPlanet: false),
+        City(name: "Cali", country: "Colombia", timeZoneIdentifier: "America/Bogota", isPlanet: false),
         City(name: "Caracas", country: "Venezuela", timeZoneIdentifier: "America/Caracas", isPlanet: false),
+        City(name: "Maracaibo", country: "Venezuela", timeZoneIdentifier: "America/Caracas", isPlanet: false),
+        City(name: "Valencia", country: "Venezuela", timeZoneIdentifier: "America/Caracas", isPlanet: false),
         
         // Europe
         City(name: "London", country: "United Kingdom", timeZoneIdentifier: "Europe/London", isPlanet: false),
+        City(name: "Manchester", country: "United Kingdom", timeZoneIdentifier: "Europe/London", isPlanet: false),
+        City(name: "Birmingham", country: "United Kingdom", timeZoneIdentifier: "Europe/London", isPlanet: false),
         City(name: "Paris", country: "France", timeZoneIdentifier: "Europe/Paris", isPlanet: false),
+        City(name: "Lyon", country: "France", timeZoneIdentifier: "Europe/Paris", isPlanet: false),
+        City(name: "Marseille", country: "France", timeZoneIdentifier: "Europe/Paris", isPlanet: false),
         City(name: "Berlin", country: "Germany", timeZoneIdentifier: "Europe/Berlin", isPlanet: false),
+        City(name: "Munich", country: "Germany", timeZoneIdentifier: "Europe/Berlin", isPlanet: false),
+        City(name: "Hamburg", country: "Germany", timeZoneIdentifier: "Europe/Berlin", isPlanet: false),
         City(name: "Rome", country: "Italy", timeZoneIdentifier: "Europe/Rome", isPlanet: false),
+        City(name: "Milan", country: "Italy", timeZoneIdentifier: "Europe/Rome", isPlanet: false),
+        City(name: "Naples", country: "Italy", timeZoneIdentifier: "Europe/Rome", isPlanet: false),
         City(name: "Madrid", country: "Spain", timeZoneIdentifier: "Europe/Madrid", isPlanet: false),
+        City(name: "Barcelona", country: "Spain", timeZoneIdentifier: "Europe/Madrid", isPlanet: false),
+        City(name: "Valencia", country: "Spain", timeZoneIdentifier: "Europe/Madrid", isPlanet: false),
         City(name: "Amsterdam", country: "Netherlands", timeZoneIdentifier: "Europe/Amsterdam", isPlanet: false),
+        City(name: "Rotterdam", country: "Netherlands", timeZoneIdentifier: "Europe/Amsterdam", isPlanet: false),
+        City(name: "The Hague", country: "Netherlands", timeZoneIdentifier: "Europe/Amsterdam", isPlanet: false),
         City(name: "Stockholm", country: "Sweden", timeZoneIdentifier: "Europe/Stockholm", isPlanet: false),
+        City(name: "Gothenburg", country: "Sweden", timeZoneIdentifier: "Europe/Stockholm", isPlanet: false),
+        City(name: "Malmö", country: "Sweden", timeZoneIdentifier: "Europe/Stockholm", isPlanet: false),
         City(name: "Oslo", country: "Norway", timeZoneIdentifier: "Europe/Oslo", isPlanet: false),
+        City(name: "Bergen", country: "Norway", timeZoneIdentifier: "Europe/Oslo", isPlanet: false),
+        City(name: "Trondheim", country: "Norway", timeZoneIdentifier: "Europe/Oslo", isPlanet: false),
         City(name: "Copenhagen", country: "Denmark", timeZoneIdentifier: "Europe/Copenhagen", isPlanet: false),
+        City(name: "Aarhus", country: "Denmark", timeZoneIdentifier: "Europe/Copenhagen", isPlanet: false),
+        City(name: "Odense", country: "Denmark", timeZoneIdentifier: "Europe/Copenhagen", isPlanet: false),
         City(name: "Helsinki", country: "Finland", timeZoneIdentifier: "Europe/Helsinki", isPlanet: false),
+        City(name: "Tampere", country: "Finland", timeZoneIdentifier: "Europe/Helsinki", isPlanet: false),
+        City(name: "Turku", country: "Finland", timeZoneIdentifier: "Europe/Helsinki", isPlanet: false),
         City(name: "Warsaw", country: "Poland", timeZoneIdentifier: "Europe/Warsaw", isPlanet: false),
+        City(name: "Kraków", country: "Poland", timeZoneIdentifier: "Europe/Warsaw", isPlanet: false),
+        City(name: "Łódź", country: "Poland", timeZoneIdentifier: "Europe/Warsaw", isPlanet: false),
         City(name: "Prague", country: "Czech Republic", timeZoneIdentifier: "Europe/Prague", isPlanet: false),
+        City(name: "Brno", country: "Czech Republic", timeZoneIdentifier: "Europe/Prague", isPlanet: false),
+        City(name: "Ostrava", country: "Czech Republic", timeZoneIdentifier: "Europe/Prague", isPlanet: false),
         City(name: "Vienna", country: "Austria", timeZoneIdentifier: "Europe/Vienna", isPlanet: false),
+        City(name: "Graz", country: "Austria", timeZoneIdentifier: "Europe/Vienna", isPlanet: false),
+        City(name: "Linz", country: "Austria", timeZoneIdentifier: "Europe/Vienna", isPlanet: false),
         City(name: "Budapest", country: "Hungary", timeZoneIdentifier: "Europe/Budapest", isPlanet: false),
+        City(name: "Debrecen", country: "Hungary", timeZoneIdentifier: "Europe/Budapest", isPlanet: false),
+        City(name: "Szeged", country: "Hungary", timeZoneIdentifier: "Europe/Budapest", isPlanet: false),
         City(name: "Bucharest", country: "Romania", timeZoneIdentifier: "Europe/Bucharest", isPlanet: false),
+        City(name: "Cluj-Napoca", country: "Romania", timeZoneIdentifier: "Europe/Bucharest", isPlanet: false),
+        City(name: "Timișoara", country: "Romania", timeZoneIdentifier: "Europe/Bucharest", isPlanet: false),
         City(name: "Sofia", country: "Bulgaria", timeZoneIdentifier: "Europe/Sofia", isPlanet: false),
+        City(name: "Plovdiv", country: "Bulgaria", timeZoneIdentifier: "Europe/Sofia", isPlanet: false),
+        City(name: "Varna", country: "Bulgaria", timeZoneIdentifier: "Europe/Sofia", isPlanet: false),
         City(name: "Athens", country: "Greece", timeZoneIdentifier: "Europe/Athens", isPlanet: false),
+        City(name: "Thessaloniki", country: "Greece", timeZoneIdentifier: "Europe/Athens", isPlanet: false),
+        City(name: "Patras", country: "Greece", timeZoneIdentifier: "Europe/Athens", isPlanet: false),
         City(name: "Istanbul", country: "Turkey", timeZoneIdentifier: "Europe/Istanbul", isPlanet: false),
+        City(name: "Ankara", country: "Turkey", timeZoneIdentifier: "Europe/Istanbul", isPlanet: false),
+        City(name: "İzmir", country: "Turkey", timeZoneIdentifier: "Europe/Istanbul", isPlanet: false),
         City(name: "Moscow", country: "Russia", timeZoneIdentifier: "Europe/Moscow", isPlanet: false),
+        City(name: "Saint Petersburg", country: "Russia", timeZoneIdentifier: "Europe/Moscow", isPlanet: false),
+        City(name: "Novosibirsk", country: "Russia", timeZoneIdentifier: "Asia/Novosibirsk", isPlanet: false),
         City(name: "Kiev", country: "Ukraine", timeZoneIdentifier: "Europe/Kiev", isPlanet: false),
+        City(name: "Kharkiv", country: "Ukraine", timeZoneIdentifier: "Europe/Kiev", isPlanet: false),
+        City(name: "Odessa", country: "Ukraine", timeZoneIdentifier: "Europe/Kiev", isPlanet: false),
         City(name: "Minsk", country: "Belarus", timeZoneIdentifier: "Europe/Minsk", isPlanet: false),
+        City(name: "Gomel", country: "Belarus", timeZoneIdentifier: "Europe/Minsk", isPlanet: false),
+        City(name: "Mogilev", country: "Belarus", timeZoneIdentifier: "Europe/Minsk", isPlanet: false),
         City(name: "Riga", country: "Latvia", timeZoneIdentifier: "Europe/Riga", isPlanet: false),
+        City(name: "Daugavpils", country: "Latvia", timeZoneIdentifier: "Europe/Riga", isPlanet: false),
+        City(name: "Liepāja", country: "Latvia", timeZoneIdentifier: "Europe/Riga", isPlanet: false),
         City(name: "Tallinn", country: "Estonia", timeZoneIdentifier: "Europe/Tallinn", isPlanet: false),
+        City(name: "Tartu", country: "Estonia", timeZoneIdentifier: "Europe/Tallinn", isPlanet: false),
+        City(name: "Narva", country: "Estonia", timeZoneIdentifier: "Europe/Tallinn", isPlanet: false),
         City(name: "Vilnius", country: "Lithuania", timeZoneIdentifier: "Europe/Vilnius", isPlanet: false),
+        City(name: "Kaunas", country: "Lithuania", timeZoneIdentifier: "Europe/Vilnius", isPlanet: false),
+        City(name: "Klaipėda", country: "Lithuania", timeZoneIdentifier: "Europe/Vilnius", isPlanet: false),
         
         // Africa
         City(name: "Cairo", country: "Egypt", timeZoneIdentifier: "Africa/Cairo", isPlanet: false),
@@ -762,32 +995,82 @@ struct City: Identifiable {
         
         // Asia
         City(name: "Tokyo", country: "Japan", timeZoneIdentifier: "Asia/Tokyo", isPlanet: false),
+        City(name: "Osaka", country: "Japan", timeZoneIdentifier: "Asia/Tokyo", isPlanet: false),
+        City(name: "Nagoya", country: "Japan", timeZoneIdentifier: "Asia/Tokyo", isPlanet: false),
         City(name: "Beijing", country: "China", timeZoneIdentifier: "Asia/Shanghai", isPlanet: false),
+        City(name: "Shanghai", country: "China", timeZoneIdentifier: "Asia/Shanghai", isPlanet: false),
+        City(name: "Guangzhou", country: "China", timeZoneIdentifier: "Asia/Shanghai", isPlanet: false),
         City(name: "Hong Kong", country: "China", timeZoneIdentifier: "Asia/Hong_Kong", isPlanet: false),
         City(name: "Seoul", country: "South Korea", timeZoneIdentifier: "Asia/Seoul", isPlanet: false),
+        City(name: "Busan", country: "South Korea", timeZoneIdentifier: "Asia/Seoul", isPlanet: false),
+        City(name: "Incheon", country: "South Korea", timeZoneIdentifier: "Asia/Seoul", isPlanet: false),
         City(name: "Singapore", country: "Singapore", timeZoneIdentifier: "Asia/Singapore", isPlanet: false),
         City(name: "Bangkok", country: "Thailand", timeZoneIdentifier: "Asia/Bangkok", isPlanet: false),
+        City(name: "Chiang Mai", country: "Thailand", timeZoneIdentifier: "Asia/Bangkok", isPlanet: false),
+        City(name: "Phuket", country: "Thailand", timeZoneIdentifier: "Asia/Bangkok", isPlanet: false),
         City(name: "Jakarta", country: "Indonesia", timeZoneIdentifier: "Asia/Jakarta", isPlanet: false),
+        City(name: "Surabaya", country: "Indonesia", timeZoneIdentifier: "Asia/Jakarta", isPlanet: false),
+        City(name: "Bandung", country: "Indonesia", timeZoneIdentifier: "Asia/Jakarta", isPlanet: false),
         City(name: "Manila", country: "Philippines", timeZoneIdentifier: "Asia/Manila", isPlanet: false),
+        City(name: "Cebu", country: "Philippines", timeZoneIdentifier: "Asia/Manila", isPlanet: false),
+        City(name: "Davao", country: "Philippines", timeZoneIdentifier: "Asia/Manila", isPlanet: false),
         City(name: "Kuala Lumpur", country: "Malaysia", timeZoneIdentifier: "Asia/Kuala_Lumpur", isPlanet: false),
+        City(name: "Penang", country: "Malaysia", timeZoneIdentifier: "Asia/Kuala_Lumpur", isPlanet: false),
+        City(name: "Johor Bahru", country: "Malaysia", timeZoneIdentifier: "Asia/Kuala_Lumpur", isPlanet: false),
         City(name: "Hanoi", country: "Vietnam", timeZoneIdentifier: "Asia/Ho_Chi_Minh", isPlanet: false),
+        City(name: "Ho Chi Minh City", country: "Vietnam", timeZoneIdentifier: "Asia/Ho_Chi_Minh", isPlanet: false),
+        City(name: "Da Nang", country: "Vietnam", timeZoneIdentifier: "Asia/Ho_Chi_Minh", isPlanet: false),
         City(name: "Yangon", country: "Myanmar", timeZoneIdentifier: "Asia/Yangon", isPlanet: false),
+        City(name: "Mandalay", country: "Myanmar", timeZoneIdentifier: "Asia/Yangon", isPlanet: false),
+        City(name: "Naypyidaw", country: "Myanmar", timeZoneIdentifier: "Asia/Yangon", isPlanet: false),
         City(name: "Phnom Penh", country: "Cambodia", timeZoneIdentifier: "Asia/Phnom_Penh", isPlanet: false),
+        City(name: "Siem Reap", country: "Cambodia", timeZoneIdentifier: "Asia/Phnom_Penh", isPlanet: false),
+        City(name: "Battambang", country: "Cambodia", timeZoneIdentifier: "Asia/Phnom_Penh", isPlanet: false),
         City(name: "Vientiane", country: "Laos", timeZoneIdentifier: "Asia/Vientiane", isPlanet: false),
+        City(name: "Luang Prabang", country: "Laos", timeZoneIdentifier: "Asia/Vientiane", isPlanet: false),
+        City(name: "Pakse", country: "Laos", timeZoneIdentifier: "Asia/Vientiane", isPlanet: false),
         City(name: "Dhaka", country: "Bangladesh", timeZoneIdentifier: "Asia/Dhaka", isPlanet: false),
+        City(name: "Chittagong", country: "Bangladesh", timeZoneIdentifier: "Asia/Dhaka", isPlanet: false),
+        City(name: "Sylhet", country: "Bangladesh", timeZoneIdentifier: "Asia/Dhaka", isPlanet: false),
         City(name: "Kathmandu", country: "Nepal", timeZoneIdentifier: "Asia/Kathmandu", isPlanet: false),
+        City(name: "Pokhara", country: "Nepal", timeZoneIdentifier: "Asia/Kathmandu", isPlanet: false),
+        City(name: "Lalitpur", country: "Nepal", timeZoneIdentifier: "Asia/Kathmandu", isPlanet: false),
         City(name: "Colombo", country: "Sri Lanka", timeZoneIdentifier: "Asia/Colombo", isPlanet: false),
+        City(name: "Kandy", country: "Sri Lanka", timeZoneIdentifier: "Asia/Colombo", isPlanet: false),
+        City(name: "Galle", country: "Sri Lanka", timeZoneIdentifier: "Asia/Colombo", isPlanet: false),
         City(name: "Mumbai", country: "India", timeZoneIdentifier: "Asia/Kolkata", isPlanet: false),
         City(name: "New Delhi", country: "India", timeZoneIdentifier: "Asia/Kolkata", isPlanet: false),
+        City(name: "Kolkata", country: "India", timeZoneIdentifier: "Asia/Kolkata", isPlanet: false),
+        City(name: "Chennai", country: "India", timeZoneIdentifier: "Asia/Kolkata", isPlanet: false),
+        City(name: "Bangalore", country: "India", timeZoneIdentifier: "Asia/Kolkata", isPlanet: false),
+        City(name: "Hyderabad", country: "India", timeZoneIdentifier: "Asia/Kolkata", isPlanet: false),
         City(name: "Karachi", country: "Pakistan", timeZoneIdentifier: "Asia/Karachi", isPlanet: false),
+        City(name: "Lahore", country: "Pakistan", timeZoneIdentifier: "Asia/Karachi", isPlanet: false),
+        City(name: "Faisalabad", country: "Pakistan", timeZoneIdentifier: "Asia/Karachi", isPlanet: false),
         City(name: "Tashkent", country: "Uzbekistan", timeZoneIdentifier: "Asia/Tashkent", isPlanet: false),
+        City(name: "Samarkand", country: "Uzbekistan", timeZoneIdentifier: "Asia/Tashkent", isPlanet: false),
+        City(name: "Bukhara", country: "Uzbekistan", timeZoneIdentifier: "Asia/Tashkent", isPlanet: false),
         City(name: "Almaty", country: "Kazakhstan", timeZoneIdentifier: "Asia/Almaty", isPlanet: false),
+        City(name: "Nur-Sultan", country: "Kazakhstan", timeZoneIdentifier: "Asia/Almaty", isPlanet: false),
+        City(name: "Shymkent", country: "Kazakhstan", timeZoneIdentifier: "Asia/Almaty", isPlanet: false),
         City(name: "Bishkek", country: "Kyrgyzstan", timeZoneIdentifier: "Asia/Bishkek", isPlanet: false),
+        City(name: "Osh", country: "Kyrgyzstan", timeZoneIdentifier: "Asia/Bishkek", isPlanet: false),
+        City(name: "Jalal-Abad", country: "Kyrgyzstan", timeZoneIdentifier: "Asia/Bishkek", isPlanet: false),
         City(name: "Dushanbe", country: "Tajikistan", timeZoneIdentifier: "Asia/Dushanbe", isPlanet: false),
+        City(name: "Khujand", country: "Tajikistan", timeZoneIdentifier: "Asia/Dushanbe", isPlanet: false),
+        City(name: "Kulob", country: "Tajikistan", timeZoneIdentifier: "Asia/Dushanbe", isPlanet: false),
         City(name: "Ashgabat", country: "Turkmenistan", timeZoneIdentifier: "Asia/Ashgabat", isPlanet: false),
+        City(name: "Türkmenabat", country: "Turkmenistan", timeZoneIdentifier: "Asia/Ashgabat", isPlanet: false),
+        City(name: "Mary", country: "Turkmenistan", timeZoneIdentifier: "Asia/Ashgabat", isPlanet: false),
         City(name: "Baku", country: "Azerbaijan", timeZoneIdentifier: "Asia/Baku", isPlanet: false),
+        City(name: "Ganja", country: "Azerbaijan", timeZoneIdentifier: "Asia/Baku", isPlanet: false),
+        City(name: "Sumqayıt", country: "Azerbaijan", timeZoneIdentifier: "Asia/Baku", isPlanet: false),
         City(name: "Tbilisi", country: "Georgia", timeZoneIdentifier: "Asia/Tbilisi", isPlanet: false),
+        City(name: "Batumi", country: "Georgia", timeZoneIdentifier: "Asia/Tbilisi", isPlanet: false),
+        City(name: "Kutaisi", country: "Georgia", timeZoneIdentifier: "Asia/Tbilisi", isPlanet: false),
         City(name: "Yerevan", country: "Armenia", timeZoneIdentifier: "Asia/Yerevan", isPlanet: false),
+        City(name: "Gyumri", country: "Armenia", timeZoneIdentifier: "Asia/Yerevan", isPlanet: false),
+        City(name: "Vanadzor", country: "Armenia", timeZoneIdentifier: "Asia/Yerevan", isPlanet: false),
         City(name: "Tehran", country: "Iran", timeZoneIdentifier: "Asia/Tehran", isPlanet: false),
         City(name: "Baghdad", country: "Iraq", timeZoneIdentifier: "Asia/Baghdad", isPlanet: false),
         City(name: "Riyadh", country: "Saudi Arabia", timeZoneIdentifier: "Asia/Riyadh", isPlanet: false),
@@ -802,7 +1085,6 @@ struct City: Identifiable {
         City(name: "Jerusalem", country: "Israel", timeZoneIdentifier: "Asia/Jerusalem", isPlanet: false),
         City(name: "Nicosia", country: "Cyprus", timeZoneIdentifier: "Asia/Nicosia", isPlanet: false),
         City(name: "Yekaterinburg", country: "Russia", timeZoneIdentifier: "Asia/Yekaterinburg", isPlanet: false),
-        City(name: "Novosibirsk", country: "Russia", timeZoneIdentifier: "Asia/Novosibirsk", isPlanet: false),
         City(name: "Krasnoyarsk", country: "Russia", timeZoneIdentifier: "Asia/Krasnoyarsk", isPlanet: false),
         City(name: "Irkutsk", country: "Russia", timeZoneIdentifier: "Asia/Irkutsk", isPlanet: false),
         City(name: "Yakutsk", country: "Russia", timeZoneIdentifier: "Asia/Yakutsk", isPlanet: false),
@@ -831,8 +1113,6 @@ struct City: Identifiable {
         City(name: "Apia", country: "Samoa", timeZoneIdentifier: "Pacific/Apia", isPlanet: false),
         City(name: "Nuku'alofa", country: "Tonga", timeZoneIdentifier: "Pacific/Tongatapu", isPlanet: false),
         City(name: "Papeete", country: "French Polynesia", timeZoneIdentifier: "Pacific/Tahiti", isPlanet: false),
-        City(name: "Honolulu", country: "United States", timeZoneIdentifier: "Pacific/Honolulu", isPlanet: false),
-        City(name: "Anchorage", country: "United States", timeZoneIdentifier: "America/Anchorage", isPlanet: false),
         
         // Atlantic Islands
         City(name: "Reykjavik", country: "Iceland", timeZoneIdentifier: "Atlantic/Reykjavik", isPlanet: false),
@@ -942,12 +1222,15 @@ class WorldClockViewModel: ObservableObject {
     @Published var timeSliderValue: Double = 0.0
     @Published var isConverterActive = false
     @Published var countdownSeconds = 0
+    @Published var selectedClocks: Set<UUID> = []
     
     private let userDefaults = UserDefaults.standard
     private let storageKey = "worldClocks"
     private var timer: Foundation.Timer?
     private var converterTimer: Foundation.Timer?
     private var countdownTimer: Foundation.Timer?
+    let aiService = AITimezoneService()
+    private var hasTriggeredAIForCurrentSession = false
     
     // Computed properties for current timezone and other clocks
     var currentTimezoneClock: WorldClock? {
@@ -958,6 +1241,19 @@ class WorldClockViewModel: ObservableObject {
     var otherClocks: [WorldClock] {
         let currentTimeZoneId = TimeZone.current.identifier
         return clocks.filter { $0.timeZoneIdentifier != currentTimeZoneId }
+    }
+    
+    // Computed properties for selection mode
+    var isSelectionMode: Bool {
+        !selectedClocks.isEmpty
+    }
+    
+    var selectedClocksCount: Int {
+        selectedClocks.count
+    }
+    
+    var selectableClocks: [WorldClock] {
+        otherClocks // Only other clocks can be selected (not current timezone)
     }
     
     var selectedTimeString: String {
@@ -994,7 +1290,7 @@ class WorldClockViewModel: ObservableObject {
     }
     
     var countdownProgress: Double {
-        return Double(3 - countdownSeconds) / 3.0
+        return Double(5 - countdownSeconds) / 5.0
     }
     
     var isToday: Bool {
@@ -1012,27 +1308,328 @@ class WorldClockViewModel: ObservableObject {
         return hasPlanet ? "🪐 Planetary Clock" : "World Clock"
     }
     
+    var aiRecommendation: String {
+        return aiService.currentRecommendation
+    }
+    
+    private func triggerAIRecommendation() {
+        print("🍌 Trigger: isConverterActive=\(isConverterActive), clocks.count=\(clocks.count), hasTriggered=\(hasTriggeredAIForCurrentSession)")
+        print("🍌 Trigger: Current clocks:")
+        for (index, clock) in clocks.enumerated() {
+            print("🍌 Trigger:   [\(index)] \(clock.cityName) (\(clock.timeZoneIdentifier))")
+        }
+        
+        // Only trigger if converter is active, we have multiple timezones, and we haven't triggered yet this session
+        if isConverterActive && clocks.count >= 2 && !hasTriggeredAIForCurrentSession {
+            print("🍌 Trigger: Calling AI service")
+            hasTriggeredAIForCurrentSession = true
+            Task {
+                await aiService.getRecommendation(for: clocks, selectedDate: selectedDate)
+            }
+        } else {
+            print("🍌 Trigger: Skipping - converter not active, insufficient clocks, or already triggered")
+            print("🍌 Trigger:   isConverterActive=\(isConverterActive)")
+            print("🍌 Trigger:   clocks.count >= 2 = \(clocks.count >= 2)")
+            print("🍌 Trigger:   !hasTriggeredAIForCurrentSession = \(!hasTriggeredAIForCurrentSession)")
+        }
+    }
+    
+    // MARK: - Meeting Time Suggestions
+    
+    var meetingTimeSuggestion: MeetingSuggestion {
+        guard isConverterActive && !otherClocks.isEmpty else { 
+            return MeetingSuggestion(type: .none, message: "", suggestedTimes: [])
+        }
+        
+        let regularClocks = otherClocks.filter { clock in
+            !clock.cityName.contains("🧠") && !clock.cityName.contains("💖") && !clock.cityName.contains("🌍") && 
+            !clock.cityName.contains("🛡️") && !clock.cityName.contains("👑") && !clock.cityName.contains("🪐") && 
+            !clock.cityName.contains("🔭") && !clock.cityName.contains("🌊")
+        }
+        
+        guard !regularClocks.isEmpty else { 
+            return MeetingSuggestion(type: .none, message: "", suggestedTimes: [])
+        }
+        
+        return generateMeetingSuggestions(for: regularClocks)
+    }
+    
+    struct MeetingSuggestion {
+        enum SuggestionType {
+            case excellent, challenging, incompatible, none
+        }
+        
+        let type: SuggestionType
+        let message: String
+        let suggestedTimes: [String]
+    }
+    
+    private func generateMeetingSuggestions(for clocks: [WorldClock]) -> MeetingSuggestion {
+        // Analyze current time
+        let currentAnalysis = analyzeCurrentTime(for: clocks)
+        
+        // Generate suggested times for different scenarios
+        let suggestedTimes = generateSuggestedTimes(for: clocks)
+        
+        switch currentAnalysis.quality {
+        case .excellent:
+            return MeetingSuggestion(
+                type: .excellent,
+                message: "These timezones work well together!",
+                suggestedTimes: suggestedTimes
+            )
+        case .good:
+            return MeetingSuggestion(
+                type: .excellent,
+                message: "These timezones work well together!",
+                suggestedTimes: suggestedTimes
+            )
+        case .fair:
+            return MeetingSuggestion(
+                type: .challenging,
+                message: "These timezones are tough, but these times might be best:",
+                suggestedTimes: suggestedTimes
+            )
+        case .poor:
+            return MeetingSuggestion(
+                type: .incompatible,
+                message: "These times aren't compatible. Someone needs to wake up.",
+                suggestedTimes: suggestedTimes
+            )
+        }
+    }
+    
+    private struct TimeAnalysis {
+        enum Quality {
+            case excellent, good, fair, poor
+        }
+        
+        let quality: Quality
+        let goodCount: Int
+        let fairCount: Int
+        let totalCount: Int
+    }
+    
+    private func analyzeCurrentTime(for clocks: [WorldClock]) -> TimeAnalysis {
+        var excellentCount = 0
+        var goodCount = 0
+        var fairCount = 0
+        
+        for clock in clocks {
+            let baseTime = converterTime
+            let formatter = DateFormatter()
+            formatter.timeZone = clock.timeZone
+            formatter.dateFormat = "HH"
+            let hourString = formatter.string(from: baseTime)
+            let hour = Int(hourString) ?? 0
+            
+            switch hour {
+            case 9..<17:  // 9am-5pm - excellent business hours
+                excellentCount += 1
+            case 8..<18:  // 8am-6pm - good business hours
+                goodCount += 1
+            case 7..<20:  // 7am-8pm - fair hours
+                fairCount += 1
+            default:      // outside fair hours
+                break
+            }
+        }
+        
+        let totalCount = clocks.count
+        let excellentPercentage = Double(excellentCount) / Double(totalCount)
+        let goodPercentage = Double(goodCount) / Double(totalCount)
+        let fairPercentage = Double(fairCount) / Double(totalCount)
+        
+        // More lenient thresholds
+        if excellentPercentage >= 0.6 {
+            return TimeAnalysis(quality: .excellent, goodCount: excellentCount, fairCount: goodCount, totalCount: totalCount)
+        } else if goodPercentage >= 0.5 {
+            return TimeAnalysis(quality: .good, goodCount: goodCount, fairCount: fairCount, totalCount: totalCount)
+        } else if fairPercentage >= 0.3 {
+            return TimeAnalysis(quality: .fair, goodCount: fairCount, fairCount: fairCount, totalCount: totalCount)
+        } else {
+            return TimeAnalysis(quality: .poor, goodCount: 0, fairCount: fairCount, totalCount: totalCount)
+        }
+    }
+    
+    private func generateSuggestedTimes(for clocks: [WorldClock]) -> [String] {
+        let calendar = Calendar.current
+        let selectedDateComponents = calendar.dateComponents([.year, .month, .day], from: selectedDate)
+        
+        // Generate time blocks throughout the day to find optimal meeting windows
+        var suggestedTimes: [String] = []
+        var blockScores: [(startHour: Int, endHour: Int, score: Int)] = []
+        
+        // Test time blocks from 6am to 10pm
+        for startHour in 6...20 {
+            for duration in [1, 2, 3] { // 1, 2, or 3 hour blocks
+                let endHour = startHour + duration
+                guard endHour <= 22 else { continue }
+                
+                var blockScore = 0
+                var totalTests = 0
+                
+                // Test every 30 minutes within this block
+                for testHour in startHour..<endHour {
+                    for minute in [0, 30] {
+                        var timeComponents = DateComponents()
+                        timeComponents.year = selectedDateComponents.year
+                        timeComponents.month = selectedDateComponents.month
+                        timeComponents.day = selectedDateComponents.day
+                        timeComponents.hour = testHour
+                        timeComponents.minute = minute
+                        timeComponents.second = 0
+                        
+                        guard let testTime = calendar.date(from: timeComponents) else { continue }
+                        totalTests += 1
+                        
+                        // Score this time based on how well it works for all timezones
+                        for clock in clocks {
+                            let formatter = DateFormatter()
+                            formatter.timeZone = clock.timeZone
+                            formatter.dateFormat = "HH"
+                            let hourString = formatter.string(from: testTime)
+                            let hour = Int(hourString) ?? 0
+                            
+                            switch hour {
+                            case 9..<17:  // 9am-5pm - excellent
+                                blockScore += 3
+                            case 8..<18:  // 8am-6pm - good
+                                blockScore += 2
+                            case 7..<20:  // 7am-8pm - fair
+                                blockScore += 1
+                            default:      // outside fair hours
+                                blockScore += 0
+                            }
+                        }
+                    }
+                }
+                
+                // Average score for this block
+                let averageScore = totalTests > 0 ? blockScore / totalTests : 0
+                blockScores.append((startHour: startHour, endHour: endHour, score: averageScore))
+            }
+        }
+        
+        // Sort by score and take top blocks (usually just 1, max 2)
+        let topBlocks = blockScores.sorted { $0.score > $1.score }.prefix(2)
+        
+        for block in topBlocks {
+            let startFormatter = DateFormatter()
+            startFormatter.timeZone = TimeZone.current
+            startFormatter.dateFormat = "h:mm a"
+            
+            let endFormatter = DateFormatter()
+            endFormatter.timeZone = TimeZone.current
+            endFormatter.dateFormat = "h:mm a"
+            
+            var startComponents = DateComponents()
+            startComponents.year = selectedDateComponents.year
+            startComponents.month = selectedDateComponents.month
+            startComponents.day = selectedDateComponents.day
+            startComponents.hour = block.startHour
+            startComponents.minute = 0
+            startComponents.second = 0
+            
+            var endComponents = DateComponents()
+            endComponents.year = selectedDateComponents.year
+            endComponents.month = selectedDateComponents.month
+            endComponents.day = selectedDateComponents.day
+            endComponents.hour = block.endHour
+            endComponents.minute = 0
+            endComponents.second = 0
+            
+            guard let startTime = calendar.date(from: startComponents),
+                  let endTime = calendar.date(from: endComponents) else { continue }
+            
+            let startString = startFormatter.string(from: startTime)
+            let endString = endFormatter.string(from: endTime)
+            
+            // Add context about how many timezones this works for
+            let workingCount = block.score / 3 // Rough estimate of working timezones
+            let totalCount = clocks.count
+            
+            let context = workingCount >= totalCount * 3 / 4 ? " (works for \(workingCount)/\(totalCount))" : ""
+            suggestedTimes.append("\(startString) - \(endString)\(context)")
+        }
+        
+        return suggestedTimes
+    }
+    
+    // MARK: - Selection Management
+    
+    func toggleSelection(for clock: WorldClock) {
+        if selectedClocks.contains(clock.id) {
+            selectedClocks.remove(clock.id)
+        } else {
+            selectedClocks.insert(clock.id)
+        }
+    }
+    
+    func selectAll() {
+        selectedClocks = Set(selectableClocks.map { $0.id })
+    }
+    
+    func deselectAll() {
+        selectedClocks.removeAll()
+    }
+    
+    func isSelected(_ clock: WorldClock) -> Bool {
+        selectedClocks.contains(clock.id)
+    }
+    
+    // MARK: - Bulk Operations
+    
+    func deleteSelectedClocks() {
+        let clocksToDelete = clocks.filter { selectedClocks.contains($0.id) }
+        
+        for clockToDelete in clocksToDelete {
+            if let index = clocks.firstIndex(where: { $0.id == clockToDelete.id }) {
+                clocks.remove(at: index)
+            }
+        }
+        
+        selectedClocks.removeAll() // Clear selection after deletion
+        updateDisplayOrder()
+        saveClocks()
+        HapticManager.shared.impact(.light)
+        
+        // Trigger AI recommendation if converter is active
+        if isConverterActive {
+            Task {
+                await aiService.getRecommendation(for: clocks, selectedDate: selectedDate)
+            }
+        }
+    }
+    
     func handleSliderEditing(_ editing: Bool) {
         if editing {
             // User started touching the slider
+            let wasConverterActive = isConverterActive
             isConverterActive = true
             countdownSeconds = 0
             converterTimer?.invalidate()
             countdownTimer?.invalidate()
+            
+            // Only trigger AI recommendation when converter first becomes active (not on every slider move)
+            if !wasConverterActive {
+                triggerAIRecommendation()
+            }
         } else {
             // User stopped touching the slider
             HapticManager.shared.impact(.light)
             
             // Start countdown
-            countdownSeconds = 3
+            countdownSeconds = 10
             startCountdown()
             
-            // Start 3-second timer to deactivate converter
+            // Start 10-second timer to deactivate converter
             converterTimer?.invalidate()
-            converterTimer = Foundation.Timer.scheduledTimer(withTimeInterval: 3.0, repeats: false) { _ in
+            converterTimer = Foundation.Timer.scheduledTimer(withTimeInterval: 10.0, repeats: false) { _ in
                 DispatchQueue.main.async {
                     self.isConverterActive = false
                     self.countdownSeconds = 0
+                    self.hasTriggeredAIForCurrentSession = false
                 }
             }
         }
@@ -1103,6 +1700,13 @@ class WorldClockViewModel: ObservableObject {
         updateDisplayOrder()
         saveClocks()
         HapticManager.shared.impact(.light)
+        
+        // Reset AI trigger flag since timezones changed
+        hasTriggeredAIForCurrentSession = false
+        // Trigger AI recommendation if converter is active and we have multiple timezones
+        if isConverterActive && clocks.count >= 2 {
+            triggerAIRecommendation()
+        }
     }
     
     func deleteClocks(at offsets: IndexSet) {
@@ -1119,6 +1723,22 @@ class WorldClockViewModel: ObservableObject {
         updateDisplayOrder()
         saveClocks()
         HapticManager.shared.impact(.light)
+        
+        // Reset AI trigger flag since timezones changed
+        hasTriggeredAIForCurrentSession = false
+        // Trigger AI recommendation if converter is active and we have multiple timezones
+        if isConverterActive && clocks.count >= 2 {
+            triggerAIRecommendation()
+        }
+    }
+    
+    func deleteCity(_ city: WorldClock) {
+        if let index = clocks.firstIndex(where: { $0.id == city.id }) {
+            clocks.remove(at: index)
+            updateDisplayOrder()
+            saveClocks()
+            HapticManager.shared.impact(.light)
+        }
     }
     
     func moveClocks(from source: IndexSet, to destination: Int) {
@@ -1174,3 +1794,13 @@ class WorldClockViewModel: ObservableObject {
         }
     }
 }
+
+// MARK: - Preference Key for Scroll Tracking
+struct ScrollOffsetPreferenceKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
+    }
+}
+

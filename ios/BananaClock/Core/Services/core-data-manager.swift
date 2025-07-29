@@ -213,6 +213,70 @@ class CoreDataManager: ObservableObject {
         return cdWorldClock
     }
     
+    // MARK: - User Preferences Operations
+    
+    func fetchUserPreferences() throws -> CDUserPreferences? {
+        let request = CDUserPreferences.fetchRequest()
+        request.fetchLimit = 1
+        
+        let preferences = try viewContext.fetch(request)
+        return preferences.first
+    }
+    
+    func createUserPreferences(_ preferences: UserPreferences) throws -> CDUserPreferences {
+        let cdPreferences = CDUserPreferences(context: viewContext)
+        cdPreferences.id = preferences.id
+        cdPreferences.timezone = preferences.timezone
+        cdPreferences.locationZip = preferences.locationZip
+        cdPreferences.name = preferences.name
+        cdPreferences.city = preferences.city
+        cdPreferences.state = preferences.state
+        cdPreferences.voice = preferences.voice.rawValue
+        cdPreferences.wakeUpTime = preferences.wakeUpTime
+        cdPreferences.contentPreferences = try JSONEncoder().encode(preferences.contentPreferences)
+        cdPreferences.updatedAt = Date()
+        
+        save()
+        return cdPreferences
+    }
+    
+    func updateUserPreferences(_ preferences: UserPreferences) throws {
+        let request = CDUserPreferences.fetchRequest()
+        request.fetchLimit = 1
+        
+        guard let cdPreferences = try viewContext.fetch(request).first else {
+            throw CoreDataError.notFound
+        }
+        
+        cdPreferences.timezone = preferences.timezone
+        cdPreferences.locationZip = preferences.locationZip
+        cdPreferences.name = preferences.name
+        cdPreferences.city = preferences.city
+        cdPreferences.state = preferences.state
+        cdPreferences.voice = preferences.voice.rawValue
+        cdPreferences.wakeUpTime = preferences.wakeUpTime
+        cdPreferences.contentPreferences = try JSONEncoder().encode(preferences.contentPreferences)
+        
+        // Update AI-specific fields
+        cdPreferences.weatherEnabled = preferences.weatherEnabled
+        cdPreferences.headlinesCategories = try JSONEncoder().encode(preferences.headlinesCategories)
+        cdPreferences.sportsCategories = try JSONEncoder().encode(preferences.sportsCategories)
+        cdPreferences.lastSyncAt = preferences.lastSyncAt
+        cdPreferences.updatedAt = Date()
+        
+        save()
+        
+        // Automatically sync to Supabase for AI content generation
+        Task {
+            do {
+                await SyncService.shared.syncChanges()
+                print("✅ User preferences automatically synced to Supabase")
+            } catch {
+                print("⚠️ Failed to sync user preferences: \(error)")
+            }
+        }
+    }
+    
     func fetchWorldClocks() throws -> [WorldClock] {
         let request = CDWorldClock.fetchRequest()
         request.sortDescriptors = [NSSortDescriptor(key: "displayOrder", ascending: true)]
@@ -258,9 +322,25 @@ class CoreDataManager: ObservableObject {
         cdPreferences.voice = preferences.voice.rawValue
         cdPreferences.wakeUpTime = preferences.wakeUpTime
         cdPreferences.contentPreferences = try JSONEncoder().encode(preferences.contentPreferences)
+        
+        // Save AI-specific fields
+        cdPreferences.weatherEnabled = preferences.weatherEnabled
+        cdPreferences.headlinesCategories = try JSONEncoder().encode(preferences.headlinesCategories)
+        cdPreferences.sportsCategories = try JSONEncoder().encode(preferences.sportsCategories)
+        cdPreferences.lastSyncAt = preferences.lastSyncAt
         cdPreferences.updatedAt = Date()
         
         save()
+        
+        // Automatically sync to Supabase for AI content generation
+        Task {
+            do {
+                await SyncService.shared.syncChanges()
+                print("✅ User preferences automatically synced to Supabase")
+            } catch {
+                print("⚠️ Failed to sync user preferences: \(error)")
+            }
+        }
     }
     
     func fetchUserPreferences() throws -> UserPreferences? {
@@ -278,6 +358,10 @@ class CoreDataManager: ObservableObject {
             from: cdPreferences.contentPreferences ?? Data()
         )) ?? UserPreferences.ContentPreferences()
         
+        // Load AI-specific fields
+        let headlinesCategories = (try? JSONDecoder().decode([String].self, from: cdPreferences.headlinesCategories ?? Data())) ?? ["business", "technology"]
+        let sportsCategories = (try? JSONDecoder().decode([String].self, from: cdPreferences.sportsCategories ?? Data())) ?? ["football", "basketball"]
+        
         return UserPreferences(
             id: id,
             timezone: timezone,
@@ -288,7 +372,11 @@ class CoreDataManager: ObservableObject {
             voice: AIVoiceOption(rawValue: voice) ?? .voice1,
             wakeUpTime: cdPreferences.wakeUpTime,
             contentPreferences: contentPrefs,
-            updatedAt: updatedAt
+            updatedAt: updatedAt,
+            weatherEnabled: cdPreferences.weatherEnabled,
+            headlinesCategories: headlinesCategories,
+            sportsCategories: sportsCategories,
+            lastSyncAt: cdPreferences.lastSyncAt
         )
     }
 }

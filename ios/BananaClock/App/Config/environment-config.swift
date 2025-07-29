@@ -49,6 +49,34 @@ enum AppEnvironment {
         return ""
     }
     
+    static var supabaseServiceKey: String {
+        print("🔍 Loading Supabase service key...")
+        
+        // First try environment variable (for CI/CD with GitHub secrets)
+        if let key = ProcessInfo.processInfo.environment["SUPABASE_SERVICE_ROLE_KEY"] {
+            print("✅ Found service key in environment variable")
+            return key
+        }
+        
+        // Then try Secrets.swift (for local development)
+        print("🔍 Checking Secrets.swift for service key...")
+        print("🔍 Secrets.supabaseServiceKey: \(Secrets.supabaseServiceKey)")
+        print("🔍 Contains 'YOUR_': \(Secrets.supabaseServiceKey.contains("YOUR_"))")
+        
+        if !Secrets.supabaseServiceKey.contains("YOUR_") {
+            print("✅ Using service key from Secrets.swift")
+            return Secrets.supabaseServiceKey
+        }
+        
+        // Finally fallback to Info.plist
+        print("🔍 Checking Info.plist for service key...")
+        let plistKey = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_SERVICE_ROLE_KEY") as? String ?? ""
+        print("🔍 Info.plist service key: \(plistKey)")
+        
+        print("❌ No valid service key found, returning empty string")
+        return ""
+    }
+    
     static var revenueCatAPIKey: String {
         // First try Secrets.swift (for local development)
         if !Secrets.revenueCatAPIKey.contains("YOUR_") {

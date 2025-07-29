@@ -51,7 +51,6 @@ struct MainTabView: View {
             ForEach(Tab.allCases, id: \.self) { tab in
                 NavigationStack {
                     contentView(for: tab)
-                        .navigationTitle("BANANA")
                         .navigationBarTitleDisplayMode(.inline)
                         .toolbarBackground(BananaTheme.Colors.backgroundPrimary, for: .navigationBar)
                         .toolbarBackground(.visible, for: .navigationBar)

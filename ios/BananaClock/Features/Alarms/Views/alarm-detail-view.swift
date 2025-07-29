@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Foundation
+import CoreData
 
 struct AlarmDetailView: View {
     @Environment(\.dismiss) private var dismiss
@@ -138,6 +139,15 @@ struct AlarmDetailView: View {
             }
             .navigationTitle(alarm == nil ? "Add Alarm" : "Edit Alarm")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbarColorScheme(.dark, for: .navigationBar)
+            .onAppear {
+                // Set navigation title color to white
+                UINavigationBar.appearance().titleTextAttributes = [
+                    .foregroundColor: UIColor.white,
+                    .font: UIFont.systemFont(ofSize: 17, weight: .regular)
+                ]
+            }
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") {
@@ -461,7 +471,35 @@ struct AlarmDetailView: View {
             updatedAt: Date()
         )
         
+        // If this is a wake-up alarm with AI enabled, save to global user preferences
+        if isWakeUpAlarm && isAIEnabled {
+            saveGlobalUserPreferences(from: newAlarm)
+        }
+        
         onSave(newAlarm)
         dismiss()
+    }
+    
+    private func saveGlobalUserPreferences(from alarm: Alarm) {
+        do {
+            let preferences = UserPreferences(
+                timezone: TimeZone.current.identifier,
+                locationZip: nil, // Will be set by user in settings
+                name: alarm.aiPreferredName,
+                city: nil, // Will be set by user in settings
+                state: nil, // Will be set by user in settings
+                voice: alarm.aiVoice,
+                weatherEnabled: alarm.aiWeatherEnabled,
+                headlinesCategories: Array(alarm.aiHeadlinesCategories.map { $0.rawValue }),
+                sportsCategories: Array(alarm.aiSportsCategories.map { $0.rawValue }),
+                lastSyncAt: Date()
+            )
+            
+            try CoreDataManager.shared.saveUserPreferences(preferences)
+            print("✅ Wake-up alarm AI settings saved to global preferences and synced")
+            
+        } catch {
+            print("❌ Failed to save global user preferences: \(error)")
+        }
     }
 }

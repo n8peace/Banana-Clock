@@ -31,10 +31,58 @@ struct AlarmsView: View {
                         alarmsList
                     }
                 }
-                .navigationTitle("BANANA")
+                .navigationTitle("Banana Clock")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     toolbarContent
+                }
+                
+                // Bottom floating action bar for selection mode
+                if isEditing && !viewModel.selectableAlarms.isEmpty {
+                    VStack {
+                        Spacer()
+                        
+                        HStack(spacing: 16) {
+                            Button {
+                                if viewModel.selectedAlarmsCount == viewModel.selectableAlarms.count {
+                                    viewModel.deselectAll()
+                                } else {
+                                    viewModel.selectAll()
+                                }
+                            } label: {
+                                Text(viewModel.selectedAlarmsCount == viewModel.selectableAlarms.count ? "Deselect All" : "Select All")
+                                    .font(.body.weight(.medium))
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 12)
+                                    .background(BananaTheme.Colors.backgroundSecondary)
+                                    .cornerRadius(BananaTheme.Layout.cornerRadius)
+                            }
+                            
+                            if viewModel.selectedAlarmsCount > 0 {
+                                Button {
+                                    Task {
+                                        await viewModel.deleteSelectedAlarms()
+                                    }
+                                } label: {
+                                    Text("Delete Selected (\(viewModel.selectedAlarmsCount))")
+                                        .font(.body.weight(.medium))
+                                        .foregroundColor(.white)
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 12)
+                                        .background(BananaTheme.Colors.error)
+                                        .cornerRadius(BananaTheme.Layout.cornerRadius)
+                                }
+                            }
+                        }
+                        .padding(.horizontal, BSpacing.md)
+                        .padding(.bottom, BSpacing.md)
+                        .background(
+                            Rectangle()
+                                .fill(Color.black.opacity(0.9))
+                                .ignoresSafeArea()
+                        )
+                    }
                 }
             }
         }
@@ -60,6 +108,13 @@ struct AlarmsView: View {
                 }
             )
         }
+        .onChange(of: isEditing) { _, newValue in
+            if !newValue {
+                // Clear selection when exiting edit mode
+                viewModel.deselectAll()
+            }
+        }
+
         .task {
             await viewModel.loadAlarms()
         }
@@ -159,8 +214,16 @@ struct AlarmsView: View {
                         alarm: alarm,
                         isEnabled: isEnabledBinding,
                         onTap: {
-                            selectedAlarm = alarm
-                        }
+                            if isEditing {
+                                // In edit mode, toggle selection instead of opening detail
+                                viewModel.toggleSelection(for: alarm)
+                            } else {
+                                // Normal mode, open detail
+                                selectedAlarm = alarm
+                            }
+                        },
+                        isSelected: viewModel.isSelected(alarm),
+                        showSelection: isEditing
                     )
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
@@ -202,7 +265,6 @@ struct AlarmsView: View {
 
         }
         .listStyle(.plain)
-        .environment(\.editMode, isEditing ? .constant(.active) : .constant(.inactive))
         .scrollContentBackground(.hidden)
         .scrollIndicators(.hidden)
     }
@@ -210,32 +272,41 @@ struct AlarmsView: View {
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .navigationBarLeading) {
-            if !viewModel.otherAlarms.isEmpty {
-                Button(isEditing ? "Done" : "Edit") {
+            if !viewModel.selectableAlarms.isEmpty {
+                Button {
                     withAnimation {
                         isEditing.toggle()
                     }
+                } label: {
+                    if isEditing {
+                        Image(systemName: "checkmark")
+                            .foregroundColor(BananaTheme.Colors.bananaYellow)
+                    } else {
+                        Text("Edit")
+                            .foregroundColor(BananaTheme.Colors.bananaYellow)
+                    }
                 }
-                .foregroundColor(BananaTheme.Colors.bananaYellow)
             }
         }
         
         ToolbarItem(placement: .navigationBarTrailing) {
-            HStack(spacing: 16) {
-                // Test Supabase button
-                Button("Test Supabase") {
-                    Task {
-                        await testSupabaseConnection()
+            if !isEditing {
+                HStack(spacing: 16) {
+                    // Test Supabase button
+                    Button("Test Supabase") {
+                        Task {
+                            await testSupabaseConnection()
+                        }
                     }
-                }
-                .font(.caption)
-                .foregroundColor(BananaTheme.Colors.bananaYellow)
-                
-                Button {
-                    showingAddAlarm = true
-                } label: {
-                    Image(systemName: "plus")
-                        .foregroundColor(BananaTheme.Colors.bananaYellow)
+                    .font(.caption)
+                    .foregroundColor(BananaTheme.Colors.bananaYellow)
+                    
+                    Button {
+                        showingAddAlarm = true
+                    } label: {
+                        Image(systemName: "plus")
+                            .foregroundColor(BananaTheme.Colors.bananaYellow)
+                    }
                 }
             }
         }
@@ -255,9 +326,8 @@ struct AlarmsView: View {
             
             // Try to sign up a test user
             do {
-                let timestamp = Int(Date().timeIntervalSince1970)
-                let testEmail = "test\(timestamp)@gmail.com"
-                let testPassword = "TestPassword123!"
+                let testEmail = "n8peace@gmail.com"
+                let testPassword = "RemotePassw0rd123!"
                 
                 print("🔄 Attempting to sign up test user: \(testEmail)")
                 
@@ -276,6 +346,8 @@ struct AlarmsView: View {
             }
         }
     }
+    
+
 }
 
 #Preview {

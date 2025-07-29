@@ -1,0 +1,215 @@
+//
+//  AITimezoneService.swift
+//  BananaClock
+//
+//  AI-powered timezone recommendations using OpenAI
+//
+
+import Foundation
+import Combine
+
+@MainActor
+class AITimezoneService: ObservableObject {
+    @Published var currentRecommendation: String = ""
+    @Published var isLoading = false
+    
+    private var recommendationTimer: Foundation.Timer?
+    private let apiKey: String
+    private let baseURL = "https://api.openai.com/v1/chat/completions"
+    
+    init() {
+        // Get API key from Secrets
+        self.apiKey = Secrets.openAIAPIKey
+        
+        // Auto-clear recommendation after 5 minutes
+        startAutoClearTimer()
+    }
+    
+    deinit {
+        recommendationTimer?.invalidate()
+    }
+    
+    func getRecommendation(for clocks: [WorldClock], selectedDate: Date) async {
+        print("🍌 AI: getRecommendation called with \(clocks.count) clocks")
+        print("🍌 AI: Clock details:")
+        for (index, clock) in clocks.enumerated() {
+            print("🍌 AI:   [\(index)] \(clock.cityName) (\(clock.timeZoneIdentifier))")
+        }
+        
+        // Only proceed if we have a valid API key and multiple timezones
+        guard !apiKey.contains("YOUR_") && clocks.count >= 2 else {
+            print("🍌 AI: Skipping - invalid API key or insufficient clocks")
+            return
+        }
+        
+        // Filter out planetary clocks and get regular cities
+        let regularClocks = clocks.filter { clock in
+            // Check if this is a planetary clock by looking for the isPlanet property
+            // Since WorldClock doesn't have isPlanet, we check the city name for planetary emojis
+            !clock.cityName.contains("🧠") && !clock.cityName.contains("💖") && !clock.cityName.contains("🌍") && 
+            !clock.cityName.contains("🛡️") && !clock.cityName.contains("👑") && !clock.cityName.contains("🪐") && 
+            !clock.cityName.contains("🔭") && !clock.cityName.contains("🌊")
+        }
+        
+        print("🍌 AI: \(regularClocks.count) regular clocks after filtering")
+        print("🍌 AI: Regular clock details:")
+        for (index, clock) in regularClocks.enumerated() {
+            print("🍌 AI:   [\(index)] \(clock.cityName) (\(clock.timeZoneIdentifier))")
+        }
+        
+        guard regularClocks.count >= 2 else { 
+            print("🍌 AI: Skipping - insufficient regular clocks")
+            return 
+        }
+        
+        // Include all regular clocks without limit
+        await requestRecommendation(for: regularClocks, selectedDate: selectedDate)
+    }
+    
+    private func requestRecommendation(for clocks: [WorldClock], selectedDate: Date) async {
+        print("🍌 AI: Starting request for \(clocks.count) clocks")
+        isLoading = true
+        
+        do {
+            let recommendation = try await callOpenAI(for: clocks, selectedDate: selectedDate)
+            print("🍌 AI: Received recommendation: \(recommendation)")
+            currentRecommendation = recommendation
+        } catch {
+            // Log error but don't show anything to user
+            print("🍌 AI: Recommendation failed: \(error)")
+        }
+        
+        isLoading = false
+    }
+    
+    private func callOpenAI(for clocks: [WorldClock], selectedDate: Date) async throws -> String {
+        print("🍌 AI: callOpenAI called with \(clocks.count) clocks")
+        
+        let userTimezone = TimeZone.current.identifier
+        let userCity = TimeZone.current.localizedName(for: .generic, locale: .current) ?? "Your Location"
+        
+        print("🍌 AI: User timezone: \(userTimezone)")
+        print("🍌 AI: User city: \(userCity)")
+        
+        // Build timezone list with user's timezone first
+        let userClock = clocks.first { $0.timeZoneIdentifier == userTimezone }
+        let otherClocks = clocks.filter { $0.timeZoneIdentifier != userTimezone }
+        
+        // Optional: Sort by time difference from user's timezone (closest first)
+        let sortedClocks = clocks.sorted {
+            abs($0.timeZone.secondsFromGMT() - TimeZone.current.secondsFromGMT()) <
+            abs($1.timeZone.secondsFromGMT() - TimeZone.current.secondsFromGMT())
+        }
+        
+        print("🍌 AI: User clock found: \(userClock?.cityName ?? "none")")
+        print("🍌 AI: Other clocks count: \(otherClocks.count)")
+        
+        var timezoneList = ""
+        // Use sorted clocks to build timezone list (user's timezone will be first if it exists)
+        let timezones = sortedClocks.map { clock in
+            let offset = clock.timeZone.secondsFromGMT() / 3600
+            let sign = offset >= 0 ? "+" : ""
+            let timezoneString = "\(clock.cityName) (UTC\(sign)\(offset))"
+            print("🍌 AI: Adding clock: \(timezoneString)")
+            return timezoneString
+        }.joined(separator: ", ")
+        timezoneList = timezones
+        
+        print("🍌 AI: Final timezone list: \(timezoneList)")
+        
+        // Format selected date
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "EEEE, MMMM d"
+        let dateString = dateFormatter.string(from: selectedDate)
+        
+        let prompt = """
+        You are a timezone meeting scheduler.
+
+        Given these timezones:
+        \(timezoneList)
+
+        Reference timezone: \(userCity) (\(userTimezone))  
+        Date: \(dateString)
+
+        Find the earliest possible time block that includes the maximum number of cities within acceptable hours:
+        - Business hours: 8 AM – 6 PM local time
+        - Also acceptable: early (6–8 AM) and evening (6–10 PM)
+        - A city is considered excluded only if the meeting falls **entirely within its overnight hours (10 PM – 6 AM)**
+
+        The block must be at least 30 minutes long but should strive to be as long as possible. In this priority order, **prefer most inclusive, longest, and earliest** block. Only choose shorter or less inclusive blocks if no better option exists.
+
+        Use the reference timezone (\(userCity)) for all output times.
+
+        Output exactly two lines:  
+        The best meeting time block (e.g., "6:00 AM – 9:00 AM Pacific Time")  
+        Who is excluded or partially excluded, or say "All cities included."
+
+        Do not explain your reasoning. Just give the result.
+
+        Before finalizing your answer, double-check the local time for each city. If a city is within 6 AM to 10 PM local time, it is not excluded.
+        """
+        
+        // Debug: Log what timezones are being sent to GPT
+        print("🍌 AI: Sending timezones to GPT: \(timezoneList)")
+        print("🍌 AI: Full prompt: \(prompt)")
+        
+        let requestBody: [String: Any] = [
+            "model": "gpt-4",
+            "messages": [
+                ["role": "system", "content": "You are a helpful timezone meeting scheduler. Be concise and practical."],
+                ["role": "user", "content": prompt]
+            ],
+            "max_tokens": 600,
+            "temperature": 0.2
+        ]
+        
+        guard let url = URL(string: baseURL) else {
+            throw AIError.invalidURL
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let jsonData = try JSONSerialization.data(withJSONObject: requestBody)
+        request.httpBody = jsonData
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse,
+              httpResponse.statusCode == 200 else {
+            throw AIError.apiError
+        }
+        
+        let responseDict = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+        guard let choices = responseDict?["choices"] as? [[String: Any]],
+              let firstChoice = choices.first,
+              let message = firstChoice["message"] as? [String: Any],
+              let content = message["content"] as? String else {
+            throw AIError.invalidResponse
+        }
+        
+        return content.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+    
+    private func startAutoClearTimer() {
+        recommendationTimer?.invalidate()
+        recommendationTimer = Foundation.Timer.scheduledTimer(withTimeInterval: 300, repeats: false) { _ in
+            Task { @MainActor in
+                self.currentRecommendation = ""
+            }
+        }
+    }
+    
+    func clearRecommendation() {
+        currentRecommendation = ""
+        recommendationTimer?.invalidate()
+    }
+}
+
+enum AIError: Error {
+    case invalidURL
+    case apiError
+    case invalidResponse
+} 

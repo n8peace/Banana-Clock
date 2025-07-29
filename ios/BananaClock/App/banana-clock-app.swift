@@ -82,6 +82,9 @@ struct BananaClockApp: App {
         
         UITabBar.appearance().standardAppearance = tabAppearance
         UITabBar.appearance().scrollEdgeAppearance = tabAppearance
+        
+        // Date Picker Text Color
+        UIDatePicker.appearance().tintColor = UIColor.white
     }
     
     private func requestInitialPermissions() async {
@@ -136,17 +139,21 @@ class AppState: ObservableObject {
     private func loadLastViewedTab() {
         let savedTabRawValue = userDefaults.integer(forKey: AppEnvironment.StorageKey.lastViewedTab)
         
-        // If no saved tab (first launch), default to alarms
-        if savedTabRawValue == 0 {
-            selectedTab = .alarms
-        } else if let tab = MainTabView.Tab(rawValue: savedTabRawValue) {
+        print("📱 Loading last viewed tab: savedTabRawValue = \(savedTabRawValue)")
+        
+        // Check if we have a saved tab value
+        if let tab = MainTabView.Tab(rawValue: savedTabRawValue) {
             selectedTab = tab
+            print("📱 Restored to tab: \(tab.title)")
         } else {
+            // If no saved tab (first launch) or invalid value, default to alarms
             selectedTab = .alarms
+            print("📱 No saved tab found, defaulting to alarms")
         }
     }
     
     func saveLastViewedTab() {
         userDefaults.set(selectedTab.rawValue, forKey: AppEnvironment.StorageKey.lastViewedTab)
+        print("📱 Saved last viewed tab: \(selectedTab.title) (rawValue: \(selectedTab.rawValue))")
     }
 }

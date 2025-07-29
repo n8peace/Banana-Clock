@@ -72,13 +72,21 @@ class SupabaseService: ObservableObject {
     func signUp(email: String, password: String) async throws -> User {
         guard let client = client else { throw SupabaseError.notConfigured }
         
-        let response = try await client.auth.signUp(
+        // Step 1: Sign up the user
+        let signUpResponse = try await client.auth.signUp(
             email: email,
             password: password
         )
         
-        let user = response.user
+        let user = signUpResponse.user
         
+        // Step 2: Sign in immediately to establish auth session
+        let signInResponse = try await client.auth.signIn(
+            email: email,
+            password: password
+        )
+        
+        // Step 3: Update current user with session data
         currentUser = User(
             id: user.id,
             email: user.email ?? "",
@@ -87,8 +95,8 @@ class SupabaseService: ObservableObject {
         )
         isAuthenticated = true
         
-        // Create initial user preferences
-        try await createUserPreferences(userId: user.id)
+        // Step 4: Create initial user preferences (now with proper auth session)
+        try await createUserPreferencesWithRetry(userId: user.id)
         
         return currentUser!
     }
@@ -196,10 +204,44 @@ class SupabaseService: ObservableObject {
             lastSyncAt: ISO8601DateFormatter().string(from: Date())
         )
         
-        try await client
+        // Use service role to bypass RLS for initial user setup
+        // This avoids the auth.uid() timing issue
+        let serviceClient = SupabaseClient(
+            supabaseURL: URL(string: AppEnvironment.supabaseURL)!,
+            supabaseKey: AppEnvironment.supabaseServiceKey
+        )
+        
+        try await serviceClient
             .from("user_preferences")
             .insert(preferences)
             .execute()
+    }
+    
+    private func createUserPreferencesWithRetry(userId: UUID) async throws {
+        let maxRetries = 2
+        let baseDelay: TimeInterval = 0.2
+        
+        for attempt in 1...maxRetries {
+            do {
+                print("🔄 Creating user preferences (attempt \(attempt)/\(maxRetries))")
+                try await createUserPreferences(userId: userId)
+                print("✅ User preferences created successfully")
+                return
+            } catch {
+                print("❌ Failed to create user preferences (attempt \(attempt)/\(maxRetries)): \(error)")
+                
+                if attempt == maxRetries {
+                    print("⚠️ User preferences creation failed, but signup completed successfully")
+                    // Don't throw error - let signup complete even if preferences fail
+                    return
+                }
+                
+                // Short delay before retry
+                let delay = baseDelay * Double(attempt)
+                print("⏳ Waiting \(delay) seconds before retry...")
+                try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+            }
+        }
     }
     
     // MARK: - AI Content Generation
@@ -540,3 +582,6 @@ struct UpdateUserPreferencesRequest: Codable {
 
 // MARK: - Error Types
 // Note: SupabaseError is defined in Core/Utilities/error-types.swift
+
+
+

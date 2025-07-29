@@ -31,14 +31,18 @@
     <entity name="CDUserPreferences" representedClassName="CDUserPreferences" syncable="YES" codeGenerationType="class">
         <attribute name="city" optional="YES" attributeType="String"/>
         <attribute name="contentPreferences" optional="YES" attributeType="Binary"/>
+        <attribute name="headlinesCategories" optional="YES" attributeType="Binary"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="lastSyncAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="locationZip" optional="YES" attributeType="String"/>
         <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="sportsCategories" optional="YES" attributeType="Binary"/>
         <attribute name="state" optional="YES" attributeType="String"/>
         <attribute name="timezone" optional="YES" attributeType="String"/>
         <attribute name="updatedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="voice" optional="YES" attributeType="String"/>
         <attribute name="wakeUpTime" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="weatherEnabled" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
     </entity>
     <entity name="CDWorldClock" representedClassName="CDWorldClock" syncable="YES" codeGenerationType="class">
         <attribute name="cityName" optional="YES" attributeType="String"/>

@@ -82,10 +82,56 @@ struct TimersView: View {
                         timersList
                     }
                 }
-                .navigationTitle("BANANA")
+                .navigationTitle("Banana Clock")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     toolbarContent
+                }
+                
+                // Bottom floating action bar for selection mode
+                if isEditing && !viewModel.selectableTimers.isEmpty {
+                    VStack {
+                        Spacer()
+                        
+                        HStack(spacing: 16) {
+                            Button {
+                                if viewModel.selectedTimersCount == viewModel.selectableTimers.count {
+                                    viewModel.deselectAll()
+                                } else {
+                                    viewModel.selectAll()
+                                }
+                            } label: {
+                                Text(viewModel.selectedTimersCount == viewModel.selectableTimers.count ? "Deselect All" : "Select All")
+                                    .font(.body.weight(.medium))
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 12)
+                                    .background(BananaTheme.Colors.backgroundSecondary)
+                                    .cornerRadius(BananaTheme.Layout.cornerRadius)
+                            }
+                            
+                            if viewModel.selectedTimersCount > 0 {
+                                Button {
+                                    viewModel.deleteSelectedTimers()
+                                } label: {
+                                    Text("Delete Selected (\(viewModel.selectedTimersCount))")
+                                        .font(.body.weight(.medium))
+                                        .foregroundColor(.white)
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 12)
+                                        .background(BananaTheme.Colors.error)
+                                        .cornerRadius(BananaTheme.Layout.cornerRadius)
+                                }
+                            }
+                        }
+                        .padding(.horizontal, BSpacing.md)
+                        .padding(.bottom, BSpacing.md)
+                        .background(
+                            Rectangle()
+                                .fill(Color.black.opacity(0.9))
+                                .ignoresSafeArea()
+                        )
+                    }
                 }
             }
         }
@@ -98,6 +144,12 @@ struct TimersView: View {
         .onAppear {
             viewModel.cleanupOldTimers()
         }
+        .onChange(of: isEditing) { _, newValue in
+            if !newValue {
+                // Clear selection when exiting edit mode
+                viewModel.deselectAll()
+            }
+        }
     }
     
     // MARK: - Views
@@ -107,12 +159,22 @@ struct TimersView: View {
             // Active timers
             if !viewModel.activeTimers.isEmpty {
                 ForEach(viewModel.activeTimers) { timer in
-                    TimerRow(timer: timer, viewModel: viewModel)
-                        .listRowBackground(Color.clear)
-                        .listRowSeparator(.hidden)
-                        .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
-                        .listRowSpacing(0)
-                        .buttonStyle(PlainButtonStyle())
+                    TimerRow(
+                        timer: timer, 
+                        viewModel: viewModel,
+                        onTap: {
+                            if isEditing {
+                                // In edit mode, toggle selection instead of doing nothing
+                                viewModel.toggleSelection(for: timer)
+                            }
+                        },
+                        isSelected: viewModel.isSelected(timer),
+                        showSelection: isEditing
+                    )
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+                    .listRowSpacing(0)
                 }
                 .onDelete { indexSet in
                     viewModel.deleteTimers(at: indexSet, from: viewModel.activeTimers)
@@ -137,12 +199,22 @@ struct TimersView: View {
             // Recents timers
             if !viewModel.recentTimers.isEmpty {
                 ForEach(viewModel.recentTimers) { timer in
-                    TimerRow(timer: timer, viewModel: viewModel)
-                        .listRowBackground(Color.clear)
-                        .listRowSeparator(.hidden)
-                        .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
-                        .listRowSpacing(0)
-                        .buttonStyle(PlainButtonStyle())
+                    TimerRow(
+                        timer: timer, 
+                        viewModel: viewModel,
+                        onTap: {
+                            if isEditing {
+                                // In edit mode, toggle selection instead of doing nothing
+                                viewModel.toggleSelection(for: timer)
+                            }
+                        },
+                        isSelected: viewModel.isSelected(timer),
+                        showSelection: isEditing
+                    )
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+                    .listRowSpacing(0)
                 }
                 .onDelete { indexSet in
                     viewModel.deleteTimers(at: indexSet, from: viewModel.recentTimers)
@@ -150,7 +222,6 @@ struct TimersView: View {
             }
         }
         .listStyle(.plain)
-        .environment(\.editMode, isEditing ? .constant(.active) : .constant(.inactive))
         .scrollContentBackground(.hidden)
         .scrollIndicators(.hidden)
     }
@@ -158,22 +229,31 @@ struct TimersView: View {
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .navigationBarLeading) {
-            if !viewModel.timers.isEmpty {
-                Button(isEditing ? "Done" : "Edit") {
+            if !viewModel.selectableTimers.isEmpty {
+                Button {
                     withAnimation {
                         isEditing.toggle()
                     }
+                } label: {
+                    if isEditing {
+                        Image(systemName: "checkmark")
+                            .foregroundColor(BananaTheme.Colors.bananaYellow)
+                    } else {
+                        Text("Edit")
+                            .foregroundColor(BananaTheme.Colors.bananaYellow)
+                    }
                 }
-                .foregroundColor(BananaTheme.Colors.bananaYellow)
             }
         }
         
         ToolbarItem(placement: .navigationBarTrailing) {
-            Button {
-                showingAddTimer = true
-            } label: {
-                Image(systemName: "plus")
-                    .foregroundColor(BananaTheme.Colors.bananaYellow)
+            if !isEditing {
+                Button {
+                    showingAddTimer = true
+                } label: {
+                    Image(systemName: "plus")
+                        .foregroundColor(BananaTheme.Colors.bananaYellow)
+                }
             }
         }
     }
@@ -184,6 +264,23 @@ struct TimerRow: View {
     let timer: BananaTimer
     @ObservedObject var viewModel: TimersViewModel
     @State private var isButtonEnabled = true
+    let onTap: () -> Void
+    let isSelected: Bool
+    let showSelection: Bool
+    
+    init(
+        timer: BananaTimer,
+        viewModel: TimersViewModel,
+        onTap: @escaping () -> Void = {},
+        isSelected: Bool = false,
+        showSelection: Bool = false
+    ) {
+        self.timer = timer
+        self.viewModel = viewModel
+        self.onTap = onTap
+        self.isSelected = isSelected
+        self.showSelection = showSelection
+    }
     
     private var endTimeFormatter: DateFormatter {
         let formatter = DateFormatter()
@@ -193,6 +290,14 @@ struct TimerRow: View {
     
     var body: some View {
         HStack {
+            // Selection checkbox (only shown in edit mode)
+            if showSelection {
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    .font(.title2)
+                    .foregroundColor(isSelected ? BananaTheme.Colors.bananaYellow : BananaTheme.Colors.textSecondary)
+                    .frame(width: 24, height: 24)
+            }
+            
             // Left side - Time display
             VStack(alignment: .leading, spacing: BananaTheme.Spacing.xxs) {
                 HStack(alignment: .firstTextBaseline, spacing: BananaTheme.Spacing.xs) {
@@ -221,70 +326,72 @@ struct TimerRow: View {
             
             Spacer()
             
-            // Right side - Controls
-            HStack(spacing: BananaTheme.Spacing.md) {
-                // Progress ring (only for running/paused timers)
-                if timer.state == .running || timer.state == .paused {
-                    ZStack {
-                        CircularProgressView(
-                            progress: timer.progress,
-                            lineWidth: 4,
-                            size: 60
-                        )
-                        
-                        // Cancel button
-                        Button {
-                            guard isButtonEnabled else { return }
-                            isButtonEnabled = false
-                            viewModel.cancelTimer(timer)
+            // Right side - Controls (only show when not in selection mode)
+            if !showSelection {
+                HStack(spacing: BananaTheme.Spacing.md) {
+                    // Progress ring (only for running/paused timers)
+                    if timer.state == .running || timer.state == .paused {
+                        ZStack {
+                            CircularProgressView(
+                                progress: timer.progress,
+                                lineWidth: 4,
+                                size: 60
+                            )
                             
-                            // Re-enable after a short delay
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                                isButtonEnabled = true
+                            // Cancel button
+                            Button {
+                                guard isButtonEnabled else { return }
+                                isButtonEnabled = false
+                                viewModel.cancelTimer(timer)
+                                
+                                // Re-enable after a short delay
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                    isButtonEnabled = true
+                                }
+                            } label: {
+                                Image(systemName: "xmark")
+                                    .font(.system(size: 20, weight: .medium))
+                                    .foregroundColor(.gray)
+                                    .frame(width: 32, height: 32)
+                                    .background(Color.black.opacity(0.7))
+                                    .clipShape(Circle())
                             }
-                        } label: {
-                            Image(systemName: "xmark")
-                                .font(.system(size: 20, weight: .medium))
-                                .foregroundColor(.gray)
-                                .frame(width: 32, height: 32)
-                                .background(Color.black.opacity(0.7))
-                                .clipShape(Circle())
+                            .allowsHitTesting(true)
+                            .disabled(!isButtonEnabled)
                         }
-                        .allowsHitTesting(true)
-                        .disabled(!isButtonEnabled)
-                    }
-                }
-                
-                // Play/Pause/Repeat button
-                Button {
-                    guard isButtonEnabled else { return }
-                    isButtonEnabled = false
-                    
-                    switch timer.state {
-                    case .ready:
-                        viewModel.startTimer(timer)
-                    case .running:
-                        viewModel.pauseTimer(timer)
-                    case .paused:
-                        viewModel.resumeTimer(timer)
-                    case .finished:
-                        viewModel.repeatTimer(timer)
                     }
                     
-                    // Re-enable after a short delay
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        isButtonEnabled = true
+                    // Play/Pause/Repeat button
+                    Button {
+                        guard isButtonEnabled else { return }
+                        isButtonEnabled = false
+                        
+                        switch timer.state {
+                        case .ready:
+                            viewModel.startTimer(timer)
+                        case .running:
+                            viewModel.pauseTimer(timer)
+                        case .paused:
+                            viewModel.resumeTimer(timer)
+                        case .finished:
+                            viewModel.repeatTimer(timer)
+                        }
+                        
+                        // Re-enable after a short delay
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            isButtonEnabled = true
+                        }
+                    } label: {
+                        Image(systemName: buttonIcon)
+                            .font(.title3)
+                            .foregroundColor(.black)
+                            .frame(width: 60, height: 60)
+                            .background(BananaTheme.Colors.bananaYellow)
+                            .clipShape(Circle())
                     }
-                } label: {
-                    Image(systemName: buttonIcon)
-                        .font(.title3)
-                        .foregroundColor(.black)
-                        .frame(width: 60, height: 60)
-                        .background(BananaTheme.Colors.bananaYellow)
-                        .clipShape(Circle())
+                    .allowsHitTesting(true)
+                    .disabled(!isButtonEnabled)
                 }
-                .allowsHitTesting(true)
-                .disabled(!isButtonEnabled)
             }
         }
         .padding(.vertical, BananaTheme.Spacing.sm)
@@ -292,9 +399,8 @@ struct TimerRow: View {
         .opacity(timer.state == .finished ? 0.7 : 1)
         .scaleEffect(timer.state == .finished ? 0.95 : 1)
         .animation(.easeInOut(duration: 0.3), value: timer.state)
-        .contentShape(Rectangle())
         .onTapGesture {
-            // Explicitly consume taps on the row background
+            onTap()
         }
     }
     
@@ -435,6 +541,15 @@ struct TimerCreationView: View {
             }
             .navigationTitle("New Timer")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbarColorScheme(.dark, for: .navigationBar)
+            .onAppear {
+                // Set navigation title color to white
+                UINavigationBar.appearance().titleTextAttributes = [
+                    .foregroundColor: UIColor.white,
+                    .font: UIFont.systemFont(ofSize: 17, weight: .regular)
+                ]
+            }
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") {
@@ -616,6 +731,7 @@ struct TimerPreset {
 @MainActor
 class TimersViewModel: ObservableObject {
     @Published var timers: [BananaTimer] = []
+    @Published var selectedTimers: Set<UUID> = []
     private var timerTasks: [UUID: Task<Void, Never>] = [:]
     
     private let timersKey = "SavedTimers"
@@ -657,6 +773,19 @@ class TimersViewModel: ObservableObject {
         }
         
         return uniqueTimers
+    }
+    
+    // Computed properties for selection mode
+    var isSelectionMode: Bool {
+        !selectedTimers.isEmpty
+    }
+    
+    var selectedTimersCount: Int {
+        selectedTimers.count
+    }
+    
+    var selectableTimers: [BananaTimer] {
+        timers // All timers can be selected
     }
     
     init() {
@@ -761,6 +890,43 @@ class TimersViewModel: ObservableObject {
             cancelTimerTask(for: timer.id)
             timers.removeAll { $0.id == timer.id }
         }
+        saveTimers()
+        HapticManager.shared.impact(.light)
+    }
+    
+    // MARK: - Selection Management
+    
+    func toggleSelection(for timer: BananaTimer) {
+        if selectedTimers.contains(timer.id) {
+            selectedTimers.remove(timer.id)
+        } else {
+            selectedTimers.insert(timer.id)
+        }
+    }
+    
+    func selectAll() {
+        selectedTimers = Set(selectableTimers.map { $0.id })
+    }
+    
+    func deselectAll() {
+        selectedTimers.removeAll()
+    }
+    
+    func isSelected(_ timer: BananaTimer) -> Bool {
+        selectedTimers.contains(timer.id)
+    }
+    
+    // MARK: - Bulk Operations
+    
+    func deleteSelectedTimers() {
+        let timersToDelete = timers.filter { selectedTimers.contains($0.id) }
+        
+        for timer in timersToDelete {
+            cancelTimerTask(for: timer.id)
+            timers.removeAll { $0.id == timer.id }
+        }
+        
+        selectedTimers.removeAll() // Clear selection after deletion
         saveTimers()
         HapticManager.shared.impact(.light)
     }

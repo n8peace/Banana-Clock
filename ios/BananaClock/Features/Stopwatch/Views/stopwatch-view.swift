@@ -46,7 +46,7 @@ struct StopwatchView: View {
                     .padding(.horizontal, BSpacing.lg)
                     .padding(.top, BSpacing.lg)
                 }
-                .navigationTitle("BANANA")
+                .navigationTitle("Banana Clock")
                 .navigationBarTitleDisplayMode(.inline)
             }
         }

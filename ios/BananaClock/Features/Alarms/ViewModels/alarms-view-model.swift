@@ -14,6 +14,7 @@ class AlarmsViewModel: ObservableObject {
     @Published var alarms: [Alarm] = []
     @Published var isLoading = false
     @Published var error: Error?
+    @Published var selectedAlarms: Set<UUID> = []
     
     var navigationTitle: String { "Alarms" }
     
@@ -24,6 +25,19 @@ class AlarmsViewModel: ObservableObject {
     
     var otherAlarms: [Alarm] {
         alarms.filter { !$0.isWakeUpAlarm }
+    }
+    
+    // Computed properties for selection mode
+    var isSelectionMode: Bool {
+        !selectedAlarms.isEmpty
+    }
+    
+    var selectedAlarmsCount: Int {
+        selectedAlarms.count
+    }
+    
+    var selectableAlarms: [Alarm] {
+        otherAlarms // Only other alarms can be selected (not wake-up alarm)
     }
     
     private let coreDataManager = CoreDataManager.shared
@@ -224,6 +238,43 @@ class AlarmsViewModel: ObservableObject {
         for alarm in alarmsToDelete {
             await deleteAlarm(alarm)
         }
+    }
+    
+    // MARK: - Selection Management
+    
+    func toggleSelection(for alarm: Alarm) {
+        guard !alarm.isWakeUpAlarm else { return } // Wake-up alarms cannot be selected
+        
+        if selectedAlarms.contains(alarm.id) {
+            selectedAlarms.remove(alarm.id)
+        } else {
+            selectedAlarms.insert(alarm.id)
+        }
+    }
+    
+    func selectAll() {
+        selectedAlarms = Set(selectableAlarms.map { $0.id })
+    }
+    
+    func deselectAll() {
+        selectedAlarms.removeAll()
+    }
+    
+    func isSelected(_ alarm: Alarm) -> Bool {
+        selectedAlarms.contains(alarm.id)
+    }
+    
+    // MARK: - Bulk Operations
+    
+    func deleteSelectedAlarms() async {
+        let alarmsToDelete = alarms.filter { selectedAlarms.contains($0.id) }
+        
+        for alarm in alarmsToDelete {
+            await deleteAlarm(alarm)
+        }
+        
+        // Clear selection after deletion
+        selectedAlarms.removeAll()
     }
     
     // MARK: - Duplicate Prevention

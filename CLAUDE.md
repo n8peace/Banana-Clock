@@ -1,0 +1,222 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Commands
+
+### iOS Development
+
+```bash
+# Build and test iOS app
+cd ios
+xcodebuild test -scheme BananaClock -destination 'platform=iOS Simulator,name=iPhone 15 Pro'
+
+# Build for specific configuration
+xcodebuild build -scheme BananaClock -configuration Debug
+xcodebuild build -scheme BananaClock -configuration Release
+
+# Run tests only
+xcodebuild test-without-building -scheme BananaClock -destination 'platform=iOS Simulator,name=iPhone 15 Pro'
+
+# Clean build folder
+xcodebuild clean -scheme BananaClock
+
+# SwiftLint (if installed)
+swiftlint --strict --path ios/
+```
+
+### Supabase Development
+
+```bash
+# Start local Supabase
+cd supabase && supabase start
+
+# Stop local Supabase
+cd supabase && supabase stop
+
+# Reset database
+cd supabase && supabase db reset
+
+# Deploy to development
+cd supabase && supabase db push
+
+# Deploy functions
+cd supabase && supabase functions deploy
+
+# Check database diff
+cd supabase && supabase db diff
+```
+
+### General Development
+
+```bash
+# Deploy to develop branch (triggers CI/CD)
+./deploy.sh
+
+# Install dependencies
+npm install
+
+# Run package.json scripts
+npm run dev:supabase    # Start local Supabase
+npm run db:reset        # Reset database
+npm run functions:deploy # Deploy all functions
+```
+
+## Architecture Overview
+
+### Repository Structure
+
+```
+Banana-Clock/
+├── ios/                  # iOS app (SwiftUI + AlarmKit)
+│   ├── BananaClock/     # Main app code
+│   │   ├── App/         # App entry point, configuration
+│   │   ├── Core/        # Models, services, utilities
+│   │   ├── Features/    # Feature modules (Alarms, Timers, etc.)
+│   │   └── Design/      # UI components, theme
+│   └── BananaClock.xcodeproj/
+├── supabase/            # Backend infrastructure
+│   ├── functions/       # Edge functions for AI content
+│   └── migrations/      # Database schema
+└── .github/workflows/   # CI/CD pipelines
+```
+
+### iOS App Architecture
+
+**Pattern**: MVVM with SwiftUI and @Observable
+- **Navigation**: NavigationStack with persistent "Banana Clock" title
+- **State Management**: Swift Concurrency (async/await)
+- **Core Services**: AlarmKit, AudioService, SupabaseService, RevenueCat
+- **Design**: Dark mode only with banana yellow (#FDE043) accent
+- **Monetization**: Hard paywall with subscription-only access
+
+**Key Technologies**:
+- AlarmKit (iOS 17+) for system alarm integration
+- Supabase Swift SDK for backend
+- RevenueCat for subscriptions
+- AVFoundation for audio playback
+
+### Backend Architecture
+
+**Supabase Project** with:
+- PostgreSQL database with RLS policies
+- Edge Functions for AI content generation (GPT-4o + ElevenLabs)
+- Storage bucket for audio files (AAC format)
+- Real-time subscriptions for alarm sync
+
+**Database Tables**:
+- `users`: User accounts
+- `user_preferences`: Settings, timezone, voice preference
+- `content_blocks`: AI-generated content with audio URLs
+- `user_weather_data`: Weather information for AI scripts
+- `logs`: System logging
+
+**Content Generation Pipeline**:
+1. Daily generation at 2 AM local time
+2. Generate personalized script with GPT-4o
+3. Synthesize audio with ElevenLabs
+4. Store in Supabase Storage (72-hour retention)
+5. Fallback to standard alarm if generation fails
+6. Retry mechanism for API failures
+7. Rate limiting implemented for external APIs
+
+### CI/CD Pipeline
+
+**Branches**:
+- `main`: Production
+- `develop`: Development/staging
+
+**Deployment**:
+- Push to `develop` triggers automatic deployment
+- Manual deployment via `./deploy.sh` script
+- iOS builds via GitHub Actions on push to `develop`
+
+## Development Guidelines
+
+### iOS Development
+
+1. **Environment Setup**:
+   - Create `ios/BananaClock/App/Config/Secrets.swift` (gitignored)
+   - Add Supabase and RevenueCat API keys
+   - Configure signing in Xcode
+
+2. **Code Style**:
+   - Follow iOS development rules in `.cursor/rules/ios-developent-cursor-rules.mdc`
+   - Use Swift 6 features where appropriate
+   - Prefer value types (structs) over reference types
+   - Use `@MainActor` for UI code
+
+3. **Testing**:
+   - AlarmKit requires physical device (not simulator)
+   - Test on iOS 17+ devices
+   - Verify audio playback and background modes
+
+### Supabase Functions
+
+1. **Function Structure**:
+   - TypeScript/Deno runtime
+   - Async/await patterns
+   - Error handling with proper status codes
+
+2. **Content Generation Functions**:
+   - `generate-banana-content`: Main wake-up script
+   - `generate-weather-content`: Weather summaries
+   - `generate-headlines-content`: News briefings
+   - `generate-audio`: ElevenLabs synthesis
+
+3. **Testing Functions**:
+   ```bash
+   # Test locally
+   supabase functions serve generate-banana-content
+   
+   # Deploy single function
+   supabase functions deploy generate-banana-content
+   
+   # Test functions available:
+   - test-user: Test user data
+   - test-user-weather-data: Test weather integration
+   - test-banana-content: Test content generation
+   - test-user-preferences: Test preference handling
+   - health-check: Runs on cron job for monitoring
+   ```
+
+## Key Integration Points
+
+### AlarmKit Integration
+- Alarms created via AlarmKit appear in native Clock app
+- Support for snooze (1-15 minutes), repeat schedules
+- AI wake-up audio plays via custom audio mixer
+- Fallback to standard alarm sound if AI fails
+
+### AI Wake-Up Flow
+1. User sets alarm with AI wake-up enabled
+2. 2 AM: Generate content for next day
+3. Alarm time: Play background music + AI voice (audio mixer implementation needed)
+4. Monitor playback, fallback if needed
+5. Offline: Use cached general audio content
+
+### RevenueCat Subscription
+- Monthly: $4.99/month (3-day free trial)
+- Annual: $39.99/year (7-day free trial)
+- Entitlement ID: `banana_plus`
+- Hard paywall: All features require active subscription
+
+## Important Notes
+
+1. **Security**: Never commit API keys. Use Secrets.swift for iOS, .env for backend
+2. **Audio Format**: All audio files must be AAC format for iOS compatibility
+3. **Testing**: Physical iOS device required for AlarmKit testing
+4. **Database**: Always write migrations for schema changes
+5. **Deployment**: Use GitHub Actions and PR to main branch (never deploy directly to Supabase)
+6. **RLS Policies**: Ensure proper row-level security for all tables
+7. **Audio Storage**: Files stored in Supabase for 72 hours
+8. **Voice Configuration**: Voice personalities configured in ElevenLabs prompts
+9. **Error Monitoring**: Check Supabase logs for debugging
+10. **Subscription Expiry**: Alarms must still function even if subscription expires during active alarm
+
+## Known TODOs
+
+- Audio mixer implementation for AI wake-up experience
+- Local notification setup for alarms
+- Subscription expiration handling during active alarms
+- Push notification infrastructure
