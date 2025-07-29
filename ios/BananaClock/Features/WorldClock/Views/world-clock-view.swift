@@ -22,16 +22,6 @@ struct WorldClockView: View {
                 // Fixed user time section at top
                 if let currentClock = viewModel.currentTimezoneClock {
                     VStack(spacing: 0) {
-                        // Page title - positioned above user time
-                        Text(viewModel.navigationTitle)
-                            .font(.title)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal, BSpacing.md)
-                            .padding(.top, BSpacing.sm)
-                            .padding(.bottom, BSpacing.lg)
-                        
                         // User's time - sticky at top
                         WorldClockRow(clock: currentClock, viewModel: viewModel)
                     }
@@ -54,7 +44,7 @@ struct WorldClockView: View {
                 }
             }
             
-            // Floating elements positioned absolutely
+            // Floating elements positioned at bottom
             VStack {
                 Spacer()
                 
@@ -102,6 +92,8 @@ struct WorldClockView: View {
                     .padding(.bottom, BSpacing.md)
                 }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+            .background(Color.clear)
         }
         .sheet(isPresented: $showingAddCity) {
             CityPickerView { city in
@@ -126,14 +118,14 @@ struct WorldClockView: View {
     // MARK: - Dynamic Title Properties
     
     private var dynamicTitle: String {
-        // Since user's time is now sticky, always show "Banana Clock"
-        return "Banana Clock"
+        // Use the viewModel's navigationTitle property which already handles planetary clock detection
+        return viewModel.navigationTitle
     }
     
     // MARK: - Views
     
     private var timezoneConverterView: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 12) {
             // Title and countdown row
             HStack {
                 Text("🍌🧠 Timezone Converter")
@@ -144,21 +136,26 @@ struct WorldClockView: View {
                 
                 // Countdown circle on the right (when active)
                 if viewModel.isConverterActive && viewModel.countdownSeconds > 0 {
-                    ZStack {
-                        Circle()
-                            .stroke(Color.gray.opacity(0.3), lineWidth: 2)
-                            .frame(width: 24, height: 24)
-                        
-                        Circle()
-                            .trim(from: 0, to: viewModel.countdownProgress)
-                            .stroke(Color.gray, lineWidth: 2)
-                            .frame(width: 24, height: 24)
-                            .rotationEffect(.degrees(-90))
-                        
-                        Text("\(viewModel.countdownSeconds)")
-                            .font(.caption2)
-                            .foregroundColor(.gray)
+                    Button {
+                        viewModel.endConverterMode()
+                    } label: {
+                        ZStack {
+                            Circle()
+                                .stroke(Color.gray.opacity(0.3), lineWidth: 2)
+                                .frame(width: 24, height: 24)
+                            
+                            Circle()
+                                .trim(from: 0, to: viewModel.countdownProgress)
+                                .stroke(Color.gray, lineWidth: 2)
+                                .frame(width: 24, height: 24)
+                                .rotationEffect(.degrees(-90))
+                            
+                            Text("\(viewModel.countdownSeconds)")
+                                .font(.caption2)
+                                .foregroundColor(.gray)
+                        }
                     }
+                    .buttonStyle(PlainButtonStyle())
                 }
             }
             
@@ -172,29 +169,6 @@ struct WorldClockView: View {
             }
             .accentColor(viewModel.isConverterActive ? BananaTheme.Colors.bananaYellow : .gray)
             
-            // Today button row below slider
-            HStack {
-                Spacer()
-                
-                // Today button to the right when applicable
-                if !viewModel.isToday {
-                    Button {
-                        viewModel.selectedDate = Date()
-                        HapticManager.shared.impact(.light)
-                    } label: {
-                        HStack(spacing: 2) {
-                            Image(systemName: "gobackward")
-                                .font(.caption2)
-                            Text("Today")
-                                .font(.caption2)
-                        }
-                        .foregroundColor(viewModel.isConverterActive ? BananaTheme.Colors.bananaYellow : .gray)
-                    }
-                }
-                
-                Spacer()
-            }
-            
             // AI Recommendation row
             if !viewModel.aiRecommendation.isEmpty {
                 Text(viewModel.aiRecommendation)
@@ -202,7 +176,6 @@ struct WorldClockView: View {
                     .foregroundColor(.gray)
                     .multilineTextAlignment(.leading)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.top, 4)
             }
         }
         .padding(.horizontal, BananaTheme.Spacing.md)
@@ -295,12 +268,18 @@ struct WorldClockView: View {
             .onDelete { indexSet in
                 viewModel.deleteClocks(at: indexSet)
             }
+            
+            // Transparent spacer to create blank space at bottom
+            Color.clear
+                .frame(height: viewModel.clocks.count >= 2 ? 160 : 60)
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets())
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
         .scrollIndicators(.hidden)
         .environment(\.editMode, .constant(isEditing ? .active : .inactive))
-        .padding(.bottom, viewModel.clocks.count >= 2 ? 160 : 60)
     }
     
     @ToolbarContentBuilder
@@ -511,20 +490,91 @@ struct WorldClockRow: View {
             ]
             return dayLengths[clock.cityName] ?? "Planetary Time"
         } else {
-            // Regular city offset - show absolute UTC offset
-            let offset = clock.timeZone.secondsFromGMT()
-            let hours = offset / 3600
-            
+            // Regular city offset - show timezone name and relative offset to user's timezone
             if clock.timeZoneIdentifier == TimeZone.current.identifier {
                 let userOffset = TimeZone.current.secondsFromGMT()
                 let userHours = userOffset / 3600
                 let userSign = userHours >= 0 ? "+" : ""
                 return "Your Time, UTC\(userSign)\(userHours)"
             } else {
-                let sign = hours >= 0 ? "+" : ""
-                return "UTC\(sign)\(hours)"
+                // Calculate relative offset to user's timezone
+                let clockOffset = clock.timeZone.secondsFromGMT()
+                let userOffset = TimeZone.current.secondsFromGMT()
+                let relativeOffset = clockOffset - userOffset
+                let relativeHours = relativeOffset / 3600
+                
+                if relativeHours == 0 {
+                    return "Same time"
+                } else {
+                    let sign = relativeHours > 0 ? "+" : ""
+                    let timezoneName = getTimezoneName(for: clock.timeZone)
+                    return "\(timezoneName), \(sign)\(relativeHours) HRS"
+                }
             }
         }
+    }
+    
+    private func getTimezoneName(for timeZone: TimeZone) -> String {
+        // Map common timezone identifiers to friendly names
+        let timezoneNames: [String: String] = [
+            "America/New_York": "Eastern Time",
+            "America/Chicago": "Central Time", 
+            "America/Denver": "Mountain Time",
+            "America/Los_Angeles": "Pacific Time",
+            "America/Phoenix": "Mountain Time",
+            "America/Anchorage": "Alaska Time",
+            "Pacific/Honolulu": "Hawaii Time",
+            "America/Toronto": "Eastern Time",
+            "America/Vancouver": "Pacific Time",
+            "America/Edmonton": "Mountain Time",
+            "America/Mexico_City": "Central Time",
+            "America/Sao_Paulo": "Brasília Time",
+            "America/Argentina/Buenos_Aires": "Argentina Time",
+            "America/Santiago": "Chile Time",
+            "America/Lima": "Peru Time",
+            "Europe/London": "GMT",
+            "Europe/Paris": "Central European Time",
+            "Europe/Berlin": "Central European Time",
+            "Europe/Rome": "Central European Time",
+            "Europe/Madrid": "Central European Time",
+            "Europe/Amsterdam": "Central European Time",
+            "Europe/Brussels": "Central European Time",
+            "Europe/Vienna": "Central European Time",
+            "Europe/Zurich": "Central European Time",
+            "Europe/Stockholm": "Central European Time",
+            "Europe/Oslo": "Central European Time",
+            "Europe/Copenhagen": "Central European Time",
+            "Europe/Helsinki": "Eastern European Time",
+            "Europe/Warsaw": "Central European Time",
+            "Europe/Prague": "Central European Time",
+            "Europe/Budapest": "Central European Time",
+            "Europe/Bucharest": "Eastern European Time",
+            "Europe/Sofia": "Eastern European Time",
+            "Europe/Athens": "Eastern European Time",
+            "Europe/Istanbul": "Turkey Time",
+            "Europe/Moscow": "Moscow Time",
+            "Asia/Tokyo": "Japan Time",
+            "Asia/Shanghai": "China Time",
+            "Asia/Seoul": "Korea Time",
+            "Asia/Singapore": "Singapore Time",
+            "Asia/Hong_Kong": "Hong Kong Time",
+            "Asia/Bangkok": "Indochina Time",
+            "Asia/Jakarta": "Western Indonesia Time",
+            "Asia/Kolkata": "India Time",
+            "Asia/Dubai": "Gulf Time",
+            "Asia/Tehran": "Iran Time",
+            "Asia/Jerusalem": "Israel Time",
+            "Africa/Cairo": "Eastern European Time",
+            "Africa/Johannesburg": "South Africa Time",
+            "Africa/Lagos": "West Africa Time",
+            "Australia/Sydney": "Eastern Australia Time",
+            "Australia/Melbourne": "Eastern Australia Time",
+            "Australia/Perth": "Western Australia Time",
+            "Pacific/Auckland": "New Zealand Time",
+            "UTC": "UTC"
+        ]
+        
+        return timezoneNames[timeZone.identifier] ?? timeZone.identifier
     }
     
     private var timeColor: Color {
@@ -577,13 +627,44 @@ struct CityPickerView: View {
         case alphabetical = "A-Z"
     }
     
+    init(onSelect: @escaping (City) -> Void) {
+        self.onSelect = onSelect
+        // Load the last used sort mode from UserDefaults
+        let savedSortMode = UserDefaults.standard.string(forKey: "CityPickerSortMode")
+        if let savedSortMode = savedSortMode, let mode = SortMode(rawValue: savedSortMode) {
+            self._sortMode = State(initialValue: mode)
+        }
+    }
+    
+    private func saveLastSelectedCity(_ city: City) {
+        UserDefaults.standard.set(city.name, forKey: "LastSelectedCity")
+    }
+    
+    private func getLastSelectedCity() -> String? {
+        return UserDefaults.standard.string(forKey: "LastSelectedCity")
+    }
+    
+    private func getSectionForCity(_ cityName: String) -> String? {
+        // Find which section this city belongs to
+        for (section, cities) in groupedCities {
+            if cities.contains(where: { $0.name == cityName }) {
+                return section
+            }
+        }
+        return nil
+    }
+    
     private var filteredCities: [City] {
         let regularCities = searchText.isEmpty ? City.popularCities : City.allCities.filter { 
             $0.name.localizedCaseInsensitiveContains(searchText) ||
             $0.country.localizedCaseInsensitiveContains(searchText)
         }
         
-        let planets = City.planets
+        // Always show planets, filter by search text if provided
+        let planets = City.planets.filter { planet in
+            searchText.isEmpty || planet.name.localizedCaseInsensitiveContains(searchText) ||
+            planet.country.localizedCaseInsensitiveContains(searchText)
+        }
         
         switch sortMode {
         case .utc:
@@ -645,15 +726,86 @@ struct CityPickerView: View {
             titles = Array("ABCDEFGHIJKLMNOPQRSTUVWXYZ").map(String.init)
         }
         
-        // Add planets section to index
+        // Always add planets section to index since planets are always available
         titles.append("🪐")
         
         return titles
     }
     
     private func scrollToSection(_ section: String) {
-        scrollTarget = section
+        // Check if the section exists in groupedCities
+        let existingSections = groupedCities.map { $0.0 }
+        
+        if existingSections.contains(section) {
+            // Section exists, scroll to it
+            scrollTarget = section
+        } else {
+            // Section doesn't exist, find the closest one
+            let closestSection = findClosestSection(to: section, from: existingSections)
+            scrollTarget = closestSection
+        }
+        
         HapticManager.shared.impact(.light)
+    }
+    
+    private func findClosestSection(to targetSection: String, from existingSections: [String]) -> String {
+        // Special handling for planets section
+        if targetSection == "🪐" {
+            return existingSections.contains("🪐 Planets") ? "🪐 Planets" : (existingSections.last ?? "")
+        }
+        
+        switch sortMode {
+        case .utc:
+            // For UTC mode, find the closest offset
+            guard let targetOffset = Int(targetSection.replacingOccurrences(of: "+", with: "")) else {
+                return existingSections.first ?? ""
+            }
+            
+            var closestSection = existingSections.first ?? ""
+            var minDistance = Int.max
+            
+            for section in existingSections {
+                if let sectionOffset = Int(section.replacingOccurrences(of: "+", with: "")) {
+                    let distance = abs(sectionOffset - targetOffset)
+                    if distance < minDistance {
+                        minDistance = distance
+                        closestSection = section
+                    }
+                }
+            }
+            
+            return closestSection
+            
+        case .alphabetical:
+            // For alphabetical mode, find the closest letter
+            let targetLetter = targetSection.uppercased()
+            
+            // If target letter is before all existing sections, go to first
+            if let firstSection = existingSections.first, targetLetter < firstSection {
+                return firstSection
+            }
+            
+            // If target letter is after all existing sections, go to last
+            if let lastSection = existingSections.last, targetLetter > lastSection {
+                return lastSection
+            }
+            
+            // Find the closest letter
+            var closestSection = existingSections.first ?? ""
+            var minDistance = Int.max
+            
+            for section in existingSections {
+                if let sectionChar = section.first, let targetChar = targetLetter.first {
+                    let distance = abs(Int(sectionChar.asciiValue ?? 0) - Int(targetChar.asciiValue ?? 0))
+                    if distance < minDistance {
+                        minDistance = distance
+                        closestSection = section
+                    }
+                }
+            }
+            
+            return closestSection
+        }
     }
     
     var body: some View {
@@ -701,6 +853,7 @@ struct CityPickerView: View {
                                 ) {
                                     ForEach(cities) { city in
                                         Button {
+                                            saveLastSelectedCity(city)
                                             onSelect(city)
                                             dismiss()
                                         } label: {
@@ -779,6 +932,14 @@ struct CityPickerView: View {
                     .foregroundColor: UIColor.white,
                     .font: UIFont.systemFont(ofSize: 17, weight: .regular)
                 ]
+                
+                // Scroll to last selected city if available
+                if let lastCityName = getLastSelectedCity(),
+                   let section = getSectionForCity(lastCityName) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        scrollTarget = section
+                    }
+                }
             }
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -787,6 +948,10 @@ struct CityPickerView: View {
                     }
                     .foregroundColor(BananaTheme.Colors.bananaYellow)
                 }
+            }
+            .onChange(of: sortMode) { _, newValue in
+                // Save the sort mode to UserDefaults
+                UserDefaults.standard.set(newValue.rawValue, forKey: "CityPickerSortMode")
             }
         }
     }
@@ -1290,7 +1455,7 @@ class WorldClockViewModel: ObservableObject {
     }
     
     var countdownProgress: Double {
-        return Double(5 - countdownSeconds) / 5.0
+        return Double(10 - countdownSeconds) / 10.0
     }
     
     var isToday: Bool {
@@ -1305,7 +1470,7 @@ class WorldClockViewModel: ObservableObject {
             clock.cityName.contains("🛡️") || clock.cityName.contains("👑") || clock.cityName.contains("🪐") || 
             clock.cityName.contains("🔭") || clock.cityName.contains("🌊")
         }
-        return hasPlanet ? "🪐 Planetary Clock" : "World Clock"
+        return hasPlanet ? "🪐🕰️ Planetary Clock" : "🌍🕒 World Clock"
     }
     
     var aiRecommendation: String {
@@ -1646,6 +1811,20 @@ class WorldClockViewModel: ObservableObject {
                 }
             }
         }
+    }
+    
+    func endConverterMode() {
+        // Immediately end converter mode
+        isConverterActive = false
+        countdownSeconds = 0
+        hasTriggeredAIForCurrentSession = false
+        
+        // Cancel all timers
+        converterTimer?.invalidate()
+        countdownTimer?.invalidate()
+        
+        // Provide haptic feedback
+        HapticManager.shared.impact(.medium)
     }
     
     init() {
