@@ -75,9 +75,9 @@ This document tracks bugs organized by page/feature for the Banana Clock iOS app
 |--------|-------------|--------|----------|----------|-------|
 | TIMER-001 | Entire row is clickable instead of just buttons | Fixed | Medium | Unassigned | Incorrect touch target behavior |
 | TIMER-002 | Buttons not clickable due to row being clickable | Fixed | High | Unassigned | Buttons blocked by row touch target |
-| TIMER-004 | Timer buttons not clickable - rows work correctly, but buttons are unresponsive | Open | High | Unassigned | .allowsHitTesting(showSelection) blocks buttons in normal mode |
+| TIMER-004 | Timer buttons not clickable - rows work correctly, but buttons are unresponsive | Fixed | High | Unassigned | .allowsHitTesting(showSelection) blocks buttons in normal mode |
 | TIMER-003 | Unable to select timers when clicking edit to delete | Fixed | High | Unassigned | Edit mode selection not working |
-| TIMER-005 | Cannot swipe to delete timers | Open | Medium | Unassigned | Missing swipe-to-delete functionality that exists in Alarms |
+| TIMER-005 | Cannot swipe to delete timers | Fixed | Medium | Unassigned | Missing swipe-to-delete functionality that exists in Alarms |
 
 ### Stopwatch Feature
 | Bug ID | Description | Status | Priority | Assigned | Notes |

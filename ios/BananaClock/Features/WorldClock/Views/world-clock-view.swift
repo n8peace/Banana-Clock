@@ -2154,32 +2154,32 @@ struct CustomDatePicker: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Collapsed view (always visible)
+            // Collapsed view (always visible) - compact and left-aligned
             Button {
                 withAnimation(.easeInOut(duration: 0.3)) {
                     showingDatePicker.toggle()
                 }
             } label: {
-                HStack {
+                HStack(spacing: 8) {
                     Image(systemName: "calendar")
-                        .foregroundColor(BananaTheme.Colors.bananaYellow)
+                        .foregroundColor(showingDatePicker ? BananaTheme.Colors.bananaYellow : BananaTheme.Colors.bananaYellow)
+                        .font(.body)
                     
                     Text(selectedDateString)
                         .font(.body)
-                        .foregroundColor(.white)
-                    
-                    Spacer()
+                        .foregroundColor(showingDatePicker ? BananaTheme.Colors.bananaYellow : .white)
                     
                     Image(systemName: showingDatePicker ? "chevron.up" : "chevron.down")
                         .foregroundColor(BananaTheme.Colors.bananaYellow)
                         .font(.caption)
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
                 .background(Color.black.opacity(0.3))
-                .cornerRadius(8)
+                .cornerRadius(6)
             }
             .buttonStyle(PlainButtonStyle())
+            .frame(maxWidth: .infinity, alignment: .leading)
             
             // Expanded calendar view
             if showingDatePicker {
@@ -2193,8 +2193,7 @@ struct CustomDatePicker: View {
                     // Calendar grid
                     calendarGrid
                     
-                    // Today button
-                    todayButton
+                    // Today button removed - today's date is highlighted instead
                 }
                 .padding(16)
                 .background(
@@ -2230,7 +2229,7 @@ struct CustomDatePicker: View {
                 showingMonthYearPicker = true
             } label: {
                 Text(currentMonthString)
-                    .font(.title2.weight(.medium))
+                    .font(.title2)
                     .foregroundColor(.white)
             }
             .buttonStyle(PlainButtonStyle())
@@ -2272,16 +2271,21 @@ struct CustomDatePicker: View {
                     Button {
                         withAnimation(.easeInOut(duration: 0.2)) {
                             selectedDate = date
-                            showingDatePicker = false
+                            // Don't close the picker - let user click the button again to close
                         }
                     } label: {
                         Text("\(calendar.component(.day, from: date))")
                             .font(.body.weight(.medium))
-                            .foregroundColor(isSelected(date) ? .black : .white)
+                            .foregroundColor(
+                                isSelected(date) ? .white : 
+                                isToday(date) ? BananaTheme.Colors.bananaYellow : .white
+                            )
                             .frame(width: 32, height: 32)
                             .background(
                                 Circle()
-                                    .fill(isSelected(date) ? BananaTheme.Colors.bananaYellow : Color.clear)
+                                    .fill(
+                                        isSelected(date) ? BananaTheme.Colors.bananaYellow : Color.clear
+                                    )
                             )
                     }
                     .buttonStyle(PlainButtonStyle())
@@ -2291,27 +2295,11 @@ struct CustomDatePicker: View {
                 }
             }
         }
+        .frame(height: 240) // Fixed height for consistent spacing (6 rows * 32px + 5 * 8px spacing)
         .padding(.bottom, 16)
     }
     
-    private var todayButton: some View {
-        Button {
-            withAnimation(.easeInOut(duration: 0.2)) {
-                selectedDate = Date()
-                currentMonth = Date()
-                showingDatePicker = false
-            }
-        } label: {
-            Text("Today")
-                .font(.body.weight(.medium))
-                .foregroundColor(BananaTheme.Colors.bananaYellow)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
-                .background(Color.white.opacity(0.1))
-                .cornerRadius(8)
-        }
-        .buttonStyle(PlainButtonStyle())
-    }
+
     
     private var monthYearPicker: some View {
         NavigationView {
@@ -2327,9 +2315,18 @@ struct CustomDatePicker: View {
                 .accentColor(BananaTheme.Colors.bananaYellow)
                 .padding()
             }
-            .navigationTitle("Select Month/Year")
+            .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarColorScheme(.dark, for: .navigationBar)
+            .toolbarBackground(.hidden, for: .navigationBar)
+            .toolbarBackground(.hidden, for: .tabBar)
             .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text("Select Month/Year")
+                        .font(.title2)
+                        .foregroundColor(.white)
+                }
+                
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") {
                         showingMonthYearPicker = false
@@ -2379,6 +2376,10 @@ struct CustomDatePicker: View {
     
     private func isSelected(_ date: Date) -> Bool {
         calendar.isDate(date, inSameDayAs: selectedDate)
+    }
+    
+    private func isToday(_ date: Date) -> Bool {
+        calendar.isDate(date, inSameDayAs: Date())
     }
 }
 
