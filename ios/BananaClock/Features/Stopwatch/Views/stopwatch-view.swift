@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Foundation
+import AudioToolbox
 
 struct StopwatchView: View {
     @StateObject private var viewModel = StopwatchViewModel()
@@ -16,16 +17,6 @@ struct StopwatchView: View {
             Color.black.ignoresSafeArea()
             
             VStack(spacing: 0) {
-                // Page title - positioned at top of screen
-                Text(viewModel.navigationTitle)
-                    .font(.title)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, BSpacing.md)
-                    .padding(.top, BSpacing.sm)
-                    .padding(.bottom, BSpacing.lg)
-                
                 NavigationStack {
                     VStack(spacing: BananaTheme.Spacing.lg) {
                         // Time display
@@ -46,7 +37,7 @@ struct StopwatchView: View {
                     .padding(.horizontal, BSpacing.lg)
                     .padding(.top, BSpacing.lg)
                 }
-                .navigationTitle("Banana Clock")
+                .navigationTitle("⏱️ Stopwatch")
                 .navigationBarTitleDisplayMode(.inline)
             }
         }
@@ -71,12 +62,25 @@ struct StopwatchView: View {
     
     private var timeDisplay: some View {
         VStack(spacing: BananaTheme.Spacing.xs) {
-            Text(viewModel.displayTime)
-                .font(BananaTheme.Typography.displayLarge)
-                .foregroundColor(viewModel.displayColor)
-                .monospacedDigit()
-                .minimumScaleFactor(0.5)
-                .lineLimit(1)
+            ZStack {
+                // Stable time display (always shows actual time)
+                Text(viewModel.displayTime)
+                    .font(BananaTheme.Typography.displayLarge)
+                    .foregroundColor(viewModel.displayColor)
+                    .monospacedDigit()
+                    .minimumScaleFactor(0.5)
+                    .lineLimit(1)
+                
+                // Banana countdown overlay with black background
+                if viewModel.isCountdownMode || (viewModel.countdownEnabled && !viewModel.isRunning && viewModel.elapsedTime == 0) {
+                    Text(viewModel.countdownBananas)
+                        .font(BananaTheme.Typography.displayLarge)
+                        .foregroundColor(BananaTheme.Colors.bananaYellow)
+                        .lineLimit(1)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .background(Color.black)
+                }
+            }
             
             // Fixed height container for lap indicator
             HStack {
@@ -262,7 +266,8 @@ class StopwatchViewModel: ObservableObject {
     private var startTime: Date?
     private var lapStartTime: TimeInterval = 0
     private var countdownTime: TimeInterval = 3 // 3 seconds
-    private var isCountdownMode = false
+    var isCountdownMode = false
+    private var lastCountdownSecond: Int = 3 // Track last second to trigger audio
     
     var displayTime: String {
         if isCountdownMode {
@@ -285,6 +290,27 @@ class StopwatchViewModel: ObservableObject {
     
     var isCountdownActive: Bool {
         return isCountdownMode
+    }
+    
+    var countdownBananas: String {
+        if isCountdownMode {
+            let currentSecond = Int(ceil(countdownTime))
+            switch currentSecond {
+            case 3:
+                return "🍌🍌🍌"
+            case 2:
+                return "🍌🍌"
+            case 1:
+                return "🍌"
+            case 0:
+                return "GO!"
+            default:
+                return "🍌🍌🍌"
+            }
+        } else {
+            // Initial state when countdown is enabled but not started
+            return "🍌🍌🍌"
+        }
     }
     
     var displayColor: Color {
@@ -354,6 +380,7 @@ class StopwatchViewModel: ObservableObject {
     func startCountdown() {
         isCountdownMode = true
         countdownTime = 3 // Reset to 3 seconds
+        lastCountdownSecond = 3
         
         timer = Foundation.Timer.scheduledTimer(withTimeInterval: 0.01, repeats: true) { _ in
             DispatchQueue.main.async {
@@ -405,6 +432,13 @@ class StopwatchViewModel: ObservableObject {
     private func updateCountdown() {
         countdownTime -= 0.01
         
+        // Check if we've crossed a second boundary
+        let currentSecond = Int(ceil(countdownTime))
+        if currentSecond != lastCountdownSecond && currentSecond > 0 {
+            lastCountdownSecond = currentSecond
+            playCountdownBeep()
+        }
+        
         // Force UI update
         objectWillChange.send()
         
@@ -415,8 +449,8 @@ class StopwatchViewModel: ObservableObject {
             startTime = Date()
             elapsedTime = 0 // Reset elapsed time when countdown finishes
             
-            // TODO: Play gunshot sound here
-            // AudioService.shared.playSound("gunshot.caf")
+            // Play go sound
+            playGoSound()
             
             // Switch timer to normal stopwatch mode
             timer?.invalidate()
@@ -429,5 +463,18 @@ class StopwatchViewModel: ObservableObject {
             // Add timer to main run loop
             RunLoop.main.add(timer!, forMode: .common)
         }
+    }
+    
+    private func playCountdownBeep() {
+        // Play a simple beep sound for countdown
+        // Using system sound for simplicity
+        AudioServicesPlaySystemSound(1103) // System sound ID for beep
+        HapticManager.shared.impact(.light)
+    }
+    
+    private func playGoSound() {
+        // Play a different sound for "Go!"
+        AudioServicesPlaySystemSound(1104) // Different system sound
+        HapticManager.shared.impact(.medium)
     }
 }
