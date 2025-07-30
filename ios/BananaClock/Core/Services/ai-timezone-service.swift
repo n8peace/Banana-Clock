@@ -131,7 +131,7 @@ class AITimezoneService: ObservableObject {
         Reference timezone: \(userCity) (\(userTimezone))  
         Date: \(dateString)
 
-        Find the earliest possible time block that includes the maximum number of cities within acceptable hours:
+        Find the most inclusive possible time block that includes the maximum number of cities within acceptable hours:
         - Business hours: 8 AM – 6 PM local time
         - Also acceptable: early (6–8 AM) and evening (6–10 PM)
         - A city is considered excluded only if the meeting falls **entirely within its overnight hours (10 PM – 6 AM)**

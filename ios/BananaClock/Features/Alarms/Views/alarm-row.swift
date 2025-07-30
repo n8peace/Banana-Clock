@@ -35,28 +35,29 @@ struct AlarmRow: View {
                 HStack(alignment: .firstTextBaseline, spacing: BananaTheme.Spacing.xs) {
                     Text(timeString)
                         .font(.largeTitle)
-                        .foregroundColor(.white)
+                        .foregroundColor(isEnabled ? .white : BananaTheme.Colors.textTertiary)
                         .monospacedDigit()
                     Text(periodString)
                         .font(.title2)
-                        .foregroundColor(BananaTheme.Colors.textSecondary)
+                        .foregroundColor(isEnabled ? BananaTheme.Colors.textSecondary : BananaTheme.Colors.textTertiary)
                 }
                 
                 if alarm.isWakeUpAlarm {
-                    // Today/Tomorrow directly below time
-                    Text(todayTomorrowText)
-                        .font(.caption)
-                        .foregroundColor(BananaTheme.Colors.textSecondary)
-                    
-                    // AI indicator below Today/Tomorrow
-                    if alarm.isAIEnabled {
-                        Text("🍌🧠 ON")
+                    // Today/Tomorrow and AI status inline below time
+                    HStack(spacing: BananaTheme.Spacing.xs) {
+                        Text(todayTomorrowText)
                             .font(.caption)
-                            .foregroundColor(BananaTheme.Colors.bananaYellow)
-                    } else {
-                        Text("🍌🧠 OFF")
-                            .font(.caption)
-                            .foregroundColor(BananaTheme.Colors.textSecondary)
+                            .foregroundColor(isEnabled ? BananaTheme.Colors.textSecondary : BananaTheme.Colors.textTertiary)
+                        
+                        if alarm.isAIEnabled {
+                            Text("🍌🧠 Wake Up ON")
+                                .font(.caption)
+                                .foregroundColor(isEnabled ? BananaTheme.Colors.bananaYellow : BananaTheme.Colors.textTertiary)
+                        } else {
+                            Text("🍌🧠 Wake Up OFF")
+                                .font(.caption)
+                                .foregroundColor(isEnabled ? BananaTheme.Colors.textSecondary : BananaTheme.Colors.textTertiary)
+                        }
                     }
                 } else {
                     HStack(spacing: BananaTheme.Spacing.xs) {
@@ -81,11 +82,13 @@ struct AlarmRow: View {
             
             Spacer()
             
-            // Only show toggle when not in selection mode
-            if !showSelection {
-                Toggle("", isOn: $isEnabled)
-                    .toggleStyle(SwitchToggleStyle(tint: BananaTheme.Colors.bananaYellow))
-                    .labelsHidden()
+            VStack(alignment: .trailing, spacing: BananaTheme.Spacing.xxs) {
+                // Only show toggle when not in selection mode
+                if !showSelection {
+                    Toggle("", isOn: $isEnabled)
+                        .toggleStyle(SwitchToggleStyle(tint: BananaTheme.Colors.bananaYellow))
+                        .labelsHidden()
+                }
             }
         }
         .padding(.vertical, BananaTheme.Spacing.sm)

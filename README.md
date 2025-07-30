@@ -1,170 +1,242 @@
 # Banana Clock 🌅
 
-A hyper-personalized, AI-powered alarm clock that improves the way people wake up. Each morning, it plays background music and a warm, emotionally intelligent voice that delivers a brief, personalized message using AI — like weather, news, encouragement, or reminders.
+**Transform your mornings from jarring to joyful**
 
-## 🚀 Vision
+Banana Clock reimagines how we wake up by replacing harsh alarms with personalized, AI-powered morning experiences that set you up for success every day.
 
-Banana Clock transforms the morning routine by combining:
-- **Personalized AI Scripts**: GPT-4o generates unique morning messages
-- **Emotional Intelligence**: Context-aware content based on user preferences
-- **High-Quality Voice Synthesis**: ElevenLabs delivers warm, natural speech
-- **Seamless Integration**: SwiftUI + Supabase for smooth user experience
+## 💡 The Problem We Solve
 
-## 🧑‍💻 Tech Stack
+**Traditional alarms are broken.** They jolt you awake with harsh sounds, offer no context about your day, and create anxiety instead of motivation. Most people start their mornings in fight-or-flight mode, checking multiple apps for weather, news, and reminders—all while trying to shake off sleep inertia.
 
-- **Frontend**: SwiftUI iOS app
-- **Backend**: Supabase (PostgreSQL + Edge Functions + Storage)
-- **AI**: GPT-4o for morning script generation
-- **Voice**: ElevenLabs Multilingual v2 for high-quality voice synthesis
-- **Storage**: Supabase Storage for audio file management
-- **CI/CD**: GitHub Actions, with `develop` and `main` branch strategy
+**Banana Clock fixes this** by creating a warm, personalized morning companion that:
+- **Eliminates morning anxiety** with gentle, encouraging wake-up experiences
+- **Provides instant context** about your day (weather, news, schedule) without reaching for your phone
+- **Motivates and inspires** with personalized encouragement tailored to your preferences
+- **Streamlines morning routines** by consolidating information into one beautiful experience
+
+## 🚀 The Banana Clock Difference
+
+### 🤖 **AI-Powered Personalization**
+Every morning is unique. Our GPT-4o engine creates personalized scripts based on:
+- Your location, weather, and personal preferences
+- Current news in categories you care about (business, sports, pop culture)
+- Your schedule, reminders, and upcoming events
+- Motivational content aligned with your values and interests
+
+### 🎵 **Cinema-Quality Experience**
+- **Premium voice synthesis** via ElevenLabs (not robotic text-to-speech)
+- **Background music integration** that complements your wake-up script
+- **Emotional intelligence** in tone and content delivery
+- **Multiple voice personalities** to match your preference
+
+### ⏰ **Smart Time Management Suite**
+Beyond revolutionary wake-ups, Banana Clock is a complete time management solution:
+- **Intelligent Wake-Up Alarms**: AI-generated personalized morning experiences
+- **Regular Alarms**: Traditional alarms with premium sounds and customization
+- **Smart Timers**: Perfect for cooking, workouts, and productivity sessions
+- **World Clock with AI**: Timezone converter with AI-powered meeting scheduling recommendations
+- **Precision Stopwatch**: Professional-grade timing for any activity
+
+### 🌍 **Global Coordination Made Easy**
+The AI timezone converter eliminates the mental math of global scheduling:
+- Input multiple cities and get instant AI-powered meeting time recommendations
+- Considers business hours, cultural preferences, and optimal windows
+- Beautiful confetti effects celebrate successful coordination (because scheduling shouldn't be boring!)
+
+## 🏗️ Architecture & Technology
+
+### **iOS App (SwiftUI + Native Integration)**
+- **AlarmKit Integration**: Alarms appear in native iOS Clock app
+- **Core Data + CloudKit**: Reliable local storage with cloud sync
+- **Premium Design**: Dark-mode interface with signature banana yellow accents
+- **iOS 17+ Optimized**: Leverages latest Apple frameworks for performance
+
+### **AI-Powered Backend (Supabase + Edge Functions)**
+- **GPT-4o Content Generation**: Creates unique morning scripts daily
+- **ElevenLabs Voice Synthesis**: Hollywood-quality voice generation
+- **PostgreSQL Database**: Robust user preferences and content management
+- **Real-time Sync**: Seamless experience across devices
+- **Intelligent Caching**: 72-hour content retention with smart fallbacks
+
+### **Subscription Model**
+- **Premium Experience Only**: $4.99/month (3-day trial) or $39.99/year (7-day trial)
+- **No Freemium Distractions**: Every feature designed for paying customers who value quality
+- **RevenueCat Integration**: Smooth, reliable subscription management
+
+## 🎯 Who This Is For
+
+### **Morning Optimizers**
+People who want to start their day feeling prepared, motivated, and in control rather than rushed and reactive.
+
+### **Global Professionals**
+Remote workers, consultants, and executives who coordinate across time zones and need intelligent scheduling assistance.
+
+### **Wellness-Focused Individuals**
+Those who understand that how you wake up determines how you feel all day, and invest in premium experiences that support their well-being.
+
+### **Productivity Enthusiasts**
+People who appreciate beautiful, thoughtful software that combines multiple time management tools into one cohesive experience.
+
+## 🚀 Getting Started
+
+### **For Users**
+1. Download from the App Store (iOS 17+ required)
+2. Start your free trial (3-7 days depending on plan)
+3. Set up your first wake-up alarm with AI preferences
+4. Wake up tomorrow to your personalized experience
+
+### **For Developers**
+See [iOS Development README](ios/README.md) for complete setup instructions.
 
 ## 📁 Project Structure
 
 ```
 Banana-Clock/
-├── supabase/          # Supabase project files
-│   ├── migrations/    # Database migrations (5 tables + storage bucket)
-│   ├── functions/     # 7 content generation functions (6 deployed to production)
-│   └── config.toml    # Supabase configuration
-├── docs/              # Project documentation
-├── .github/           # GitHub Actions workflows
-├── deploy-tables.sh   # Database deployment script
-├── .env               # Local environment file (gitignored)
-└── README.md          # This file
+├── ios/                  # iOS app (SwiftUI + AlarmKit)
+│   ├── BananaClock/     # Main app code
+│   │   ├── App/         # Configuration, entry point
+│   │   ├── Core/        # Models, services, utilities
+│   │   │   ├── Models/  # Alarm, Timer, User models
+│   │   │   ├── Services/# AI, audio, sync services
+│   │   │   └── Components/ # Reusable UI components
+│   │   ├── Features/    # Feature modules
+│   │   │   ├── Alarms/  # Wake-up & regular alarms
+│   │   │   ├── Timers/  # Timer functionality
+│   │   │   ├── WorldClock/ # Time zones + AI converter
+│   │   │   ├── Stopwatch/  # Precision timing
+│   │   │   └── Premium/ # Subscription management
+│   │   └── Design/      # Theme, colors, typography
+├── supabase/            # Backend infrastructure
+│   ├── functions/       # AI content generation (7 functions)
+│   │   ├── generate-banana-content/  # Main wake-up scripts
+│   │   ├── generate-weather-content/ # Weather integration
+│   │   ├── generate-headlines-content/ # News summaries
+│   │   └── generate-audio/           # Voice synthesis
+│   ├── migrations/      # Database schema (5 tables)
+│   └── config.toml     # Environment configuration
+├── docs/               # Comprehensive documentation
+└── .github/workflows/  # CI/CD automation
 ```
 
-## 🚀 Getting Started
+## 🎯 Core Features Deep Dive
 
-### Prerequisites
+### **🌅 Wake-Up Alarms (The Star)**
+- **Flexible Scheduling**: Different times on different days (7am MWF, 8am Tue/Thu, off weekends)
+- **One-Per-Day Limit**: Prevents over-scheduling, maintains focus on quality
+- **18-Hour Visibility Rule**: Shows tomorrow's alarm after 6pm today
+- **AI Content Categories**: Weather, news, sports, markets, philosophy, reminders
+- **Voice Customization**: Multiple ElevenLabs voice options
+- **Music Integration**: Background music that complements your wake-up script
 
-- Node.js 18+ (for Supabase CLI)
-- Supabase CLI
-- ElevenLabs API key
-- OpenAI API key
+### **⏰ Regular Alarms**
+- **Native iOS Integration**: Appears in system Clock app
+- **Premium Sounds**: Curated audio library
+- **Smart Snooze**: 1-15 minute customizable snooze
+- **Volume Control**: Gradual wake-up or instant alert
+- **Repeat Patterns**: Flexible scheduling for any use case
 
-### Local Development Setup
+### **⏲️ Smart Timers**
+- **Quick Presets**: 1, 5, 10 minute instant start
+- **Custom Durations**: Hours, minutes, seconds precision
+- **Activity Labels**: Cooking, workout, meditation, etc.
+- **Background Operation**: Works while phone is locked
+- **Bulk Management**: Edit, delete multiple timers
+- **Smart Deduplication**: Prevents identical timer clutter
 
-1. **Clone and Setup**
-   ```bash
-   git clone <repository-url>
-   cd banana-clock
-   cp .env.example .env
-   # Edit .env with your API keys
-   ```
+### **🌍 World Clock + AI Timezone Converter**
+- **Global Time Display**: Beautiful, real-time world clocks
+- **AI Meeting Scheduler**: Input cities, get optimal meeting times
+- **Business Hours Intelligence**: Considers work schedules across cultures
+- **Confetti Celebrations**: Delightful animations when AI finds solutions
+- **Drag-to-Convert**: Interactive time slider for visual scheduling
 
-2. **iOS App Setup** (Ready for Development)
-   ```bash
-   # Backend infrastructure is complete and deployed to production
-   # Content generation system is fully operational
-   # iOS app development can now begin
-   # cd ios-app
-   # Open BananaClock.xcodeproj in Xcode
-   # Configure signing and capabilities
-   ```
+### **⏱️ Precision Stopwatch**
+- **Millisecond Accuracy**: Professional-grade timing
+- **Lap Functionality**: Track intervals and splits
+- **Clean Interface**: Distraction-free design
+- **Background Operation**: Continues timing when app is closed
 
-3. **Supabase Setup**
-   ```bash
-   cd supabase
-   supabase start
-   supabase db reset
-   ```
+## 🏆 Competitive Advantages
 
-4. **Install Dependencies**
-   ```bash
-   # iOS dependencies managed via Swift Package Manager
-   # Supabase functions dependencies
-   cd supabase/functions
-   npm install
-   ```
+### **Versus Apple Clock**
+- **Personalized content** vs. generic alarms
+- **AI-powered intelligence** vs. basic functionality
+- **Premium experience** vs. utilitarian design
+- **Emotional wellness focus** vs. pure functionality
 
-### Environment Variables
+### **Versus Sleep Cycle / AutoSleep**
+- **Active morning engagement** vs. passive sleep tracking
+- **Content delivery** vs. data collection
+- **Motivational focus** vs. analysis paralysis
+- **AI personalization** vs. generic recommendations
 
-Create a `.env` file in the root directory:
+### **Versus Calendly / Scheduling Apps**
+- **Timezone intelligence** vs. manual coordination
+- **AI-powered recommendations** vs. user guesswork
+- **Integrated time management** vs. single-purpose tools
+- **Beautiful experience** vs. functional interfaces
 
-```env
-# Supabase (Development Environment)
-SUPABASE_URL=your_supabase_url
-SUPABASE_ANON_KEY=your_development_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_development_service_role_key
-SUPABASE_DEVELOP_PROJECT=project_ref
-SUPABASE_ACCESS_TOKEN=your_supabase_access_token
-SUPABASE_DB_PASSWORD=your_database_password
+## 🛣️ Roadmap & Vision
 
-# Supabase (Production Environment)
-# SUPABASE_URL=your_supabase_url
-# SUPABASE_ANON_KEY=your_production_anon_key
-# SUPABASE_SERVICE_ROLE_KEY=your_production_service_role_key
-# SUPABASE_MAIN_PROJECT=project_ref
-# SUPABASE_ACCESS_TOKEN=your_supabase_access_token
-# SUPABASE_DB_PASSWORD=your_database_password
+### **Short Term (Next 3 Months)**
+- Complete audio mixer for seamless music + voice experience
+- Launch production-ready subscription system
+- Implement push notifications and background processing
+- Add comprehensive analytics and user insights
 
-# OpenAI
-OPENAI_API_KEY=your_openai_api_key
+### **Medium Term (3-6 Months)**
+- Multi-language support for global expansion
+- Advanced AI personalization with learning algorithms
+- Integration with calendar and task management systems
+- Apple Watch companion app for wrist-based wake-ups
 
-# ElevenLabs
-ELEVENLABS_API_KEY=your_elevenlabs_api_key
-
-# App Configuration
-APP_ENV=development
-```
-
-## 🔄 Development Workflow
-
-### Branch Strategy
-- `main`: Production-ready code
-- `develop`: Integration branch for features
-
-### Development Process
-1. Create feature branch from `develop`
-2. Implement feature with tests
-3. Create PR to `develop`
-4. Code review and CI checks
-5. Merge to `develop`
-6. Release to `main` via PR
-
-## 📱 iOS App Features
-
-- **Smart Alarm**: AI-generated personalized wake-up messages
-- **Voice Customization**: Multiple voice options via ElevenLabs
-- **Weather Integration**: Local weather in morning messages
-- **News Briefing**: Curated news based on user interests
-- **Sports Highlights**: Latest sports updates and scores
-- **Market Highlights**: Stock market and financial news
-- **Philosophical/Religious Encouragement**: Inspirational quotes and spiritual guidance
-- **Reminders**: Personalized task and appointment reminders
-- **Outro Encouragement**: Motivational closing messages
-- **Offline Support**: Core functionality works offline
-
-
-
-## 📚 Documentation
-
-- [Content Schema](docs/content-schema.md) - Live database schema and content system
-- [Database Documentation](docs/database.md) - Complete database table definitions
-- [iOS App Features](docs/ios-app.md) - Complete iOS app feature documentation
-- [Supabase Setup](docs/supabase-setup.md) - Initial setup and configuration
-- [Deployment Guide](docs/deployment.md) - CI/CD and deployment workflows
-- [Development Guide](docs/development.md) - Development workflow and best practices
-- [Troubleshooting](docs/troubleshooting.md) - Common issues and solutions
+### **Long Term (6+ Months)**
+- Smart home integration (lights, coffee makers, etc.)
+- Social features for family and team coordination
+- Corporate enterprise solutions for global teams
+- Voice assistant integration (Siri, shortcuts)
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+We welcome contributions that align with our vision of creating joyful morning experiences:
+
+1. **Fork & Feature Branch**: Create focused, well-tested features
+2. **Design First**: Consider user experience over technical convenience
+3. **Performance Matters**: Optimize for battery life and responsiveness
+4. **Documentation**: Update docs for any user-facing changes
+5. **Test Thoroughly**: Especially alarm functionality (use real devices)
+
+## 📊 Key Metrics We Track
+
+- **Morning Sentiment**: How users feel after using wake-up alarms
+- **Engagement Depth**: Which AI content categories resonate most
+- **Retention Quality**: Long-term subscription value vs. churn
+- **Global Usage**: Timezone converter adoption across regions
+- **Performance**: App responsiveness, battery usage, sync reliability
+
+## 🆘 Support & Community
+
+### **For Users**
+- In-app help system with video tutorials
+- Email support: support@bananaclock.app
+- Community forum: [community.bananaclock.app](https://community.bananaclock.app)
+
+### **For Developers**
+- Complete documentation in `/docs/`
+- Development setup guide: [ios/README.md](ios/README.md)
+- Technical architecture: [CLAUDE.md](CLAUDE.md)
+- Issue tracking: GitHub Issues with detailed templates
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT License - see [LICENSE](LICENSE) for details.
 
-## 🆘 Support
+---
 
-For support and questions:
-- Create an issue in this repository
-- Check the [documentation](docs/)
-- Review [troubleshooting guide](docs/troubleshooting.md)
-- Check [development guide](docs/development.md) for workflow questions 
-# Trigger function deployment - Wed Jul 16 21:23:50 PDT 2025
+**Banana Clock** isn't just another alarm app—it's a morning transformation system that helps you wake up feeling prepared, motivated, and connected to your day. Join thousands of users who've already transformed their mornings from jarring to joyful.
+
+*"The way you wake up determines how you feel all day. Make it count."* 🌅
+
+---
+
+*Last updated: January 2025*

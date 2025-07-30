@@ -20,6 +20,9 @@ struct Alarm: Identifiable, Codable, Equatable {
     var volume: Float // 0.0-1.0
     var isWakeUpAlarm: Bool
     
+    // Wake-Up Schedule Support
+    var wakeUpDays: Set<Weekday>? // Specific days for wake-up alarms only
+    
     // AI Wake-Up Preferences
     var aiVoice: AIVoiceOption
     var aiMusic: MusicOption
@@ -46,20 +49,23 @@ struct Alarm: Identifiable, Codable, Equatable {
     }
     
     var repeatDescription: String {
-        if repeatDays.isEmpty {
+        // For wake-up alarms, use wakeUpDays if available
+        let daysToCheck = isWakeUpAlarm ? (wakeUpDays.map { Array($0) } ?? repeatDays) : repeatDays
+        
+        if daysToCheck.isEmpty {
             return "Once"
-        } else if repeatDays.count == 7 {
+        } else if daysToCheck.count == 7 {
             return "Every day"
-        } else if repeatDays.count == 5 && 
-                  !repeatDays.contains(.saturday) && 
-                  !repeatDays.contains(.sunday) {
+        } else if daysToCheck.count == 5 && 
+                  !daysToCheck.contains(.saturday) && 
+                  !daysToCheck.contains(.sunday) {
             return "Weekdays"
-        } else if repeatDays.count == 2 && 
-                  repeatDays.contains(.saturday) && 
-                  repeatDays.contains(.sunday) {
+        } else if daysToCheck.count == 2 && 
+                  daysToCheck.contains(.saturday) && 
+                  daysToCheck.contains(.sunday) {
             return "Weekends"
         } else {
-            return repeatDays.map { $0.shortName }.joined(separator: ", ")
+            return daysToCheck.map { $0.shortName }.joined(separator: ", ")
         }
     }
     
@@ -75,6 +81,7 @@ struct Alarm: Identifiable, Codable, Equatable {
         repeatDays: [Weekday]? = nil,
         volume: Float = 0.7,
         isWakeUpAlarm: Bool = false,
+        wakeUpDays: Set<Weekday>? = nil,
         aiVoice: AIVoiceOption = .voice1,
         aiMusic: MusicOption = .chillVibes,
         aiWeatherEnabled: Bool = false,
@@ -106,6 +113,7 @@ struct Alarm: Identifiable, Codable, Equatable {
         self.repeatDays = defaultRepeatDays
         self.volume = max(0, min(1, volume))
         self.isWakeUpAlarm = isWakeUpAlarm
+        self.wakeUpDays = wakeUpDays
         self.aiVoice = aiVoice
         self.aiMusic = aiMusic
         self.aiWeatherEnabled = aiWeatherEnabled
@@ -127,8 +135,11 @@ struct Alarm: Identifiable, Codable, Equatable {
         // Get time components
         let timeComponents = calendar.dateComponents([.hour, .minute], from: time)
         
+        // Determine which days to check
+        let daysToCheck = isWakeUpAlarm ? (wakeUpDays.map { Array($0) } ?? repeatDays) : repeatDays
+        
         // If no repeat, find next occurrence
-        if repeatDays.isEmpty {
+        if daysToCheck.isEmpty {
             var nextDate = calendar.date(bySettingHour: timeComponents.hour ?? 0,
                                        minute: timeComponents.minute ?? 0,
                                        second: 0,
@@ -148,7 +159,7 @@ struct Alarm: Identifiable, Codable, Equatable {
             let weekday = calendar.component(.weekday, from: checkDate)
             
             if let matchingDay = Weekday(rawValue: weekday),
-               repeatDays.contains(matchingDay) {
+               daysToCheck.contains(matchingDay) {
                 
                 let nextDate = calendar.date(bySettingHour: timeComponents.hour ?? 0,
                                            minute: timeComponents.minute ?? 0,

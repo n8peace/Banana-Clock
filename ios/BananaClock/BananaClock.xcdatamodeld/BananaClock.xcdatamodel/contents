@@ -13,6 +13,7 @@
         <attribute name="time" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="updatedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="volume" optional="NO" attributeType="Float" defaultValueString="0.7" usesScalarValueType="YES"/>
+        <attribute name="wakeUpDays" optional="YES" attributeType="Binary"/>
     </entity>
     <entity name="CDTimer" representedClassName="CDTimer" syncable="YES" codeGenerationType="class">
         <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>

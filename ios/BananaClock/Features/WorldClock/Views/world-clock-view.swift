@@ -13,6 +13,8 @@ struct WorldClockView: View {
     @StateObject private var viewModel = WorldClockViewModel()
     @State private var showingAddCity = false
     @State private var isEditing = false
+    @State private var showConfetti = false
+    @State private var showGoldenGlow = false
     
     var body: some View {
         ZStack {
@@ -48,8 +50,8 @@ struct WorldClockView: View {
             VStack {
                 Spacer()
                 
-                // Timezone converter (when multiple clocks exist)
-                if viewModel.clocks.count >= 2 {
+                // Timezone converter (when multiple clocks exist and not in edit mode)
+                if viewModel.clocks.count >= 2 && !isEditing {
                     timezoneConverterView
                         .padding(.horizontal, BSpacing.md)
                         .padding(.bottom, BSpacing.md)
@@ -122,6 +124,8 @@ struct WorldClockView: View {
         return viewModel.navigationTitle
     }
     
+
+    
     // MARK: - Views
     
     private var timezoneConverterView: some View {
@@ -159,6 +163,9 @@ struct WorldClockView: View {
                 }
             }
             
+            // Custom date picker
+            CustomDatePicker(selectedDate: $viewModel.selectedDate)
+            
             // Slider
             Slider(
                 value: $viewModel.timeSliderValue,
@@ -182,10 +189,48 @@ struct WorldClockView: View {
         .padding(.vertical, BananaTheme.Spacing.sm)
         .background(BananaTheme.Colors.backgroundSecondary)
         .cornerRadius(BananaTheme.Layout.cornerRadius)
+        .goldenGlow(isActive: showGoldenGlow)
         .animation(.easeInOut(duration: 0.3), value: viewModel.isConverterActive)
+        .overlay(
+            // Confetti overlay positioned at top
+            BananaConfettiView(
+                isActive: showConfetti,
+                sourceRect: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width - 32, height: 100)
+            )
+            .allowsHitTesting(false),
+            alignment: .top
+        )
+        .onChange(of: viewModel.aiRecommendation) { oldValue, newValue in
+            // Trigger confetti every time AI recommendation changes (not just empty to non-empty)
+            if !newValue.isEmpty && oldValue != newValue {
+                triggerConfettiEffect()
+            }
+        }
     }
     
-
+    // MARK: - Confetti Effect
+    
+    private func triggerConfettiEffect() {
+        // Reset first to ensure clean trigger
+        showConfetti = false
+        showGoldenGlow = false
+        
+        // Small delay then trigger both effects
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            showConfetti = true
+            showGoldenGlow = true
+        }
+        
+        // Reset confetti after particles fall off screen (6 seconds is enough for single burst)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 6.0) {
+            showConfetti = false
+        }
+        
+        // Reset glow after shorter duration
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+            showGoldenGlow = false
+        }
+    }
     
     private func emptyStateView() -> some View {
         VStack(spacing: BananaTheme.Spacing.lg) {
@@ -260,10 +305,7 @@ struct WorldClockView: View {
                 }
                 .listRowBackground(Color.clear)
                 .listRowSeparator(.hidden)
-                .listRowInsets(EdgeInsets())
-            }
-            .onMove { from, to in
-                viewModel.moveClocks(from: from, to: to)
+                .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
             }
             .onDelete { indexSet in
                 viewModel.deleteClocks(at: indexSet)
@@ -274,12 +316,11 @@ struct WorldClockView: View {
                 .frame(height: viewModel.clocks.count >= 2 ? 160 : 60)
                 .listRowBackground(Color.clear)
                 .listRowSeparator(.hidden)
-                .listRowInsets(EdgeInsets())
+                .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
         .scrollIndicators(.hidden)
-        .environment(\.editMode, .constant(isEditing ? .active : .inactive))
     }
     
     @ToolbarContentBuilder
@@ -416,6 +457,12 @@ struct WorldClockRow: View {
             // Planetary time - show "Planetary Time" instead of date
             return "Planetary Time"
         } else {
+            // Check for holiday first
+            let city = City(name: clock.cityName, country: getCountryForCity(clock.cityName), timeZoneIdentifier: clock.timeZoneIdentifier, isPlanet: false)
+            if let holidayText = HolidayDatabase.getHolidayText(for: city) {
+                return holidayText
+            }
+            
             // Use converter date only when converter is active, otherwise current date
             let baseTime = viewModel.isConverterActive ? viewModel.converterTime : viewModel.currentTime
             
@@ -467,6 +514,30 @@ struct WorldClockRow: View {
                 }
             }
         }
+    }
+    
+    private func getCountryForCity(_ cityName: String) -> String {
+        // Map city names to countries for holiday detection
+        let cityCountryMap: [String: String] = [
+            // United States
+            "New York": "United States", "Boston": "United States", "Philadelphia": "United States",
+            "Los Angeles": "United States", "San Francisco": "United States", "Seattle": "United States",
+            "Chicago": "United States", "Houston": "United States", "Dallas": "United States",
+            "Denver": "United States", "Phoenix": "United States", "Anchorage": "United States",
+            "Honolulu": "United States",
+            
+            // United Kingdom
+            "London": "United Kingdom", "Manchester": "United Kingdom", "Birmingham": "United Kingdom",
+            
+            // Canada
+            "Toronto": "Canada", "Montreal": "Canada", "Ottawa": "Canada", "Vancouver": "Canada",
+            "Calgary": "Canada", "Edmonton": "Canada",
+            
+            // Mexico
+            "Mexico City": "Mexico", "Guadalajara": "Mexico", "Monterrey": "Mexico"
+        ]
+        
+        return cityCountryMap[cityName] ?? "Unknown"
     }
     
     private var isCurrentTimezone: Bool {
@@ -620,6 +691,7 @@ struct CityPickerView: View {
     @State private var searchText = ""
     @State private var sortMode: SortMode = .utc
     @State private var scrollTarget: String?
+    @State private var lastScrollSection: String?
     let onSelect: (City) -> Void
     
     enum SortMode: String, CaseIterable {
@@ -629,29 +701,22 @@ struct CityPickerView: View {
     
     init(onSelect: @escaping (City) -> Void) {
         self.onSelect = onSelect
-        // Load the last used sort mode from UserDefaults
+        // Load the last used sort mode from UserDefaults, default to alphabetical
         let savedSortMode = UserDefaults.standard.string(forKey: "CityPickerSortMode")
         if let savedSortMode = savedSortMode, let mode = SortMode(rawValue: savedSortMode) {
             self._sortMode = State(initialValue: mode)
+        } else {
+            // Default to alphabetical
+            self._sortMode = State(initialValue: .alphabetical)
         }
+        
+        // Load the last scroll section
+        let savedScrollSection = UserDefaults.standard.string(forKey: "CityPickerLastScrollSection")
+        self._lastScrollSection = State(initialValue: savedScrollSection)
     }
     
     private func saveLastSelectedCity(_ city: City) {
         UserDefaults.standard.set(city.name, forKey: "LastSelectedCity")
-    }
-    
-    private func getLastSelectedCity() -> String? {
-        return UserDefaults.standard.string(forKey: "LastSelectedCity")
-    }
-    
-    private func getSectionForCity(_ cityName: String) -> String? {
-        // Find which section this city belongs to
-        for (section, cities) in groupedCities {
-            if cities.contains(where: { $0.name == cityName }) {
-                return section
-            }
-        }
-        return nil
     }
     
     private var filteredCities: [City] {
@@ -739,10 +804,16 @@ struct CityPickerView: View {
         if existingSections.contains(section) {
             // Section exists, scroll to it
             scrollTarget = section
+            // Save the scroll section for next time
+            UserDefaults.standard.set(section, forKey: "CityPickerLastScrollSection")
+            lastScrollSection = section
         } else {
             // Section doesn't exist, find the closest one
             let closestSection = findClosestSection(to: section, from: existingSections)
             scrollTarget = closestSection
+            // Save the scroll section for next time
+            UserDefaults.standard.set(closestSection, forKey: "CityPickerLastScrollSection")
+            lastScrollSection = closestSection
         }
         
         HapticManager.shared.impact(.light)
@@ -816,27 +887,44 @@ struct CityPickerView: View {
                 VStack(spacing: 0) {
                     // Sort Mode Toggle
                     HStack(spacing: 0) {
-                        ForEach(SortMode.allCases, id: \.self) { mode in
-                            Button {
-                                withAnimation(.easeInOut(duration: 0.2)) {
-                                    sortMode = mode
-                                }
-                            } label: {
-                                Text(mode.rawValue)
-                                    .font(.headline)
-                                    .fontWeight(.medium)
-                                    .foregroundColor(sortMode == mode ? .black : .white)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 12)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .fill(sortMode == mode ? BananaTheme.Colors.bananaYellow : Color.clear)
-                                    )
+                        // A-Z button (left)
+                        Button {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                sortMode = .alphabetical
                             }
+                        } label: {
+                            Text("A-Z")
+                                .font(.headline)
+                                .fontWeight(.medium)
+                                .foregroundColor(sortMode == .alphabetical ? .black : .white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 12)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .fill(sortMode == .alphabetical ? BananaTheme.Colors.bananaYellow : Color.clear)
+                                )
+                        }
+                        
+                        // UTC +/- button (right)
+                        Button {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                sortMode = .utc
+                            }
+                        } label: {
+                            Text("UTC +/-")
+                                .font(.headline)
+                                .fontWeight(.medium)
+                                .foregroundColor(sortMode == .utc ? .black : .white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 12)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .fill(sortMode == .utc ? BananaTheme.Colors.bananaYellow : Color.clear)
+                                )
                         }
                     }
                     .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
+                    .padding(.bottom, 12)
                     
                     // Cities List
                     ScrollViewReader { proxy in
@@ -849,6 +937,7 @@ struct CityPickerView: View {
                                         .textCase(nil)
                                         .padding(.horizontal, 16)
                                         .padding(.vertical, 8)
+                                        .background(Color.black)
                                         .id(section)
                                 ) {
                                     ForEach(cities) { city in
@@ -891,6 +980,11 @@ struct CityPickerView: View {
                                 scrollTarget = nil
                             }
                         }
+                        .onChange(of: sortMode) { _, newValue in
+                            // Clear the saved scroll position when sort mode changes
+                            UserDefaults.standard.removeObject(forKey: "CityPickerLastScrollSection")
+                            lastScrollSection = nil
+                        }
                     }
                     .listStyle(.plain)
                     .searchable(text: $searchText, prompt: "Search cities")
@@ -915,6 +1009,12 @@ struct CityPickerView: View {
                                         }
                                     }
                                 }
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 8)
+                                .background(
+                                    Capsule()
+                                        .fill(Color.black.opacity(0.8))
+                                )
                                 .padding(.trailing, 8)
                             }
                             Spacer()
@@ -933,11 +1033,10 @@ struct CityPickerView: View {
                     .font: UIFont.systemFont(ofSize: 17, weight: .regular)
                 ]
                 
-                // Scroll to last selected city if available
-                if let lastCityName = getLastSelectedCity(),
-                   let section = getSectionForCity(lastCityName) {
+                // Scroll to last scroll section if available
+                if let lastSection = lastScrollSection {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                        scrollTarget = section
+                        scrollTarget = lastSection
                     }
                 }
             }
@@ -987,7 +1086,66 @@ struct WorldClock: Identifiable, Codable {
     }
 }
 
+// MARK: - Holiday System
+struct Holiday: Codable {
+    let name: String
+    let emoji: String
+    let month: Int
+    let day: Int
+    let country: String
+    
+    var isToday: Bool {
+        let calendar = Calendar.current
+        let today = Date()
+        return calendar.component(.month, from: today) == month &&
+               calendar.component(.day, from: today) == day
+    }
+    
+    var isTomorrow: Bool {
+        let calendar = Calendar.current
+        let tomorrow = calendar.date(byAdding: .day, value: 1, to: Date()) ?? Date()
+        return calendar.component(.month, from: tomorrow) == month &&
+               calendar.component(.day, from: tomorrow) == day
+    }
+}
 
+struct HolidayDatabase {
+    static let holidays: [Holiday] = [
+        // United States
+        Holiday(name: "New Year's Day", emoji: "🎆", month: 1, day: 1, country: "United States"),
+        Holiday(name: "Independence Day", emoji: "🇺🇸", month: 7, day: 4, country: "United States"),
+        Holiday(name: "Christmas Day", emoji: "🎄", month: 12, day: 25, country: "United States"),
+        
+        // United Kingdom
+        Holiday(name: "New Year's Day", emoji: "🎆", month: 1, day: 1, country: "United Kingdom"),
+        Holiday(name: "Christmas Day", emoji: "🎄", month: 12, day: 25, country: "United Kingdom"),
+        Holiday(name: "Boxing Day", emoji: "📦", month: 12, day: 26, country: "United Kingdom"),
+        
+        // Canada
+        Holiday(name: "New Year's Day", emoji: "🎆", month: 1, day: 1, country: "Canada"),
+        Holiday(name: "Canada Day", emoji: "🍁", month: 7, day: 1, country: "Canada"),
+        Holiday(name: "Christmas Day", emoji: "🎄", month: 12, day: 25, country: "Canada"),
+        Holiday(name: "Boxing Day", emoji: "📦", month: 12, day: 26, country: "Canada"),
+        
+        // Mexico
+        Holiday(name: "New Year's Day", emoji: "🎆", month: 1, day: 1, country: "Mexico"),
+        Holiday(name: "Independence Day", emoji: "🇲🇽", month: 9, day: 16, country: "Mexico"),
+        Holiday(name: "Christmas Day", emoji: "🎄", month: 12, day: 25, country: "Mexico")
+    ]
+    
+    static func getHoliday(for city: City) -> Holiday? {
+        return holidays.first { holiday in
+            holiday.country == city.country && (holiday.isToday || holiday.isTomorrow)
+        }
+    }
+    
+    static func getHolidayText(for city: City) -> String? {
+        guard let holiday = getHoliday(for: city) else { return nil }
+        
+        let prefix = holiday.isToday ? "" : "Tomorrow, "
+        return "\(prefix)\(holiday.emoji) \(holiday.name)"
+    }
+}
 
 struct City: Identifiable {
     let id = UUID()
@@ -1971,6 +2129,256 @@ class WorldClockViewModel: ObservableObject {
                 self.currentTime = Date()
             }
         }
+    }
+}
+
+// MARK: - Custom Date Picker
+struct CustomDatePicker: View {
+    @Binding var selectedDate: Date
+    @State private var showingDatePicker = false
+    @State private var currentMonth = Date()
+    @State private var showingMonthYearPicker = false
+    
+    private let calendar = Calendar.current
+    private let dateFormatter = DateFormatter()
+    
+    private var selectedDateString: String {
+        dateFormatter.dateFormat = "MMM d, yyyy"
+        return dateFormatter.string(from: selectedDate)
+    }
+    
+    private var currentMonthString: String {
+        dateFormatter.dateFormat = "MMMM yyyy"
+        return dateFormatter.string(from: currentMonth)
+    }
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // Collapsed view (always visible)
+            Button {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    showingDatePicker.toggle()
+                }
+            } label: {
+                HStack {
+                    Image(systemName: "calendar")
+                        .foregroundColor(BananaTheme.Colors.bananaYellow)
+                    
+                    Text(selectedDateString)
+                        .font(.body)
+                        .foregroundColor(.white)
+                    
+                    Spacer()
+                    
+                    Image(systemName: showingDatePicker ? "chevron.up" : "chevron.down")
+                        .foregroundColor(BananaTheme.Colors.bananaYellow)
+                        .font(.caption)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(Color.black.opacity(0.3))
+                .cornerRadius(8)
+            }
+            .buttonStyle(PlainButtonStyle())
+            
+            // Expanded calendar view
+            if showingDatePicker {
+                VStack(spacing: 0) {
+                    // Header with month/year and navigation
+                    calendarHeader
+                    
+                    // Day headers
+                    dayHeaders
+                    
+                    // Calendar grid
+                    calendarGrid
+                    
+                    // Today button
+                    todayButton
+                }
+                .padding(16)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color.black.opacity(0.8))
+                        .background(.ultraThinMaterial)
+                )
+                .transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
+        .sheet(isPresented: $showingMonthYearPicker) {
+            monthYearPicker
+        }
+    }
+    
+    private var calendarHeader: some View {
+        HStack {
+            // Previous month button
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    currentMonth = calendar.date(byAdding: .month, value: -1, to: currentMonth) ?? currentMonth
+                }
+            } label: {
+                Image(systemName: "chevron.left")
+                    .foregroundColor(BananaTheme.Colors.bananaYellow)
+                    .font(.title3)
+            }
+            
+            Spacer()
+            
+            // Month/Year text (clickable)
+            Button {
+                showingMonthYearPicker = true
+            } label: {
+                Text(currentMonthString)
+                    .font(.title2.weight(.medium))
+                    .foregroundColor(.white)
+            }
+            .buttonStyle(PlainButtonStyle())
+            
+            Spacer()
+            
+            // Next month button
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    currentMonth = calendar.date(byAdding: .month, value: 1, to: currentMonth) ?? currentMonth
+                }
+            } label: {
+                Image(systemName: "chevron.right")
+                    .foregroundColor(BananaTheme.Colors.bananaYellow)
+                    .font(.title3)
+            }
+        }
+        .padding(.bottom, 16)
+    }
+    
+    private var dayHeaders: some View {
+        HStack(spacing: 0) {
+            ForEach(["S", "M", "T", "W", "T", "F", "S"], id: \.self) { day in
+                Text(day)
+                    .font(.caption.weight(.medium))
+                    .foregroundColor(.gray)
+                    .frame(maxWidth: .infinity)
+            }
+        }
+        .padding(.bottom, 8)
+    }
+    
+    private var calendarGrid: some View {
+        let days = daysInMonth()
+        
+        return LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 8) {
+            ForEach(Array(days.enumerated()), id: \.offset) { index, day in
+                if let date = day {
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            selectedDate = date
+                            showingDatePicker = false
+                        }
+                    } label: {
+                        Text("\(calendar.component(.day, from: date))")
+                            .font(.body.weight(.medium))
+                            .foregroundColor(isSelected(date) ? .black : .white)
+                            .frame(width: 32, height: 32)
+                            .background(
+                                Circle()
+                                    .fill(isSelected(date) ? BananaTheme.Colors.bananaYellow : Color.clear)
+                            )
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                } else {
+                    Color.clear
+                        .frame(width: 32, height: 32)
+                }
+            }
+        }
+        .padding(.bottom, 16)
+    }
+    
+    private var todayButton: some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                selectedDate = Date()
+                currentMonth = Date()
+                showingDatePicker = false
+            }
+        } label: {
+            Text("Today")
+                .font(.body.weight(.medium))
+                .foregroundColor(BananaTheme.Colors.bananaYellow)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+                .background(Color.white.opacity(0.1))
+                .cornerRadius(8)
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+    
+    private var monthYearPicker: some View {
+        NavigationView {
+            VStack {
+                DatePicker(
+                    "Select Month/Year",
+                    selection: $currentMonth,
+                    displayedComponents: .date
+                )
+                .datePickerStyle(.wheel)
+                .labelsHidden()
+                .colorScheme(.dark)
+                .accentColor(BananaTheme.Colors.bananaYellow)
+                .padding()
+            }
+            .navigationTitle("Select Month/Year")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        showingMonthYearPicker = false
+                    }
+                    .foregroundColor(BananaTheme.Colors.bananaYellow)
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        showingMonthYearPicker = false
+                    }
+                    .foregroundColor(BananaTheme.Colors.bananaYellow)
+                }
+            }
+        }
+        .presentationDetents([.medium])
+    }
+    
+    // MARK: - Helper Methods
+    
+    private func daysInMonth() -> [Date?] {
+        let startOfMonth = calendar.dateInterval(of: .month, for: currentMonth)?.start ?? currentMonth
+        let firstWeekday = calendar.component(.weekday, from: startOfMonth)
+        let daysInMonth = calendar.range(of: .day, in: .month, for: currentMonth)?.count ?? 30
+        
+        var days: [Date?] = []
+        
+        // Add empty cells for days before the first day of the month
+        for _ in 1..<firstWeekday {
+            days.append(nil)
+        }
+        
+        // Add all days in the month
+        for day in 1...daysInMonth {
+            if let date = calendar.date(byAdding: .day, value: day - 1, to: startOfMonth) {
+                days.append(date)
+            }
+        }
+        
+        // Fill remaining cells to complete the grid
+        while days.count % 7 != 0 {
+            days.append(nil)
+        }
+        
+        return days
+    }
+    
+    private func isSelected(_ date: Date) -> Bool {
+        calendar.isDate(date, inSameDayAs: selectedDate)
     }
 }
 

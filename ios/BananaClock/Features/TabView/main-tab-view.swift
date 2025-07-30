@@ -36,6 +36,15 @@ struct MainTabView: View {
             }
         }
         
+        var navigationTitle: String {
+            switch self {
+            case .worldClock: return "🌍🕒 World Clock"
+            case .alarms: return "⏰ Alarms"
+            case .stopwatch: return "⏱️ Stopwatch"
+            case .timers: return "⏲️ Timers"
+            }
+        }
+        
         var icon: String {
             switch self {
             case .worldClock: return "globe"

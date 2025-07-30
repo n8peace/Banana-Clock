@@ -69,6 +69,13 @@ class CoreDataManager: ObservableObject {
         cdAlarm.snoozeLength = Int16(alarm.snoozeLength ?? 9)
         cdAlarm.repeatDays = try JSONEncoder().encode(alarm.repeatDays)
         cdAlarm.volume = alarm.volume
+        
+        // Save wakeUpDays if present
+        if let wakeUpDays = alarm.wakeUpDays {
+            cdAlarm.wakeUpDays = try JSONEncoder().encode(wakeUpDays)
+        } else {
+            cdAlarm.wakeUpDays = nil
+        }
 
         // Note: isWakeUpAlarm and lastUsedAt are not in Core Data model yet
         // For now, we'll use a workaround by checking the label
@@ -93,6 +100,7 @@ class CoreDataManager: ObservableObject {
                   let updatedAt = cdAlarm.updatedAt else { return nil }
             
             let repeatDays = (try? JSONDecoder().decode([Alarm.Weekday].self, from: cdAlarm.repeatDays ?? Data())) ?? []
+            let wakeUpDays = (try? JSONDecoder().decode(Set<Alarm.Weekday>.self, from: cdAlarm.wakeUpDays ?? Data())) ?? nil
             
             // Workaround: Check if this is the wake-up alarm by label
             let isWakeUpAlarm = label == "Wake Up"
@@ -108,7 +116,7 @@ class CoreDataManager: ObservableObject {
                 repeatDays: repeatDays,
                 volume: cdAlarm.volume,
                 isWakeUpAlarm: isWakeUpAlarm,
-
+                wakeUpDays: wakeUpDays,
                 lastUsedAt: updatedAt, // Use updatedAt as fallback for lastUsedAt
                 createdAt: createdAt,
                 updatedAt: updatedAt
@@ -132,6 +140,13 @@ class CoreDataManager: ObservableObject {
         cdAlarm.snoozeLength = Int16(alarm.snoozeLength ?? 9)
         cdAlarm.repeatDays = try JSONEncoder().encode(alarm.repeatDays)
         cdAlarm.volume = alarm.volume
+        
+        // Save wakeUpDays if present
+        if let wakeUpDays = alarm.wakeUpDays {
+            cdAlarm.wakeUpDays = try JSONEncoder().encode(wakeUpDays)
+        } else {
+            cdAlarm.wakeUpDays = nil
+        }
 
         cdAlarm.updatedAt = Date()
         // Note: isWakeUpAlarm and lastUsedAt updates are not handled in Core Data yet

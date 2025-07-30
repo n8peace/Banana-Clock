@@ -63,7 +63,7 @@ class AlarmKitService: ObservableObject {
             volume: Double(alarm.volume),
             vibrationEnabled: true, // Always enabled
             snoozeLength: TimeInterval((alarm.snoozeLength ?? 9) * 60),
-            repeatSchedule: createRepeatSchedule(from: alarm.repeatDays)
+            repeatSchedule: createRepeatSchedule(from: alarm.isWakeUpAlarm ? (alarm.wakeUpDays?.map { $0 } ?? []) : alarm.repeatDays)
         )
         
         // Handle AI wake-up if enabled

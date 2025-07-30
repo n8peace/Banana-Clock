@@ -119,6 +119,7 @@ struct StopwatchView: View {
                             )
                     )
             }
+            .buttonStyle(PlainButtonStyle())
             .disabled(viewModel.elapsedTime == 0 || viewModel.isCountdownActive)
             
             // Right button (Start/Stop)
@@ -134,6 +135,7 @@ struct StopwatchView: View {
                             .fill(viewModel.buttonColor)
                     )
             }
+            .buttonStyle(PlainButtonStyle())
         }
     }
     

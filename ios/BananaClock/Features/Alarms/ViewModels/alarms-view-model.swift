@@ -16,7 +16,10 @@ class AlarmsViewModel: ObservableObject {
     @Published var error: Error?
     @Published var selectedAlarms: Set<UUID> = []
     
-    var navigationTitle: String { "Alarms" }
+    // Wake-up alarm management
+    let wakeUpViewModel = WakeUpAlarmsViewModel()
+    
+    var navigationTitle: String { "⏰ Alarms" }
     
     // Computed properties for sections
     var wakeUpAlarm: Alarm? {
@@ -40,6 +43,17 @@ class AlarmsViewModel: ObservableObject {
         otherAlarms // Only other alarms can be selected (not wake-up alarm)
     }
     
+    // Next alarm state from wake-up view model
+    var nextAlarmState: NextAlarmState {
+        wakeUpViewModel.nextAlarmState
+    }
+    
+    var tomorrowsAlarmText: String {
+        wakeUpViewModel.tomorrowsAlarmText
+    }
+    
+
+    
     private let coreDataManager = CoreDataManager.shared
     private let alarmService = AlarmKitService.shared
     private let supabaseService = SupabaseService.shared
@@ -52,13 +66,11 @@ class AlarmsViewModel: ObservableObject {
             // Load from Core Data (local + iCloud synced)
             alarms = try coreDataManager.fetchAlarms()
             
-            // Ensure wake-up alarm exists (only if none exists)
-            if wakeUpAlarm == nil {
-                ensureWakeUpAlarmExists()
-            }
-            
             // Clean up old alarms
             cleanupOldAlarms()
+            
+            // Load wake-up alarms state
+            await wakeUpViewModel.loadWakeUpAlarms()
             
             // Sync with AlarmKit
             for alarm in alarms where alarm.isEnabled {
@@ -77,34 +89,7 @@ class AlarmsViewModel: ObservableObject {
             print("Failed to load alarms: \(error)")
         }
     }
-    
 
-    
-    private func ensureWakeUpAlarmExists() {
-        // Check if wake-up alarm already exists in memory
-        guard wakeUpAlarm == nil else { return }
-        
-        // Create default wake-up alarm at 7:00 AM, disabled, with AI enabled
-        let defaultWakeUpTime = Calendar.current.date(bySettingHour: 7, minute: 0, second: 0, of: Date()) ?? Date()
-
-        let wakeUpAlarm = Alarm(
-            time: defaultWakeUpTime,
-            label: "Wake Up",
-            isEnabled: false,
-            isAIEnabled: true,
-            isWakeUpAlarm: true,
-
-        )
-        
-        alarms.append(wakeUpAlarm)
-        
-        // Save to Core Data immediately
-        do {
-            _ = try coreDataManager.createAlarm(wakeUpAlarm)
-        } catch {
-            print("Failed to create wake-up alarm: \(error)")
-        }
-    }
     
     private func cleanupOldAlarms() {
         let tenDaysAgo = Date().addingTimeInterval(-10 * 24 * 60 * 60)
@@ -221,15 +206,19 @@ class AlarmsViewModel: ObservableObject {
     }
     
     func toggleAlarm(_ alarm: Alarm, isEnabled: Bool) async {
+        print("DEBUG: toggleAlarm called for alarm \(alarm.id), isWakeUp: \(alarm.isWakeUpAlarm), newEnabled: \(isEnabled)")
         var updatedAlarm = alarm
         updatedAlarm.isEnabled = isEnabled
         
-        // Update lastUsedAt for non-wake-up alarms
-        if !alarm.isWakeUpAlarm {
+        if alarm.isWakeUpAlarm {
+            // Use wake-up view model for wake-up alarms
+            print("DEBUG: Using wake-up view model for toggle")
+            await wakeUpViewModel.toggleAlarm(alarm, isEnabled: isEnabled)
+        } else {
+            // Update lastUsedAt for non-wake-up alarms
             updatedAlarm.lastUsedAt = Date()
+            await updateAlarm(updatedAlarm)
         }
-        
-        await updateAlarm(updatedAlarm)
     }
     
     func deleteAlarms(at offsets: IndexSet) async {

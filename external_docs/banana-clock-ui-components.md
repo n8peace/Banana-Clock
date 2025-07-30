@@ -480,6 +480,15 @@ struct BananaTabBar: View {
             }
         }
         
+        var navigationTitle: String {
+            switch self {
+            case .worldClock: return "🌍🕒 World Clock"
+            case .alarms: return "⏰ Alarms"
+            case .stopwatch: return "⏱️ Stopwatch"
+            case .timers: return "⏲️ Timers"
+            }
+        }
+        
         var icon: String {
             switch self {
             case .worldClock: return "globe"
@@ -645,6 +654,93 @@ struct EmptyStateView: View {
     }
 }
 ```
+
+---
+
+## 🧭 Navigation Standards
+
+### Navigation Bar Styling
+```swift
+// Standard Navigation Bar Configuration
+.navigationTitle("Screen Title")
+.navigationBarTitleDisplayMode(.inline)
+.toolbarBackground(.visible, for: .navigationBar)
+.toolbarColorScheme(.dark, for: .navigationBar)
+.onAppear {
+    // Set navigation title color to white and unbolded
+    UINavigationBar.appearance().titleTextAttributes = [
+        .foregroundColor: UIColor.white,
+        .font: UIFont.systemFont(ofSize: 17, weight: .regular)
+    ]
+}
+```
+
+### Navigation Button Patterns
+
+#### Edit/Creation Screens
+```swift
+.toolbar {
+    ToolbarItem(placement: .navigationBarLeading) {
+        Button("Cancel") {
+            dismiss()
+        }
+        .foregroundColor(.white)
+    }
+    
+    ToolbarItem(placement: .navigationBarTrailing) {
+        Button("Save") {
+            saveAction()
+        }
+        .foregroundColor(.bananaYellow)
+        .disabled(!isValid) // Optional validation
+    }
+}
+```
+
+#### Detail/View Screens
+```swift
+.toolbar {
+    ToolbarItem(placement: .navigationBarTrailing) {
+        Button("Done") {
+            dismiss()
+        }
+        .foregroundColor(.bananaYellow)
+    }
+}
+```
+
+#### List Screens with Actions
+```swift
+.toolbar {
+    ToolbarItem(placement: .navigationBarLeading) {
+        if hasSelectableItems {
+            Button(isEditing ? "Done" : "Edit") {
+                isEditing.toggle()
+            }
+            .foregroundColor(.bananaYellow)
+        }
+    }
+    
+    ToolbarItem(placement: .navigationBarTrailing) {
+        if !isEditing {
+            Button {
+                addAction()
+            } label: {
+                Image(systemName: "plus")
+                    .foregroundColor(.bananaYellow)
+            }
+        }
+    }
+}
+```
+
+### Navigation Guidelines
+- **Titles**: Always white, unbolded, regular weight (17pt)
+- **Cancel buttons**: White text, left side
+- **Save/Done buttons**: Banana yellow, right side
+- **Action buttons**: Banana yellow with appropriate icons
+- **Background**: Always visible, dark theme
+- **Consistent spacing**: Use standard toolbar item placement
 
 ---
 

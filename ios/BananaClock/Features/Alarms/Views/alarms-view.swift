@@ -4,6 +4,7 @@ struct AlarmsView: View {
     @StateObject private var viewModel = AlarmsViewModel()
     @State private var showingAddAlarm = false
     @State private var selectedAlarm: Alarm?
+    @State private var showingWakeUpManagement = false
     @State private var isEditing = false
     
     var body: some View {
@@ -12,14 +13,14 @@ struct AlarmsView: View {
             
             VStack(spacing: 0) {
                 // Page title - positioned at top of screen
-                Text(viewModel.navigationTitle)
-                    .font(.title)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, BSpacing.md)
-                    .padding(.top, BSpacing.sm)
-                    .padding(.bottom, BSpacing.lg)
+                // Text(viewModel.navigationTitle)
+                //     .font(.title)
+                //     .fontWeight(.semibold)
+                //     .foregroundColor(.white)
+                //     .frame(maxWidth: .infinity, alignment: .leading)
+                //     .padding(.horizontal, BSpacing.md)
+                //     .padding(.top, BSpacing.sm)
+                //     .padding(.bottom, BSpacing.lg)
                 
                 NavigationStack {
                     if viewModel.alarms.isEmpty {
@@ -31,58 +32,53 @@ struct AlarmsView: View {
                         alarmsList
                     }
                 }
-                .navigationTitle("Banana Clock")
+                .navigationTitle("⏰ Alarms")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     toolbarContent
                 }
-                
-                // Bottom floating action bar for selection mode
-                if isEditing && !viewModel.selectableAlarms.isEmpty {
-                    VStack {
-                        Spacer()
+            }
+            
+            // Bottom floating action bar for selection mode - positioned absolutely
+            if isEditing && !viewModel.selectableAlarms.isEmpty {
+                VStack {
+                    Spacer()
+                    
+                    HStack(spacing: 16) {
+                        Button {
+                            if viewModel.selectedAlarmsCount == viewModel.selectableAlarms.count {
+                                viewModel.deselectAll()
+                            } else {
+                                viewModel.selectAll()
+                            }
+                        } label: {
+                            Text(viewModel.selectedAlarmsCount == viewModel.selectableAlarms.count ? "Deselect All" : "Select All")
+                                .font(.body.weight(.medium))
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 12)
+                                .background(BananaTheme.Colors.backgroundSecondary)
+                                .cornerRadius(BananaTheme.Layout.cornerRadius)
+                        }
                         
-                        HStack(spacing: 16) {
+                        if viewModel.selectedAlarmsCount > 0 {
                             Button {
-                                if viewModel.selectedAlarmsCount == viewModel.selectableAlarms.count {
-                                    viewModel.deselectAll()
-                                } else {
-                                    viewModel.selectAll()
+                                Task {
+                                    await viewModel.deleteSelectedAlarms()
                                 }
                             } label: {
-                                Text(viewModel.selectedAlarmsCount == viewModel.selectableAlarms.count ? "Deselect All" : "Select All")
+                                Text("Delete Selected (\(viewModel.selectedAlarmsCount))")
                                     .font(.body.weight(.medium))
                                     .foregroundColor(.white)
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 12)
-                                    .background(BananaTheme.Colors.backgroundSecondary)
+                                    .background(BananaTheme.Colors.error)
                                     .cornerRadius(BananaTheme.Layout.cornerRadius)
                             }
-                            
-                            if viewModel.selectedAlarmsCount > 0 {
-                                Button {
-                                    Task {
-                                        await viewModel.deleteSelectedAlarms()
-                                    }
-                                } label: {
-                                    Text("Delete Selected (\(viewModel.selectedAlarmsCount))")
-                                        .font(.body.weight(.medium))
-                                        .foregroundColor(.white)
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 12)
-                                        .background(BananaTheme.Colors.error)
-                                        .cornerRadius(BananaTheme.Layout.cornerRadius)
-                                }
-                            }
                         }
-                        .padding(.horizontal, BSpacing.md)
-                        .padding(.bottom, BSpacing.md)
-                        .background(
-                            Rectangle()
-                                .fill(Color.black.opacity(0.9))
-                                .ignoresSafeArea()
-                        )
                     }
+                    .padding(.horizontal, BSpacing.md)
+                    .padding(.bottom, BSpacing.md)
                 }
             }
         }
@@ -107,6 +103,13 @@ struct AlarmsView: View {
                     }
                 }
             )
+        }
+        .sheet(isPresented: $showingWakeUpManagement) {
+            WakeUpManagementView {
+                Task {
+                    await viewModel.loadAlarms()
+                }
+            }
         }
         .onChange(of: isEditing) { _, newValue in
             if !newValue {
@@ -148,41 +151,21 @@ struct AlarmsView: View {
     private var alarmsList: some View {
         List {
             // Wake Up section
-            if let wakeUpAlarm = viewModel.wakeUpAlarm {
-                // Section header
-                HStack {
-                    Text("Wake Up")
-                        .font(BananaTheme.Typography.title3)
-                        .foregroundColor(BananaTheme.Colors.textPrimary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                .padding(.vertical, BananaTheme.Spacing.sm)
-                .padding(.horizontal, BananaTheme.Spacing.md)
-                .listRowBackground(Color.clear)
-                .listRowSeparator(.hidden)
-                .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
-                
-                // Wake Up alarm row
-                let isEnabledBinding = Binding(
-                    get: { wakeUpAlarm.isEnabled },
-                    set: { newValue in
-                        Task {
-                            await viewModel.toggleAlarm(wakeUpAlarm, isEnabled: newValue)
-                        }
-                    }
-                )
-                
-                AlarmRow(
-                    alarm: wakeUpAlarm,
-                    isEnabled: isEnabledBinding,
-                    onTap: {
-                        selectedAlarm = wakeUpAlarm
-                    }
-                )
-                .listRowBackground(Color.clear)
-                .listRowSeparator(.hidden)
-                .listRowInsets(EdgeInsets())
+            // Section header
+            HStack {
+                Text("Wake Up")
+                    .font(BananaTheme.Typography.title3)
+                    .foregroundColor(BananaTheme.Colors.textPrimary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
+            .padding(.vertical, BananaTheme.Spacing.sm)
+            .padding(.horizontal, BananaTheme.Spacing.md)
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+            
+            // Next Alarm section based on state
+            nextAlarmView
             
             // Other alarms section
             if !viewModel.otherAlarms.isEmpty {
@@ -200,7 +183,7 @@ struct AlarmsView: View {
                 .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
                 
                 // Other alarm rows
-                ForEach(viewModel.otherAlarms) { alarm in
+                ForEach(viewModel.otherAlarms, id: \.id) { alarm in
                     let isEnabledBinding = Binding(
                         get: { alarm.isEnabled },
                         set: { newValue in
@@ -227,7 +210,7 @@ struct AlarmsView: View {
                     )
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
-                    .listRowInsets(EdgeInsets())
+                    .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
                 }
                 .onDelete { indexSet in
                     Task {
@@ -259,7 +242,7 @@ struct AlarmsView: View {
                 .padding()
                 .listRowBackground(Color.clear)
                 .listRowSeparator(.hidden)
-                .listRowInsets(EdgeInsets())
+                .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
             }
             
 
@@ -267,6 +250,189 @@ struct AlarmsView: View {
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
         .scrollIndicators(.hidden)
+    }
+    
+    // MARK: - Next Alarm View
+    
+    @ViewBuilder
+    private var nextAlarmView: some View {
+        switch viewModel.nextAlarmState {
+        case .nextAlarm(let alarm):
+            // Next alarm within 12 hours - use existing UI
+            if let currentAlarm = viewModel.wakeUpViewModel.wakeUpSchedules.first(where: { $0.id == alarm.id }) {
+                AlarmRow(
+                    alarm: currentAlarm,
+                    isEnabled: Binding(
+                        get: { 
+                            let enabled = currentAlarm.isEnabled
+                            return enabled
+                        },
+                        set: { newValue in
+                            Task {
+                                await viewModel.toggleAlarm(currentAlarm, isEnabled: newValue)
+                            }
+                        }
+                    ),
+                    onTap: {
+                        showingWakeUpManagement = true
+                    }
+                )
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+            } else {
+                // Fallback if alarm not found
+                EmptyView()
+            }
+            
+        case .previousAlarm(let alarm):
+            // Previous alarm beyond 12 hours - replace toggle with play button
+            VStack(spacing: 0) {
+                HStack {
+                    VStack(alignment: .leading, spacing: BananaTheme.Spacing.xxs) {
+                        HStack(alignment: .firstTextBaseline, spacing: BananaTheme.Spacing.xs) {
+                            Text(timeString(from: alarm.time))
+                                .font(.largeTitle)
+                                .foregroundColor(.white)
+                                .monospacedDigit()
+                            Text(periodString(from: alarm.time))
+                                .font(.title2)
+                                .foregroundColor(BananaTheme.Colors.textSecondary)
+                        }
+                        
+                        // Today/Tomorrow and AI status inline below time
+                        HStack(spacing: BananaTheme.Spacing.xs) {
+                            Text(todayTomorrowText(for: alarm))
+                                .font(.caption)
+                                .foregroundColor(BananaTheme.Colors.textSecondary)
+                            
+                            if alarm.isAIEnabled {
+                                Text("🍌🧠 Wake Up ON")
+                                    .font(.caption)
+                                    .foregroundColor(BananaTheme.Colors.bananaYellow)
+                            } else {
+                                Text("🍌🧠 Wake Up OFF")
+                                    .font(.caption)
+                                    .foregroundColor(BananaTheme.Colors.textSecondary)
+                            }
+                        }
+                    }
+                    
+                    Spacer()
+                    
+                    VStack(alignment: .trailing, spacing: BananaTheme.Spacing.xxs) {
+                        Button {
+                            // TODO: Play alarm AI message
+                            print("Play alarm AI message")
+                        } label: {
+                            Image(systemName: "play.circle.fill")
+                                .font(.title2)
+                                .foregroundColor(BananaTheme.Colors.bananaYellow)
+                        }
+                    }
+                }
+                .padding(.vertical, BananaTheme.Spacing.sm)
+                .padding(.horizontal, BananaTheme.Spacing.md)
+                .onTapGesture {
+                    showingWakeUpManagement = true
+                }
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+                
+                // Tomorrow's alarm subtitle
+                HStack {
+                    Text("Tomorrow's Alarm: \(viewModel.tomorrowsAlarmText)")
+                        .font(.caption)
+                        .foregroundColor(BananaTheme.Colors.textTertiary)
+                    
+                    Spacer()
+                }
+                .padding(.horizontal, BananaTheme.Spacing.md)
+                .padding(.bottom, BananaTheme.Spacing.sm)
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+            }
+            
+        case .noAlarms:
+            // No alarms state
+            VStack(spacing: 0) {
+                HStack {
+                    VStack(alignment: .leading, spacing: BananaTheme.Spacing.xxs) {
+                        HStack(alignment: .firstTextBaseline, spacing: BananaTheme.Spacing.xs) {
+                            Text("No Alarms")
+                                .font(.largeTitle)
+                                .foregroundColor(BananaTheme.Colors.textTertiary)
+                        }
+                        
+                        Text("Tap to set up wake-up alarm")
+                            .font(.caption)
+                            .foregroundColor(BananaTheme.Colors.textTertiary)
+                    }
+                    
+                    Spacer()
+                    
+                    VStack(alignment: .trailing, spacing: BananaTheme.Spacing.xxs) {
+                        Button {
+                            showingWakeUpManagement = true
+                        } label: {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.title2)
+                                .foregroundColor(BananaTheme.Colors.bananaYellow)
+                        }
+                    }
+                }
+                .padding(.vertical, BananaTheme.Spacing.sm)
+                .padding(.horizontal, BananaTheme.Spacing.md)
+                .onTapGesture {
+                    showingWakeUpManagement = true
+                }
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+                
+                // Tomorrow's alarm subtitle
+                HStack {
+                    Text("Tomorrow's Alarm: \(viewModel.tomorrowsAlarmText)")
+                        .font(.caption)
+                        .foregroundColor(BananaTheme.Colors.textTertiary)
+                    
+                    Spacer()
+                }
+                .padding(.horizontal, BananaTheme.Spacing.md)
+                .padding(.bottom, BananaTheme.Spacing.sm)
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+            }
+        }
+    }
+    
+    // MARK: - Helper Methods
+    
+    private func timeString(from date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "h:mm"
+        return formatter.string(from: date)
+    }
+    
+    private func periodString(from date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "a"
+        return formatter.string(from: date)
+    }
+    
+    private func todayTomorrowText(for alarm: Alarm) -> String {
+        let calendar = Calendar.current
+        let now = Date()
+        let alarmDate = alarm.nextFireDate
+        
+        if calendar.isDate(alarmDate, inSameDayAs: now) {
+            return "Today"
+        } else {
+            return "Tomorrow"
+        }
     }
     
     @ToolbarContentBuilder
@@ -312,6 +478,7 @@ struct AlarmsView: View {
         }
     }
     
+    @MainActor
     private func testSupabaseConnection() async {
         let supabaseService = SupabaseService.shared
         

@@ -72,23 +72,26 @@ struct AlarmDetailView: View {
     }
     
     var body: some View {
-        NavigationStack {
-            ZStack {
-                Color.black.ignoresSafeArea()
-                
-                ScrollView {
-                    VStack(spacing: 0) {
-                        // Time Picker
-                        DatePicker("", selection: $time, displayedComponents: .hourAndMinute)
-                            .datePickerStyle(.wheel)
-                            .labelsHidden()
-                            .colorScheme(.dark)
-                            .padding()
-                        
-                        // Options
+        // Redirect wake-up alarms to the new management view
+        if isWakeUpAlarm {
+            WakeUpManagementView()
+        } else {
+            NavigationStack {
+                ZStack {
+                    Color.black.ignoresSafeArea()
+                    
+                    ScrollView {
                         VStack(spacing: 0) {
-                            // Label - only for non-wake-up alarms
-                            if !isWakeUpAlarm {
+                            // Time Picker
+                            DatePicker("", selection: $time, displayedComponents: .hourAndMinute)
+                                .datePickerStyle(.wheel)
+                                .labelsHidden()
+                                .colorScheme(.dark)
+                                .padding()
+                            
+                            // Options
+                            VStack(spacing: 0) {
+                                // Label
                                 SettingsRow(title: "Label") {
                                     TextField("Alarm", text: $label)
                                         .multilineTextAlignment(.trailing)
@@ -96,228 +99,65 @@ struct AlarmDetailView: View {
                                 }
                                 
                                 Divider().background(BananaTheme.Colors.divider)
+                                
+                                // Other settings in same card
+                                otherSettingsSection
                             }
+                            .bananaCard()
+                            .padding()
                             
-                            // AI Wake-up Section - only show for wake-up alarms
-                            if isWakeUpAlarm {
-                                aiWakeUpSection
-                            }
-                        }
-                        .bananaCard()
-                        .padding()
-                        
-                        // Other Settings Section (separate card)
-                        if isWakeUpAlarm {
-                            VStack(spacing: 0) {
-                                otherSettingsSection
-                            }
-                            .bananaCard()
-                            .padding()
-                        } else {
-                            // For non-wake-up alarms, include other settings in the same card
-                            VStack(spacing: 0) {
-                                otherSettingsSection
-                            }
-                            .bananaCard()
-                            .padding()
-                        }
-                        
-                        // Delete button (for existing alarms, but not wake-up alarms)
-                        if alarm != nil && !isWakeUpAlarm {
-                            Button {
-                                showingDeleteConfirmation = true
-                            } label: {
-                                Text("Delete Alarm")
-                                    .font(.body)
-                                    .foregroundColor(BananaTheme.Colors.error)
-                                    .frame(maxWidth: .infinity)
-                                    .padding()
+                            // Delete button (for existing alarms)
+                            if alarm != nil {
+                                Button {
+                                    showingDeleteConfirmation = true
+                                } label: {
+                                    Text("Delete Alarm")
+                                        .font(.body)
+                                        .foregroundColor(BananaTheme.Colors.error)
+                                        .frame(maxWidth: .infinity)
+                                        .padding()
+                                }
                             }
                         }
                     }
                 }
-            }
-            .navigationTitle(alarm == nil ? "Add Alarm" : "Edit Alarm")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(.visible, for: .navigationBar)
-            .toolbarColorScheme(.dark, for: .navigationBar)
-            .onAppear {
-                // Set navigation title color to white
-                UINavigationBar.appearance().titleTextAttributes = [
-                    .foregroundColor: UIColor.white,
-                    .font: UIFont.systemFont(ofSize: 17, weight: .regular)
-                ]
-            }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
+                .navigationTitle(alarm == nil ? "Add Alarm" : "Edit Alarm")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbarBackground(.visible, for: .navigationBar)
+                .toolbarColorScheme(.dark, for: .navigationBar)
+                .onAppear {
+                    // Set navigation title color to white
+                    UINavigationBar.appearance().titleTextAttributes = [
+                        .foregroundColor: UIColor.white,
+                        .font: UIFont.systemFont(ofSize: 17, weight: .regular)
+                    ]
+                }
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button("Cancel") {
+                            dismiss()
+                        }
+                        .foregroundColor(BananaTheme.Colors.bananaYellow)
+                    }
+                    
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button("Save") {
+                            saveAlarm()
+                        }
+                        .foregroundColor(BananaTheme.Colors.bananaYellow)
+                    }
+                }
+                .alert("Delete Alarm", isPresented: $showingDeleteConfirmation) {
+                    Button("Delete", role: .destructive) {
+                        if let alarm = alarm, let onDelete = onDelete {
+                            onDelete(alarm)
+                        }
                         dismiss()
                     }
-                    .foregroundColor(BananaTheme.Colors.bananaYellow)
+                    Button("Cancel", role: .cancel) {}
+                } message: {
+                    Text("Are you sure you want to delete this alarm?")
                 }
-                
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Save") {
-                        saveAlarm()
-                    }
-                    .foregroundColor(BananaTheme.Colors.bananaYellow)
-                }
-            }
-        }
-
-        .alert("Delete Alarm", isPresented: $showingDeleteConfirmation) {
-            Button("Delete", role: .destructive) {
-                if let alarm = alarm, let onDelete = onDelete {
-                    onDelete(alarm)
-                }
-                dismiss()
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("Are you sure you want to delete this alarm?")
-        }
-    }
-    
-    // MARK: - AI Wake-Up Section
-    
-    private var aiWakeUpSection: some View {
-        VStack(spacing: 0) {
-            // AI Toggle Header
-            HStack {
-                HStack {
-                    Text("🍌🧠")
-                        .font(.title2)
-                    Text("Wake Up AI")
-                        .foregroundColor(.textPrimary)
-                    Spacer()
-                }
-                Toggle("", isOn: $isAIEnabled)
-                    .labelsHidden()
-                    .onChange(of: isAIEnabled) { _, newValue in
-                        if newValue && !isAISectionExpanded {
-                            withAnimation(.easeInOut(duration: 0.3)) {
-                                isAISectionExpanded = true
-                            }
-                        }
-                    }
-            }
-            .padding(.vertical, BSpacing.sm)
-            
-            // AI Options (collapsible)
-            if isAIEnabled && isAISectionExpanded {
-                VStack(spacing: 0) {
-                    // Voice Selection
-                    HStack {
-                        Text("Voice")
-                            .foregroundColor(.textPrimary)
-                        Spacer()
-                        HStack(spacing: 8) {
-                            ForEach(AIVoiceOption.allCases, id: \.self) { voice in
-                                Button {
-                                    aiVoice = voice
-                                    HapticManager.shared.impact(.light)
-                                } label: {
-                                    Text(voice.displayName)
-                                        .font(.body)
-                                        .padding(.horizontal, 8)
-                                        .padding(.vertical, 4)
-                                        .background(aiVoice == voice ? Color.bananaYellow : Color.backgroundSecondary)
-                                        .foregroundColor(aiVoice == voice ? .black : .textPrimary)
-                                        .cornerRadius(12)
-                                }
-                            }
-                        }
-                    }
-                    .padding(.vertical, BSpacing.sm)
-                    
-                    Divider().background(BananaTheme.Colors.divider)
-                    
-                    // Music Selection
-                    NavigationLink {
-                        MusicPickerView(selectedMusic: $aiMusic)
-                    } label: {
-                        HStack {
-                            Text("Background Music")
-                                .foregroundColor(.textPrimary)
-                            Spacer()
-                            Text(aiMusic.displayName)
-                                .foregroundColor(BananaTheme.Colors.textSecondary)
-                            Image(systemName: "chevron.right")
-                                .font(.caption)
-                                .foregroundColor(BananaTheme.Colors.textTertiary)
-                        }
-                        .padding(.vertical, BSpacing.sm)
-                    }
-                    
-                    Divider().background(BananaTheme.Colors.divider)
-                    
-                    // Preferred Name
-                    SettingsRow(title: "Preferred Name") {
-                        TextField("Banana", text: $aiPreferredName)
-                            .multilineTextAlignment(.trailing)
-                            .foregroundColor(.white)
-                    }
-                    .padding(.vertical, BSpacing.sm)
-                    
-                    Divider().background(BananaTheme.Colors.divider)
-                    
-                    // Weather Toggle
-                    HStack {
-                        Text("Weather")
-                            .foregroundColor(.textPrimary)
-                        Spacer()
-                        Toggle("", isOn: $aiWeatherEnabled)
-                            .labelsHidden()
-                            .onChange(of: aiWeatherEnabled) { _, newValue in
-                                if newValue {
-                                    // Request location when weather is enabled
-                                    requestLocationPermission()
-                                }
-                            }
-                    }
-                    .padding(.vertical, BSpacing.sm)
-                    
-                    Divider().background(BananaTheme.Colors.divider)
-                    
-                    // Headlines Categories
-                    NavigationLink {
-                        HeadlinesPickerView(selectedCategories: $aiHeadlinesCategories)
-                    } label: {
-                        HStack {
-                            Text("News Categories")
-                                .foregroundColor(.textPrimary)
-                            Spacer()
-                            Text(headlinesDescription)
-                                .foregroundColor(BananaTheme.Colors.textSecondary)
-                                .multilineTextAlignment(.trailing)
-                            Image(systemName: "chevron.right")
-                                .font(.caption)
-                                .foregroundColor(BananaTheme.Colors.textTertiary)
-                        }
-                        .padding(.vertical, BSpacing.sm)
-                    }
-                    
-                    Divider().background(BananaTheme.Colors.divider)
-                    
-                    // Sports Categories
-                    NavigationLink {
-                        SportsPickerView(selectedCategories: $aiSportsCategories)
-                    } label: {
-                        HStack {
-                            Text("Sports")
-                                .foregroundColor(.textPrimary)
-                            Spacer()
-                            Text(sportsDescription)
-                                .foregroundColor(BananaTheme.Colors.textSecondary)
-                                .multilineTextAlignment(.trailing)
-                            Image(systemName: "chevron.right")
-                                .font(.caption)
-                                .foregroundColor(BananaTheme.Colors.textTertiary)
-                        }
-                        .padding(.vertical, BSpacing.sm)
-                    }
-                }
-                .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
     }
@@ -450,56 +290,21 @@ struct AlarmDetailView: View {
         let newAlarm = Alarm(
             id: alarm?.id ?? UUID(),
             time: time,
-            label: isWakeUpAlarm ? "Wake Up" : label, // Use fixed label for wake-up alarms
+            label: label,
             isEnabled: true,
-            isAIEnabled: isAIEnabled,
+            isAIEnabled: false, // Regular alarms don't have AI
             soundIdentifier: selectedSound.rawValue,
             snoozeLength: snoozeLength,
             repeatDays: Array(repeatDays),
             volume: volume,
-            isWakeUpAlarm: isWakeUpAlarm,
-            aiVoice: aiVoice,
-            aiMusic: aiMusic,
-            aiWeatherEnabled: aiWeatherEnabled,
-            aiHeadlinesCategories: aiHeadlinesCategories,
-            aiSportsCategories: aiSportsCategories,
-            aiLocationLatitude: aiLocationLatitude,
-            aiLocationLongitude: aiLocationLongitude,
-            aiPreferredName: aiPreferredName,
+            isWakeUpAlarm: false, // This view is only for regular alarms now
             lastUsedAt: alarm?.lastUsedAt ?? Date(),
             createdAt: alarm?.createdAt ?? Date(),
             updatedAt: Date()
         )
         
-        // If this is a wake-up alarm with AI enabled, save to global user preferences
-        if isWakeUpAlarm && isAIEnabled {
-            saveGlobalUserPreferences(from: newAlarm)
-        }
-        
         onSave(newAlarm)
         dismiss()
     }
     
-    private func saveGlobalUserPreferences(from alarm: Alarm) {
-        do {
-            let preferences = UserPreferences(
-                timezone: TimeZone.current.identifier,
-                locationZip: nil, // Will be set by user in settings
-                name: alarm.aiPreferredName,
-                city: nil, // Will be set by user in settings
-                state: nil, // Will be set by user in settings
-                voice: alarm.aiVoice,
-                weatherEnabled: alarm.aiWeatherEnabled,
-                headlinesCategories: Array(alarm.aiHeadlinesCategories.map { $0.rawValue }),
-                sportsCategories: Array(alarm.aiSportsCategories.map { $0.rawValue }),
-                lastSyncAt: Date()
-            )
-            
-            try CoreDataManager.shared.saveUserPreferences(preferences)
-            print("✅ Wake-up alarm AI settings saved to global preferences and synced")
-            
-        } catch {
-            print("❌ Failed to save global user preferences: \(error)")
-        }
-    }
 }
