@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 import Foundation
 import Combine
 
@@ -15,6 +16,7 @@ struct WorldClockView: View {
     @State private var isEditing = false
     @State private var showConfetti = false
     @State private var showGoldenGlow = false
+    @State private var showingCalendar = false
     
     var body: some View {
         ZStack {
@@ -50,9 +52,14 @@ struct WorldClockView: View {
             VStack {
                 Spacer()
                 
+                
                 // Timezone converter (when multiple clocks exist and not in edit mode)
                 if viewModel.clocks.count >= 2 && !isEditing {
                     timezoneConverterView
+                        .background(
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(Color.backgroundSecondary.opacity(0.95))
+                        )
                         .padding(.horizontal, BSpacing.md)
                         .padding(.bottom, BSpacing.md)
                 }
@@ -96,6 +103,39 @@ struct WorldClockView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
             .background(Color.clear)
+            
+            // Calendar overlay with dismiss background
+            if viewModel.clocks.count >= 2 && !isEditing && showingCalendar {
+                ZStack {
+                    // Full screen tap to dismiss
+                    Color.clear
+                        .contentShape(Rectangle())
+                        .ignoresSafeArea()
+                        .onTapGesture {
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                showingCalendar = false
+                            }
+                        }
+                    
+                    // Calendar positioned at bottom - no tap gestures
+                    VStack {
+                        Spacer()
+                        
+                        NativeCalendarView(selectedDate: $viewModel.selectedDate)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .background(
+                                RoundedRectangle(cornerRadius: 16)
+                                    .fill(Color.backgroundSecondary.opacity(0.95))
+                            )
+                            .padding(.horizontal, BSpacing.md)
+                            .padding(.bottom, 200) // Position above converter
+                    }
+                }
+                .transition(.asymmetric(
+                    insertion: .opacity,
+                    removal: .opacity
+                ))
+            }
         }
         .sheet(isPresented: $showingAddCity) {
             CityPickerView { city in
@@ -164,7 +204,7 @@ struct WorldClockView: View {
             }
             
             // Custom date picker
-            CustomDatePicker(selectedDate: $viewModel.selectedDate)
+            CustomDatePicker(selectedDate: $viewModel.selectedDate, showingCalendar: $showingCalendar)
             
             // Slider
             Slider(
@@ -185,8 +225,7 @@ struct WorldClockView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
-        .padding(.horizontal, BananaTheme.Spacing.md)
-        .padding(.vertical, BananaTheme.Spacing.sm)
+        .padding(BananaTheme.Spacing.md)
         .background(BananaTheme.Colors.backgroundSecondary)
         .cornerRadius(BananaTheme.Layout.cornerRadius)
         .goldenGlow(isActive: showGoldenGlow)
@@ -457,14 +496,22 @@ struct WorldClockRow: View {
             // Planetary time - show "Planetary Time" instead of date
             return "Planetary Time"
         } else {
-            // Check for holiday first
-            let city = City(name: clock.cityName, country: getCountryForCity(clock.cityName), timeZoneIdentifier: clock.timeZoneIdentifier, isPlanet: false)
-            if let holidayText = HolidayDatabase.getHolidayText(for: city) {
-                return holidayText
-            }
-            
             // Use converter date only when converter is active, otherwise current date
             let baseTime = viewModel.isConverterActive ? viewModel.converterTime : viewModel.currentTime
+            
+            // Check for holiday when converter is active
+            if viewModel.isConverterActive {
+                let city = City(name: clock.cityName, country: getCountryForCity(clock.cityName), timeZoneIdentifier: clock.timeZoneIdentifier, isPlanet: false)
+                if let holidayText = HolidayDatabase.getHolidayTextForDate(for: city, date: baseTime) {
+                    return holidayText
+                }
+            } else {
+                // Check for holiday in current time (non-converter mode)
+                let city = City(name: clock.cityName, country: getCountryForCity(clock.cityName), timeZoneIdentifier: clock.timeZoneIdentifier, isPlanet: false)
+                if let holidayText = HolidayDatabase.getHolidayText(for: city) {
+                    return holidayText
+                }
+            }
             
             // Check if this is the current timezone (user's time)
             let isCurrentTimezone = clock.timeZoneIdentifier == TimeZone.current.identifier
@@ -496,8 +543,6 @@ struct WorldClockRow: View {
                 
                 let daysDifference = calendar.dateComponents([.day], from: userTodayDate, to: clockDateStartOfDay).day ?? 0
                 
-
-                
                 switch daysDifference {
                 case -1:
                     return "Yesterday"
@@ -508,7 +553,19 @@ struct WorldClockRow: View {
                 default:
                     // For dates beyond yesterday/tomorrow, show the date
                     let dateFormatter = DateFormatter()
-                    dateFormatter.dateFormat = "E, MMM d"
+                    
+                    // Check if the date is in a different year
+                    let calendar = Calendar.current
+                    let currentYear = calendar.component(.year, from: Date())
+                    let targetYear = calendar.component(.year, from: baseTime)
+                    
+                    if targetYear != currentYear {
+                        // Include year when date is not in current year
+                        dateFormatter.dateFormat = "E, MMM d, yyyy"
+                    } else {
+                        dateFormatter.dateFormat = "E, MMM d"
+                    }
+                    
                     dateFormatter.timeZone = clock.timeZone
                     return dateFormatter.string(from: baseTime)
                 }
@@ -1143,6 +1200,31 @@ struct HolidayDatabase {
         guard let holiday = getHoliday(for: city) else { return nil }
         
         let prefix = holiday.isToday ? "" : "Tomorrow, "
+        return "\(prefix)\(holiday.emoji) \(holiday.name)"
+    }
+    
+    static func getHolidayTextForDate(for city: City, date: Date) -> String? {
+        let calendar = Calendar.current
+        let targetMonth = calendar.component(.month, from: date)
+        let targetDay = calendar.component(.day, from: date)
+        
+        // Find holiday that matches the target date
+        let holiday = holidays.first { holiday in
+            holiday.country == city.country && 
+            holiday.month == targetMonth && 
+            holiday.day == targetDay
+        }
+        
+        guard let holiday = holiday else { return nil }
+        
+        // Check if this is today or tomorrow relative to the target date
+        let today = Date()
+        let tomorrow = calendar.date(byAdding: .day, value: 1, to: today) ?? today
+        
+        let isToday = calendar.isDate(date, inSameDayAs: today)
+        let isTomorrow = calendar.isDate(date, inSameDayAs: tomorrow)
+        
+        let prefix = isToday ? "" : (isTomorrow ? "Tomorrow, " : "")
         return "\(prefix)\(holiday.emoji) \(holiday.name)"
     }
 }
@@ -2132,255 +2214,149 @@ class WorldClockViewModel: ObservableObject {
     }
 }
 
+// MARK: - Native Calendar View
+struct NativeCalendarView: UIViewRepresentable {
+    @Binding var selectedDate: Date
+    
+    func makeUIView(context: Context) -> UICalendarView {
+        let calendarView = UICalendarView()
+        calendarView.calendar = Calendar.current
+        calendarView.availableDateRange = DateInterval(start: Date.distantPast, end: Date.distantFuture)
+        calendarView.selectionBehavior = UICalendarSelectionSingleDate(delegate: context.coordinator)
+        calendarView.fontDesign = .rounded
+        calendarView.tintColor = UIColor(BananaTheme.Colors.bananaYellow)
+        
+        // Configure for compact display
+        calendarView.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
+        calendarView.setContentHuggingPriority(.defaultHigh, for: .vertical)
+        
+        return calendarView
+    }
+    
+    func updateUIView(_ uiView: UICalendarView, context: Context) {
+        // Update selection if needed
+        if let selection = uiView.selectionBehavior as? UICalendarSelectionSingleDate {
+            let components = Calendar.current.dateComponents([.year, .month, .day], from: selectedDate)
+            selection.setSelected(components, animated: true)
+        }
+    }
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+    
+    class Coordinator: NSObject, UICalendarSelectionSingleDateDelegate {
+        var parent: NativeCalendarView
+        
+        init(_ parent: NativeCalendarView) {
+            self.parent = parent
+        }
+        
+        func dateSelection(_ selection: UICalendarSelectionSingleDate, didSelectDate dateComponents: DateComponents?) {
+            if let dateComponents = dateComponents,
+               let date = Calendar.current.date(from: dateComponents) {
+                parent.selectedDate = date
+            }
+        }
+        
+        func dateSelection(_ selection: UICalendarSelectionSingleDate, didDeselectDate dateComponents: DateComponents?) {
+            // Handle deselection if needed
+        }
+    }
+}
+
 // MARK: - Custom Date Picker
 struct CustomDatePicker: View {
     @Binding var selectedDate: Date
-    @State private var showingDatePicker = false
-    @State private var currentMonth = Date()
-    @State private var showingMonthYearPicker = false
+    @Binding var showingCalendar: Bool
     
     private let calendar = Calendar.current
     private let dateFormatter = DateFormatter()
     
     private var selectedDateString: String {
-        dateFormatter.dateFormat = "MMM d, yyyy"
-        return dateFormatter.string(from: selectedDate)
-    }
-    
-    private var currentMonthString: String {
-        dateFormatter.dateFormat = "MMMM yyyy"
-        return dateFormatter.string(from: currentMonth)
-    }
-    
-    var body: some View {
-        VStack(spacing: 0) {
-            // Collapsed view (always visible) - compact and left-aligned
-            Button {
-                withAnimation(.easeInOut(duration: 0.3)) {
-                    showingDatePicker.toggle()
-                }
-            } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: "calendar")
-                        .foregroundColor(showingDatePicker ? BananaTheme.Colors.bananaYellow : BananaTheme.Colors.bananaYellow)
-                        .font(.body)
-                    
-                    Text(selectedDateString)
-                        .font(.body)
-                        .foregroundColor(showingDatePicker ? BananaTheme.Colors.bananaYellow : .white)
-                    
-                    Image(systemName: showingDatePicker ? "chevron.up" : "chevron.down")
-                        .foregroundColor(BananaTheme.Colors.bananaYellow)
-                        .font(.caption)
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background(Color.black.opacity(0.3))
-                .cornerRadius(6)
-            }
-            .buttonStyle(PlainButtonStyle())
-            .frame(maxWidth: .infinity, alignment: .leading)
-            
-            // Expanded calendar view
-            if showingDatePicker {
-                VStack(spacing: 0) {
-                    // Header with month/year and navigation
-                    calendarHeader
-                    
-                    // Day headers
-                    dayHeaders
-                    
-                    // Calendar grid
-                    calendarGrid
-                    
-                    // Today button removed - today's date is highlighted instead
-                }
-                .padding(16)
-                .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color.black.opacity(0.8))
-                        .background(.ultraThinMaterial)
-                )
-                .transition(.move(edge: .top).combined(with: .opacity))
-            }
+        if isToday(selectedDate) {
+            return "Today"
+        } else {
+            dateFormatter.dateFormat = "MMM d, yyyy"
+            return dateFormatter.string(from: selectedDate)
         }
-        .sheet(isPresented: $showingMonthYearPicker) {
-            monthYearPicker
-        }
-    }
-    
-    private var calendarHeader: some View {
-        HStack {
-            // Previous month button
-            Button {
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    currentMonth = calendar.date(byAdding: .month, value: -1, to: currentMonth) ?? currentMonth
-                }
-            } label: {
-                Image(systemName: "chevron.left")
-                    .foregroundColor(BananaTheme.Colors.bananaYellow)
-                    .font(.title3)
-            }
-            
-            Spacer()
-            
-            // Month/Year text (clickable)
-            Button {
-                showingMonthYearPicker = true
-            } label: {
-                Text(currentMonthString)
-                    .font(.title2)
-                    .foregroundColor(.white)
-            }
-            .buttonStyle(PlainButtonStyle())
-            
-            Spacer()
-            
-            // Next month button
-            Button {
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    currentMonth = calendar.date(byAdding: .month, value: 1, to: currentMonth) ?? currentMonth
-                }
-            } label: {
-                Image(systemName: "chevron.right")
-                    .foregroundColor(BananaTheme.Colors.bananaYellow)
-                    .font(.title3)
-            }
-        }
-        .padding(.bottom, 16)
-    }
-    
-    private var dayHeaders: some View {
-        HStack(spacing: 0) {
-            ForEach(["S", "M", "T", "W", "T", "F", "S"], id: \.self) { day in
-                Text(day)
-                    .font(.caption.weight(.medium))
-                    .foregroundColor(.gray)
-                    .frame(maxWidth: .infinity)
-            }
-        }
-        .padding(.bottom, 8)
-    }
-    
-    private var calendarGrid: some View {
-        let days = daysInMonth()
-        
-        return LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 8) {
-            ForEach(Array(days.enumerated()), id: \.offset) { index, day in
-                if let date = day {
-                    Button {
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            selectedDate = date
-                            // Don't close the picker - let user click the button again to close
-                        }
-                    } label: {
-                        Text("\(calendar.component(.day, from: date))")
-                            .font(.body.weight(.medium))
-                            .foregroundColor(
-                                isSelected(date) ? .white : 
-                                isToday(date) ? BananaTheme.Colors.bananaYellow : .white
-                            )
-                            .frame(width: 32, height: 32)
-                            .background(
-                                Circle()
-                                    .fill(
-                                        isSelected(date) ? BananaTheme.Colors.bananaYellow : Color.clear
-                                    )
-                            )
-                    }
-                    .buttonStyle(PlainButtonStyle())
-                } else {
-                    Color.clear
-                        .frame(width: 32, height: 32)
-                }
-            }
-        }
-        .frame(height: 240) // Fixed height for consistent spacing (6 rows * 32px + 5 * 8px spacing)
-        .padding(.bottom, 16)
     }
     
 
     
-    private var monthYearPicker: some View {
-        NavigationView {
-            VStack {
-                DatePicker(
-                    "Select Month/Year",
-                    selection: $currentMonth,
-                    displayedComponents: .date
-                )
-                .datePickerStyle(.wheel)
-                .labelsHidden()
-                .colorScheme(.dark)
-                .accentColor(BananaTheme.Colors.bananaYellow)
-                .padding()
-            }
-            .navigationTitle("")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarColorScheme(.dark, for: .navigationBar)
-            .toolbarBackground(.hidden, for: .navigationBar)
-            .toolbarBackground(.hidden, for: .tabBar)
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Text("Select Month/Year")
-                        .font(.title2)
-                        .foregroundColor(.white)
-                }
-                
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
-                        showingMonthYearPicker = false
+
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // Collapsed view (always visible) - compact and left-aligned
+            HStack {
+                Button {
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        showingCalendar.toggle()
                     }
-                    .foregroundColor(BananaTheme.Colors.bananaYellow)
-                }
-                
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
-                        showingMonthYearPicker = false
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "calendar")
+                            .foregroundColor(showingCalendar ? BananaTheme.Colors.bananaYellow : BananaTheme.Colors.bananaYellow)
+                            .font(.body)
+                        
+                        Text(selectedDateString)
+                            .font(.body)
+                            .foregroundColor(showingCalendar ? BananaTheme.Colors.bananaYellow : .white)
+                        
+                        Image(systemName: showingCalendar ? "xmark" : "chevron.down")
+                            .foregroundColor(BananaTheme.Colors.bananaYellow)
+                            .font(.caption)
                     }
-                    .foregroundColor(BananaTheme.Colors.bananaYellow)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(Color.black.opacity(0.3))
+                    .cornerRadius(6)
+                }
+                .buttonStyle(PlainButtonStyle())
+                
+                // Today button - only show when not today
+                if !isToday(selectedDate) {
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            selectedDate = Date()
+                        }
+                    } label: {
+                        HStack(spacing: 4) {
+                            Text("Today")
+                                .font(.caption)
+                                .foregroundColor(BananaTheme.Colors.bananaYellow)
+                            
+                            Image(systemName: "arrow.clockwise")
+                                .font(.caption2)
+                                .foregroundColor(BananaTheme.Colors.bananaYellow)
+                        }
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                    .padding(.leading, 8)
                 }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .presentationDetents([.medium])
     }
+    
+
+    
+
+    
+
+    
+
     
     // MARK: - Helper Methods
     
-    private func daysInMonth() -> [Date?] {
-        let startOfMonth = calendar.dateInterval(of: .month, for: currentMonth)?.start ?? currentMonth
-        let firstWeekday = calendar.component(.weekday, from: startOfMonth)
-        let daysInMonth = calendar.range(of: .day, in: .month, for: currentMonth)?.count ?? 30
-        
-        var days: [Date?] = []
-        
-        // Add empty cells for days before the first day of the month
-        for _ in 1..<firstWeekday {
-            days.append(nil)
-        }
-        
-        // Add all days in the month
-        for day in 1...daysInMonth {
-            if let date = calendar.date(byAdding: .day, value: day - 1, to: startOfMonth) {
-                days.append(date)
-            }
-        }
-        
-        // Fill remaining cells to complete the grid
-        while days.count % 7 != 0 {
-            days.append(nil)
-        }
-        
-        return days
-    }
-    
-    private func isSelected(_ date: Date) -> Bool {
-        calendar.isDate(date, inSameDayAs: selectedDate)
-    }
+
     
     private func isToday(_ date: Date) -> Bool {
         calendar.isDate(date, inSameDayAs: Date())
     }
+    
+
 }
 
 // MARK: - Preference Key for Scroll Tracking

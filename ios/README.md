@@ -7,10 +7,12 @@ This README covers iOS-specific development setup, architecture, and guidelines 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- **Xcode 15.0+** (iOS 17+ deployment target)
-- **iOS 17+ physical device** (AlarmKit requires real hardware)
+- **Xcode 15.0+** (iOS 26+ deployment target)
+- **iOS 26+ physical device** (AlarmKit requires real hardware - not available in simulator)
 - **Apple Developer Account** (for signing and AlarmKit capabilities)
 - **macOS Sonoma 14.0+** recommended
+
+> ⚠️ **Important**: This app requires iOS 26 or later due to AlarmKit framework dependency. AlarmKit enables alarms to appear in the native iOS Clock app and must be tested on physical devices.
 
 ### Initial Setup
 

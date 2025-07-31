@@ -46,10 +46,10 @@ The AI timezone converter eliminates the mental math of global scheduling:
 ## 🏗️ Architecture & Technology
 
 ### **iOS App (SwiftUI + Native Integration)**
-- **AlarmKit Integration**: Alarms appear in native iOS Clock app
+- **AlarmKit Integration**: Alarms appear in native iOS Clock app (requires iOS 26+)
 - **Core Data + CloudKit**: Reliable local storage with cloud sync
 - **Premium Design**: Dark-mode interface with signature banana yellow accents
-- **iOS 17+ Optimized**: Leverages latest Apple frameworks for performance
+- **iOS 26+ Required**: Uses AlarmKit framework for native alarm integration
 
 ### **AI-Powered Backend (Supabase + Edge Functions)**
 - **GPT-4o Content Generation**: Creates unique morning scripts daily
@@ -80,7 +80,7 @@ People who appreciate beautiful, thoughtful software that combines multiple time
 ## 🚀 Getting Started
 
 ### **For Users**
-1. Download from the App Store (iOS 17+ required)
+1. Download from the App Store (iOS 26+ required)
 2. Start your free trial (3-7 days depending on plan)
 3. Set up your first wake-up alarm with AI preferences
 4. Wake up tomorrow to your personalized experience
