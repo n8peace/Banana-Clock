@@ -77,10 +77,83 @@ jobs:
     - name: Link to development project
       env:
         SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
       run: |
         cd supabase
-        echo "Linking to development project: ${{ secrets.SUPABASE_DEVELOP_PROJECT }}"
-        supabase link --project-ref ${{ secrets.SUPABASE_DEVELOP_PROJECT }}
+        echo "🔗 Linking to development project with enhanced debugging..."
+        echo "Project ref: ${{ secrets.SUPABASE_DEVELOP_PROJECT }}"
+        echo "Access token length: ${#SUPABASE_ACCESS_TOKEN}"
+        echo "DB password length: ${#SUPABASE_DB_PASSWORD}"
+        echo "Current directory: $(pwd)"
+        echo "Supabase CLI version: $(supabase --version)"
+        
+        # Check if we're already linked
+        echo "🔍 Checking current link status..."
+        supabase projects list --debug || echo "Projects list failed"
+        
+        # Export DB password for the link process
+        export PGPASSWORD="${{ secrets.SUPABASE_DB_PASSWORD }}"
+        echo "✅ Database password exported to PGPASSWORD"
+        
+        # Check password formatting
+        echo "🔐 Password validation:"
+        if [[ "$SUPABASE_DB_PASSWORD" =~ [[:space:]] ]]; then
+          echo "⚠️ Password contains whitespace characters"
+        fi
+        if [[ "$SUPABASE_DB_PASSWORD" =~ [\$\`\\] ]]; then
+          echo "⚠️ Password contains shell special characters"
+        fi
+        echo "Password starts with: ${SUPABASE_DB_PASSWORD:0:3}..."
+        echo "Password ends with: ...${SUPABASE_DB_PASSWORD: -3}"
+        
+        # Test basic API connectivity first
+        echo "🌐 Testing Supabase API connectivity..."
+        api_response=$(curl -s -w "\n%{http_code}" "https://${{ secrets.SUPABASE_DEVELOP_PROJECT }}.supabase.co/rest/v1/" \
+          -H "Authorization: Bearer ${{ secrets.SUPABASE_ACCESS_TOKEN }}")
+        echo "API response: $api_response"
+        
+        # Test database connectivity before linking
+        echo "🔧 Testing database connection methods before linking..."
+        
+        # Try different connection strings
+        echo "Testing transaction pooler (5432)..."
+        timeout 10 psql "postgresql://postgres.${{ secrets.SUPABASE_DEVELOP_PROJECT }}:${SUPABASE_DB_PASSWORD}@aws-0-us-west-1.pooler.supabase.com:5432/postgres?sslmode=require" \
+          -c "SELECT 1;" 2>&1 || echo "Transaction pooler test failed"
+        
+        echo "Testing session pooler (6543)..."
+        timeout 10 psql "postgresql://postgres.${{ secrets.SUPABASE_DEVELOP_PROJECT }}:${SUPABASE_DB_PASSWORD}@aws-0-us-west-1.pooler.supabase.com:6543/postgres?sslmode=require" \
+          -c "SELECT 1;" 2>&1 || echo "Session pooler test failed"
+        
+        echo "Testing direct connection..."
+        timeout 10 psql "postgresql://postgres.${{ secrets.SUPABASE_DEVELOP_PROJECT }}:${SUPABASE_DB_PASSWORD}@db.${{ secrets.SUPABASE_DEVELOP_PROJECT }}.supabase.co:5432/postgres?sslmode=require" \
+          -c "SELECT 1;" 2>&1 || echo "Direct connection test failed"
+        
+        # Try the link command with debug
+        echo "🚀 Attempting to link with debug mode..."
+        supabase link --project-ref ${{ secrets.SUPABASE_DEVELOP_PROJECT }} --debug || {
+          echo "❌ Link failed, attempting with alternative methods..."
+          
+          # Try link with password in environment
+          echo "🔄 Retry with explicit password environment..."
+          SUPABASE_DB_PASSWORD="${{ secrets.SUPABASE_DB_PASSWORD }}" supabase link --project-ref ${{ secrets.SUPABASE_DEVELOP_PROJECT }} --debug || {
+            echo "❌ Alternative link method failed"
+            echo "🔍 Diagnostic information:"
+            echo "Working directory: $(pwd)"
+            echo "Config files:"
+            ls -la config.toml 2>/dev/null || echo "No config.toml found"
+            ls -la .supabase/ 2>/dev/null || echo "No .supabase directory found"
+            
+            echo "🔍 Attempting to get more error details..."
+            RUST_LOG=debug supabase link --project-ref ${{ secrets.SUPABASE_DEVELOP_PROJECT }} --debug || {
+              echo "❌ All link attempts failed"
+              echo "This may be a SCRAM authentication issue with the database password"
+              echo "Please verify the password in Supabase Dashboard → Project Settings → Database"
+              exit 1
+            }
+          }
+        }
+        
+        echo "✅ Successfully linked to development project"
         
     - name: Deploy database migrations
       env:
@@ -88,10 +161,106 @@ jobs:
         SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
       run: |
         cd supabase
-        echo "Deploying database migrations to development..."
+        echo "🔍 Starting database migration deployment with enhanced debugging..."
+        
+        # Debug environment setup
+        echo "📊 Environment Debug Information:"
+        echo "Current directory: $(pwd)"
+        echo "Supabase CLI version: $(supabase --version)"
+        echo "Project ref: ${{ secrets.SUPABASE_DEVELOP_PROJECT }}"
+        echo "Access token length: ${#SUPABASE_ACCESS_TOKEN}"
+        echo "DB password length: ${#SUPABASE_DB_PASSWORD}"
+        
+        # Check if password contains problematic characters
+        echo "🔐 Password character analysis:"
+        if [[ "$SUPABASE_DB_PASSWORD" =~ [[:space:]] ]]; then
+          echo "⚠️ Password contains whitespace characters"
+        fi
+        if [[ "$SUPABASE_DB_PASSWORD" =~ [\$\`\\] ]]; then
+          echo "⚠️ Password contains shell special characters"
+        fi
+        echo "Password starts with: ${SUPABASE_DB_PASSWORD:0:3}..."
+        echo "Password ends with: ...${SUPABASE_DB_PASSWORD: -3}"
+        
+        # Export password for psql tools
         export PGPASSWORD="${{ secrets.SUPABASE_DB_PASSWORD }}"
-        echo "Attempting database migration deployment..."
-        supabase db push --include-all
+        
+        # Get connection details from Supabase CLI
+        echo "🔗 Getting connection details..."
+        supabase status --local=false --debug || echo "Status command failed"
+        
+        # Test basic connectivity first
+        echo "🏥 Testing basic database connectivity..."
+        timeout 30 curl -s "https://${{ secrets.SUPABASE_DEVELOP_PROJECT }}.supabase.co/rest/v1/" \
+          -H "Authorization: Bearer ${{ secrets.SUPABASE_ACCESS_TOKEN }}" || echo "API connectivity test failed"
+        
+        # Try different connection methods for debugging
+        echo "🔧 Testing PostgreSQL connection methods..."
+        
+        # Method 1: Direct psql test with transaction pooler
+        echo "Method 1: Testing transaction pooler connection..."
+        timeout 15 psql "postgresql://postgres.${{ secrets.SUPABASE_DEVELOP_PROJECT }}:${SUPABASE_DB_PASSWORD}@aws-0-us-west-1.pooler.supabase.com:5432/postgres?sslmode=require" \
+          -c "SELECT version();" || echo "Transaction pooler connection failed"
+        
+        # Method 2: Test with session pooler  
+        echo "Method 2: Testing session pooler connection..."
+        timeout 15 psql "postgresql://postgres.${{ secrets.SUPABASE_DEVELOP_PROJECT }}:${SUPABASE_DB_PASSWORD}@aws-0-us-west-1.pooler.supabase.com:6543/postgres?sslmode=require" \
+          -c "SELECT version();" || echo "Session pooler connection failed"
+        
+        # Method 3: Test direct connection (non-pooled)
+        echo "Method 3: Testing direct database connection..."
+        timeout 15 psql "postgresql://postgres.${{ secrets.SUPABASE_DEVELOP_PROJECT }}:${SUPABASE_DB_PASSWORD}@db.${{ secrets.SUPABASE_DEVELOP_PROJECT }}.supabase.co:5432/postgres?sslmode=require" \
+          -c "SELECT version();" || echo "Direct connection failed"
+        
+        # Method 4: Test with different SSL modes
+        echo "Method 4: Testing with sslmode=prefer..."
+        timeout 15 psql "postgresql://postgres.${{ secrets.SUPABASE_DEVELOP_PROJECT }}:${SUPABASE_DB_PASSWORD}@aws-0-us-west-1.pooler.supabase.com:5432/postgres?sslmode=prefer" \
+          -c "SELECT version();" || echo "SSL prefer mode failed"
+        
+        echo "Method 5: Testing with sslmode=disable..."
+        timeout 15 psql "postgresql://postgres.${{ secrets.SUPABASE_DEVELOP_PROJECT }}:${SUPABASE_DB_PASSWORD}@aws-0-us-west-1.pooler.supabase.com:5432/postgres?sslmode=disable" \
+          -c "SELECT version();" || echo "SSL disable mode failed"
+        
+        # Test the Supabase CLI link status
+        echo "🔗 Checking Supabase CLI link status..."
+        supabase projects list --debug || echo "Projects list failed"
+        supabase db remote --linked --debug || echo "Remote DB check failed"
+        
+        # Try the migration with maximum debugging
+        echo "🚀 Attempting database migration deployment with debug mode..."
+        echo "Using PGPASSWORD for authentication..."
+        
+        # First try with debug flag
+        echo "Attempt 1: With --debug flag..."
+        supabase db push --include-all --debug || {
+          echo "❌ First attempt failed, trying alternative approaches..."
+          
+          # Try without --include-all
+          echo "Attempt 2: Without --include-all flag..."
+          supabase db push --debug || {
+            echo "❌ Second attempt failed"
+            
+            # Try to get more specific error information
+            echo "🔍 Getting detailed error information..."
+            supabase db diff --linked --debug || echo "Diff command failed"
+            
+            # Check if there are any pending migrations
+            echo "📋 Checking migration status..."
+            ls -la migrations/ || echo "No migrations directory"
+            
+            # Final attempt with maximum verbosity
+            echo "Attempt 3: Final attempt with maximum verbosity..."
+            RUST_LOG=debug supabase db push --include-all --debug || {
+              echo "❌ All migration attempts failed"
+              echo "🔍 Final diagnostic information:"
+              echo "Environment variables are set: ACCESS_TOKEN=${#SUPABASE_ACCESS_TOKEN}, DB_PASSWORD=${#SUPABASE_DB_PASSWORD}"
+              echo "Project ref: ${{ secrets.SUPABASE_DEVELOP_PROJECT }}"
+              exit 1
+            }
+          }
+        }
+        
+        echo "✅ Database migration completed successfully"
         
     - name: Deploy Edge Functions (Update Only)
       env:
