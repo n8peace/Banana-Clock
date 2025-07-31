@@ -10,6 +10,13 @@ import SwiftUI
 struct MusicPickerView: View {
     @Binding var selectedMusic: MusicOption
     @Environment(\.dismiss) private var dismiss
+    @StateObject private var audioService = AudioService.shared
+    @State private var originalSelection: MusicOption
+    
+    init(selectedMusic: Binding<MusicOption>) {
+        self._selectedMusic = selectedMusic
+        self._originalSelection = State(initialValue: selectedMusic.wrappedValue)
+    }
     
     var body: some View {
         NavigationStack {
@@ -17,39 +24,78 @@ struct MusicPickerView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack {
                         Text(music.displayName)
-                            .foregroundColor(.textPrimary)
+                            .foregroundColor(selectedMusic == music ? .black : .textPrimary)
                         
                         Spacer()
                         
                         if selectedMusic == music {
-                            Image(systemName: "checkmark")
-                                .foregroundColor(.bananaYellow)
+                            if audioService.isPlayingPreview && audioService.currentPreviewMusic == music {
+                                AudioBarsView(isPlaying: true)
+                                    .frame(width: 30, height: 20)
+                            } else {
+                                AudioBarsView(isPlaying: false)
+                                    .frame(width: 30, height: 20)
+                            }
                         }
                     }
                     
                     Text(music.description)
                         .font(.caption)
-                        .foregroundColor(BananaTheme.Colors.textSecondary)
+                        .foregroundColor(selectedMusic == music ? .black.opacity(0.7) : BananaTheme.Colors.textSecondary)
                 }
                 .contentShape(Rectangle())
                 .onTapGesture {
-                    selectedMusic = music
+                    if selectedMusic == music {
+                        // Toggle preview if tapping same selection
+                        if audioService.isPlayingPreview && audioService.currentPreviewMusic == music {
+                            audioService.stopMusicPreview()
+                        } else {
+                            audioService.playMusicPreview(music)
+                        }
+                    } else {
+                        // Select new music and start preview
+                        selectedMusic = music
+                        audioService.playMusicPreview(music)
+                    }
                     HapticManager.shared.impact(.light)
                 }
-                .listRowBackground(Color.backgroundSecondary)
+                .listRowBackground(selectedMusic == music ? Color.bananaYellow : Color.backgroundSecondary)
             }
             .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
             .background(Color.backgroundPrimary)
             .navigationTitle("Background Music")
             .navigationBarTitleDisplayMode(.inline)
+            .navigationBarBackButtonHidden(true)
+            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbarColorScheme(.dark, for: .navigationBar)
+            .onAppear {
+                // Set navigation title color to white and unbolded
+                UINavigationBar.appearance().titleTextAttributes = [
+                    .foregroundColor: UIColor.white,
+                    .font: UIFont.systemFont(ofSize: 17, weight: .regular)
+                ]
+            }
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        selectedMusic = originalSelection
+                        audioService.stopMusicPreview()
                         dismiss()
                     }
                     .foregroundColor(.bananaYellow)
                 }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Save") {
+                        audioService.stopMusicPreview()
+                        dismiss()
+                    }
+                    .foregroundColor(.bananaYellow)
+                }
+            }
+            .onDisappear {
+                audioService.stopMusicPreview()
             }
         }
     }

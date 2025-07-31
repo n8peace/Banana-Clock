@@ -1,0 +1,638 @@
+{
+  "" : {
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/BananaClock-master.dia",
+    "emit-module-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/BananaClock-master-emit-module.d",
+    "emit-module-diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/BananaClock-master-emit-module.dia",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/BananaClock-master.swiftdeps"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/App/Config/Secrets.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/Secrets.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/Secrets.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/Secrets.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/Secrets.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/Secrets.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/Secrets.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/Secrets.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/Secrets~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/App/Config/environment-config.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/environment-config.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/environment-config.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/environment-config.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/environment-config.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/environment-config.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/environment-config.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/environment-config.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/environment-config~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/App/banana-clock-app.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/banana-clock-app.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/banana-clock-app.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/banana-clock-app.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/banana-clock-app.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/banana-clock-app.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/banana-clock-app.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/banana-clock-app.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/banana-clock-app~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/Core/Components/AudioBarsView.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/AudioBarsView.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/AudioBarsView.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/AudioBarsView.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/AudioBarsView.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/AudioBarsView.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/AudioBarsView.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/AudioBarsView.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/AudioBarsView~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/Core/Components/BananaConfettiView.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/BananaConfettiView.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/BananaConfettiView.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/BananaConfettiView.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/BananaConfettiView.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/BananaConfettiView.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/BananaConfettiView.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/BananaConfettiView.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/BananaConfettiView~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/Core/Components/GoldenGlowModifier.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/GoldenGlowModifier.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/GoldenGlowModifier.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/GoldenGlowModifier.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/GoldenGlowModifier.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/GoldenGlowModifier.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/GoldenGlowModifier.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/GoldenGlowModifier.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/GoldenGlowModifier~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/Core/Intents/AlarmIntents.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/AlarmIntents.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/AlarmIntents.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/AlarmIntents.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/AlarmIntents.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/AlarmIntents.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/AlarmIntents.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/AlarmIntents.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/AlarmIntents~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/Core/Models/alarm-error.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarm-error.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarm-error.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarm-error.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarm-error.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarm-error.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarm-error.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarm-error.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarm-error~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/Core/Models/alarm-model.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarm-model.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarm-model.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarm-model.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarm-model.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarm-model.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarm-model.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarm-model.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarm-model~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/Core/Models/alarm-sound-model.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarm-sound-model.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarm-sound-model.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarm-sound-model.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarm-sound-model.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarm-sound-model.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarm-sound-model.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarm-sound-model.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarm-sound-model~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/Core/Models/banana-clock-metadata.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/banana-clock-metadata.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/banana-clock-metadata.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/banana-clock-metadata.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/banana-clock-metadata.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/banana-clock-metadata.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/banana-clock-metadata.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/banana-clock-metadata.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/banana-clock-metadata~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/Core/Models/holiday-database.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/holiday-database.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/holiday-database.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/holiday-database.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/holiday-database.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/holiday-database.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/holiday-database.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/holiday-database.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/holiday-database~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/Core/Models/user-model.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/user-model.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/user-model.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/user-model.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/user-model.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/user-model.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/user-model.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/user-model.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/user-model~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/Core/Services/ai-timezone-service.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/ai-timezone-service.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/ai-timezone-service.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/ai-timezone-service.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/ai-timezone-service.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/ai-timezone-service.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/ai-timezone-service.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/ai-timezone-service.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/ai-timezone-service~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/Core/Services/alarmkit-service.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarmkit-service.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarmkit-service.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarmkit-service.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarmkit-service.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarmkit-service.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarmkit-service.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarmkit-service.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarmkit-service~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/Core/Services/audio-analyzer.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/audio-analyzer.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/audio-analyzer.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/audio-analyzer.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/audio-analyzer.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/audio-analyzer.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/audio-analyzer.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/audio-analyzer.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/audio-analyzer~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/Core/Services/audio-service.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/audio-service.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/audio-service.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/audio-service.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/audio-service.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/audio-service.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/audio-service.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/audio-service.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/audio-service~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/Core/Services/core-data-manager.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/core-data-manager.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/core-data-manager.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/core-data-manager.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/core-data-manager.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/core-data-manager.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/core-data-manager.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/core-data-manager.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/core-data-manager~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/Core/Services/haptic-manager.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/haptic-manager.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/haptic-manager.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/haptic-manager.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/haptic-manager.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/haptic-manager.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/haptic-manager.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/haptic-manager.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/haptic-manager~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/Core/Services/purchase-service.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/purchase-service.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/purchase-service.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/purchase-service.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/purchase-service.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/purchase-service.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/purchase-service.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/purchase-service.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/purchase-service~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/Core/Services/secure-key-manager.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/secure-key-manager.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/secure-key-manager.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/secure-key-manager.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/secure-key-manager.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/secure-key-manager.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/secure-key-manager.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/secure-key-manager.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/secure-key-manager~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/Core/Services/supabase-service.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/supabase-service.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/supabase-service.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/supabase-service.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/supabase-service.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/supabase-service.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/supabase-service.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/supabase-service.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/supabase-service~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/Core/Services/sync-service.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/sync-service.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/sync-service.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/sync-service.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/sync-service.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/sync-service.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/sync-service.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/sync-service.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/sync-service~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/Core/Utilities/error-types.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/error-types.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/error-types.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/error-types.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/error-types.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/error-types.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/error-types.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/error-types.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/error-types~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/Design/Components/banana-button.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/banana-button.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/banana-button.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/banana-button.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/banana-button.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/banana-button.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/banana-button.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/banana-button.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/banana-button~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/Design/Theme/banana-theme.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/banana-theme.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/banana-theme.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/banana-theme.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/banana-theme.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/banana-theme.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/banana-theme.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/banana-theme.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/banana-theme~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/Features/Alarms/ViewModels/WakeUpAlarmsViewModel.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpAlarmsViewModel.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpAlarmsViewModel.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpAlarmsViewModel.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpAlarmsViewModel.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpAlarmsViewModel.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpAlarmsViewModel.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpAlarmsViewModel.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpAlarmsViewModel~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/Features/Alarms/ViewModels/alarms-view-model.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarms-view-model.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarms-view-model.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarms-view-model.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarms-view-model.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarms-view-model.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarms-view-model.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarms-view-model.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarms-view-model~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/Features/Alarms/Views/AlarmKitTestView.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/AlarmKitTestView.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/AlarmKitTestView.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/AlarmKitTestView.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/AlarmKitTestView.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/AlarmKitTestView.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/AlarmKitTestView.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/AlarmKitTestView.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/AlarmKitTestView~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/Features/Alarms/Views/WakeUpAISettingsView.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpAISettingsView.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpAISettingsView.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpAISettingsView.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpAISettingsView.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpAISettingsView.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpAISettingsView.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpAISettingsView.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpAISettingsView~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/Features/Alarms/Views/WakeUpEditView.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpEditView.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpEditView.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpEditView.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpEditView.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpEditView.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpEditView.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpEditView.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpEditView~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/Features/Alarms/Views/WakeUpGeneralSettingsView.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpGeneralSettingsView.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpGeneralSettingsView.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpGeneralSettingsView.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpGeneralSettingsView.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpGeneralSettingsView.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpGeneralSettingsView.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpGeneralSettingsView.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpGeneralSettingsView~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/Features/Alarms/Views/WakeUpManagementView.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpManagementView.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpManagementView.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpManagementView.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpManagementView.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpManagementView.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpManagementView.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpManagementView.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpManagementView~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/Features/Alarms/Views/WakeUpScheduleEditor.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpScheduleEditor.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpScheduleEditor.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpScheduleEditor.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpScheduleEditor.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpScheduleEditor.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpScheduleEditor.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpScheduleEditor.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpScheduleEditor~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/Features/Alarms/Views/WakeUpScheduleSettingsView.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpScheduleSettingsView.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpScheduleSettingsView.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpScheduleSettingsView.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpScheduleSettingsView.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpScheduleSettingsView.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpScheduleSettingsView.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpScheduleSettingsView.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpScheduleSettingsView~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/Features/Alarms/Views/WakeUpScheduleView.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpScheduleView.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpScheduleView.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpScheduleView.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpScheduleView.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpScheduleView.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpScheduleView.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpScheduleView.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/WakeUpScheduleView~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/Features/Alarms/Views/alarm-detail-view.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarm-detail-view.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarm-detail-view.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarm-detail-view.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarm-detail-view.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarm-detail-view.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarm-detail-view.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarm-detail-view.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarm-detail-view~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/Features/Alarms/Views/alarm-row.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarm-row.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarm-row.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarm-row.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarm-row.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarm-row.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarm-row.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarm-row.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarm-row~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/Features/Alarms/Views/alarms-view.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarms-view.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarms-view.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarms-view.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarms-view.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarms-view.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarms-view.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarms-view.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/alarms-view~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/Features/Alarms/Views/headlines-picker-view.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/headlines-picker-view.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/headlines-picker-view.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/headlines-picker-view.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/headlines-picker-view.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/headlines-picker-view.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/headlines-picker-view.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/headlines-picker-view.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/headlines-picker-view~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/Features/Alarms/Views/music-picker-view.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/music-picker-view.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/music-picker-view.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/music-picker-view.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/music-picker-view.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/music-picker-view.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/music-picker-view.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/music-picker-view.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/music-picker-view~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/Features/Alarms/Views/repeat-picker-view.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/repeat-picker-view.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/repeat-picker-view.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/repeat-picker-view.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/repeat-picker-view.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/repeat-picker-view.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/repeat-picker-view.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/repeat-picker-view.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/repeat-picker-view~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/Features/Alarms/Views/settings-row.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/settings-row.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/settings-row.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/settings-row.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/settings-row.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/settings-row.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/settings-row.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/settings-row.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/settings-row~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/Features/Alarms/Views/sound-picker-view.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/sound-picker-view.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/sound-picker-view.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/sound-picker-view.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/sound-picker-view.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/sound-picker-view.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/sound-picker-view.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/sound-picker-view.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/sound-picker-view~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/Features/Alarms/Views/sports-picker-view.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/sports-picker-view.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/sports-picker-view.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/sports-picker-view.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/sports-picker-view.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/sports-picker-view.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/sports-picker-view.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/sports-picker-view.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/sports-picker-view~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/Features/Alarms/Views/voice-picker-view.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/voice-picker-view.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/voice-picker-view.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/voice-picker-view.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/voice-picker-view.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/voice-picker-view.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/voice-picker-view.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/voice-picker-view.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/voice-picker-view~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/Features/Premium/paywall-view.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/paywall-view.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/paywall-view.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/paywall-view.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/paywall-view.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/paywall-view.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/paywall-view.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/paywall-view.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/paywall-view~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/Features/Stopwatch/Views/stopwatch-view.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/stopwatch-view.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/stopwatch-view.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/stopwatch-view.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/stopwatch-view.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/stopwatch-view.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/stopwatch-view.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/stopwatch-view.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/stopwatch-view~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/Features/TabView/main-tab-view.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/main-tab-view.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/main-tab-view.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/main-tab-view.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/main-tab-view.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/main-tab-view.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/main-tab-view.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/main-tab-view.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/main-tab-view~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/Features/Timers/Views/timers-view.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/timers-view.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/timers-view.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/timers-view.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/timers-view.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/timers-view.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/timers-view.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/timers-view.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/timers-view~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/BananaClock/Features/WorldClock/Views/world-clock-view.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/world-clock-view.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/world-clock-view.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/world-clock-view.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/world-clock-view.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/world-clock-view.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/world-clock-view.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/world-clock-view.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/world-clock-view~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/DerivedSources/CoreDataGenerated/BananaClock/BananaClock+CoreDataModel.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/BananaClock+CoreDataModel.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/BananaClock+CoreDataModel.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/BananaClock+CoreDataModel.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/BananaClock+CoreDataModel.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/BananaClock+CoreDataModel.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/BananaClock+CoreDataModel.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/BananaClock+CoreDataModel.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/BananaClock+CoreDataModel~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/DerivedSources/CoreDataGenerated/BananaClock/CDAlarm+CoreDataClass.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDAlarm+CoreDataClass.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDAlarm+CoreDataClass.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDAlarm+CoreDataClass.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDAlarm+CoreDataClass.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDAlarm+CoreDataClass.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDAlarm+CoreDataClass.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDAlarm+CoreDataClass.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDAlarm+CoreDataClass~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/DerivedSources/CoreDataGenerated/BananaClock/CDAlarm+CoreDataProperties.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDAlarm+CoreDataProperties.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDAlarm+CoreDataProperties.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDAlarm+CoreDataProperties.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDAlarm+CoreDataProperties.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDAlarm+CoreDataProperties.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDAlarm+CoreDataProperties.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDAlarm+CoreDataProperties.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDAlarm+CoreDataProperties~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/DerivedSources/CoreDataGenerated/BananaClock/CDTimer+CoreDataClass.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDTimer+CoreDataClass.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDTimer+CoreDataClass.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDTimer+CoreDataClass.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDTimer+CoreDataClass.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDTimer+CoreDataClass.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDTimer+CoreDataClass.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDTimer+CoreDataClass.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDTimer+CoreDataClass~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/DerivedSources/CoreDataGenerated/BananaClock/CDTimer+CoreDataProperties.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDTimer+CoreDataProperties.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDTimer+CoreDataProperties.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDTimer+CoreDataProperties.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDTimer+CoreDataProperties.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDTimer+CoreDataProperties.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDTimer+CoreDataProperties.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDTimer+CoreDataProperties.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDTimer+CoreDataProperties~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/DerivedSources/CoreDataGenerated/BananaClock/CDUserPreferences+CoreDataClass.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDUserPreferences+CoreDataClass.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDUserPreferences+CoreDataClass.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDUserPreferences+CoreDataClass.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDUserPreferences+CoreDataClass.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDUserPreferences+CoreDataClass.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDUserPreferences+CoreDataClass.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDUserPreferences+CoreDataClass.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDUserPreferences+CoreDataClass~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/DerivedSources/CoreDataGenerated/BananaClock/CDUserPreferences+CoreDataProperties.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDUserPreferences+CoreDataProperties.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDUserPreferences+CoreDataProperties.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDUserPreferences+CoreDataProperties.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDUserPreferences+CoreDataProperties.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDUserPreferences+CoreDataProperties.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDUserPreferences+CoreDataProperties.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDUserPreferences+CoreDataProperties.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDUserPreferences+CoreDataProperties~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/DerivedSources/CoreDataGenerated/BananaClock/CDWorldClock+CoreDataClass.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDWorldClock+CoreDataClass.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDWorldClock+CoreDataClass.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDWorldClock+CoreDataClass.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDWorldClock+CoreDataClass.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDWorldClock+CoreDataClass.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDWorldClock+CoreDataClass.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDWorldClock+CoreDataClass.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDWorldClock+CoreDataClass~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/DerivedSources/CoreDataGenerated/BananaClock/CDWorldClock+CoreDataProperties.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDWorldClock+CoreDataProperties.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDWorldClock+CoreDataProperties.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDWorldClock+CoreDataProperties.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDWorldClock+CoreDataProperties.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDWorldClock+CoreDataProperties.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDWorldClock+CoreDataProperties.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDWorldClock+CoreDataProperties.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/CDWorldClock+CoreDataProperties~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/DerivedSources/CoreDataGenerated/BananaClock/Item+CoreDataClass.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/Item+CoreDataClass.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/Item+CoreDataClass.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/Item+CoreDataClass.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/Item+CoreDataClass.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/Item+CoreDataClass.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/Item+CoreDataClass.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/Item+CoreDataClass.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/Item+CoreDataClass~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/DerivedSources/CoreDataGenerated/BananaClock/Item+CoreDataProperties.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/Item+CoreDataProperties.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/Item+CoreDataProperties.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/Item+CoreDataProperties.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/Item+CoreDataProperties.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/Item+CoreDataProperties.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/Item+CoreDataProperties.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/Item+CoreDataProperties.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/Item+CoreDataProperties~partial.swiftmodule"
+  },
+  "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/DerivedSources/GeneratedAssetSymbols.swift" : {
+    "const-values" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/GeneratedAssetSymbols.swiftconstvalues",
+    "dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/GeneratedAssetSymbols.d",
+    "diagnostics" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/GeneratedAssetSymbols.dia",
+    "index-unit-output-path" : "/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/GeneratedAssetSymbols.o",
+    "llvm-bc" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/GeneratedAssetSymbols.bc",
+    "object" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/GeneratedAssetSymbols.o",
+    "swift-dependencies" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/GeneratedAssetSymbols.swiftdeps",
+    "swiftmodule" : "/Users/natep/Banana-Clock/ios/build/BananaClock.build/Debug-iphonesimulator/BananaClock.build/Objects-normal/x86_64/GeneratedAssetSymbols~partial.swiftmodule"
+  }
+}

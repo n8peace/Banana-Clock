@@ -20,74 +20,75 @@ enum AppEnvironment {
     static let supabaseProjectRef = "yqbrfznixefqqhnvingu"
     #endif
     
-    // MARK: - API Keys (from environment or Info.plist)
+    // MARK: - API Keys (from secure storage)
     static var supabaseAnonKey: String {
-        print("🔍 Loading Supabase key...")
+        print("🔍 Loading Supabase key from secure storage...")
         
-        // First try environment variable (for CI/CD with GitHub secrets)
+        // Try secure key manager first
+        if let key = SecureKeyManager.shared.retrieveAPIKey(service: .supabaseAnon) {
+            print("✅ Found key in secure storage")
+            return key
+        }
+        
+        // Fallback to environment variable (for CI/CD)
         if let key = ProcessInfo.processInfo.environment["SUPABASE_ANON_KEY"] {
             print("✅ Found key in environment variable")
             return key
         }
-        
-        // Then try Secrets.swift (for local development)
-        print("🔍 Checking Secrets.swift...")
-        print("🔍 Secrets.supabaseAnonKey: \(Secrets.supabaseAnonKey)")
-        print("🔍 Contains 'YOUR_': \(Secrets.supabaseAnonKey.contains("YOUR_"))")
-        
-        if !Secrets.supabaseAnonKey.contains("YOUR_") {
-            print("✅ Using key from Secrets.swift")
-            return Secrets.supabaseAnonKey
-        }
-        
-        // Finally fallback to Info.plist
-        print("🔍 Checking Info.plist...")
-        let plistKey = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_ANON_KEY") as? String ?? ""
-        print("🔍 Info.plist key: \(plistKey)")
         
         print("❌ No valid key found, returning empty string")
         return ""
     }
     
     static var supabaseServiceKey: String {
-        print("🔍 Loading Supabase service key...")
+        print("🔍 Loading Supabase service key from secure storage...")
         
-        // First try environment variable (for CI/CD with GitHub secrets)
+        // Try secure key manager first
+        if let key = SecureKeyManager.shared.retrieveAPIKey(service: .supabaseService) {
+            print("✅ Found service key in secure storage")
+            return key
+        }
+        
+        // Fallback to environment variable (for CI/CD)
         if let key = ProcessInfo.processInfo.environment["SUPABASE_SERVICE_ROLE_KEY"] {
             print("✅ Found service key in environment variable")
             return key
         }
-        
-        // Then try Secrets.swift (for local development)
-        print("🔍 Checking Secrets.swift for service key...")
-        print("🔍 Secrets.supabaseServiceKey: \(Secrets.supabaseServiceKey)")
-        print("🔍 Contains 'YOUR_': \(Secrets.supabaseServiceKey.contains("YOUR_"))")
-        
-        if !Secrets.supabaseServiceKey.contains("YOUR_") {
-            print("✅ Using service key from Secrets.swift")
-            return Secrets.supabaseServiceKey
-        }
-        
-        // Finally fallback to Info.plist
-        print("🔍 Checking Info.plist for service key...")
-        let plistKey = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_SERVICE_ROLE_KEY") as? String ?? ""
-        print("🔍 Info.plist service key: \(plistKey)")
         
         print("❌ No valid service key found, returning empty string")
         return ""
     }
     
     static var revenueCatAPIKey: String {
-        // First try Secrets.swift (for local development)
-        if !Secrets.revenueCatAPIKey.contains("YOUR_") {
-            return Secrets.revenueCatAPIKey
+        // Try secure key manager first
+        if let key = SecureKeyManager.shared.retrieveAPIKey(service: .revenueCat) {
+            return key
         }
-        // Then try environment variable
+        // Fallback to environment variable (for CI/CD)
         if let key = ProcessInfo.processInfo.environment["REVENUECAT_API_KEY"] {
             return key
         }
         // Finally fallback to Info.plist
         return Bundle.main.object(forInfoDictionaryKey: "REVENUECAT_API_KEY") as? String ?? ""
+    }
+    
+    static var openAIAPIKey: String {
+        print("🔍 Loading OpenAI API key from secure storage...")
+        
+        // Try secure key manager first
+        if let key = SecureKeyManager.shared.retrieveAPIKey(service: .openAI) {
+            print("✅ Found OpenAI key in secure storage")
+            return key
+        }
+        
+        // Fallback to environment variable (for CI/CD)
+        if let key = ProcessInfo.processInfo.environment["OPENAI_API_KEY"] {
+            print("✅ Found OpenAI key in environment variable")
+            return key
+        }
+        
+        print("❌ No valid OpenAI key found, returning empty string")
+        return ""
     }
     
     // MARK: - Feature Flags

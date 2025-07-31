@@ -1,48 +1,63 @@
 import Foundation
 
 enum AlarmSound: String, CaseIterable, Codable {
-    case `default` = "default"
-    case radar = "radar"
-    case beacon = "beacon"
-    case signal = "signal"
-    case circuit = "circuit"
-    case reflection = "reflection"
-    case apex = "apex"
-    case bulletin = "bulletin"
-    case sencha = "sencha"
-    case waves = "waves"
+    case glassHorizon = "glassHorizon"
+    case pulseShift = "pulseShift"
+    case morningMonks = "morningMonks"
+    case orbitalBounce = "orbitalBounce"
+    case woodWake = "woodWake"
+    case dreamExit = "dreamExit"
+    case loFiLift = "loFiLift"
+    case sparkTaps = "sparkTaps"
+    case sunGarden = "sunGarden"
+    case chronoTriggered = "chronoTriggered"
+    case timesUp = "timesUp"
+    case timerComplete = "timer_complete"
     
     var displayName: String {
         switch self {
-        case .default: return "Default"
-        case .radar: return "Radar"
-        case .beacon: return "Beacon"
-        case .signal: return "Signal"
-        case .circuit: return "Circuit"
-        case .reflection: return "Reflection"
-        case .apex: return "Apex"
-        case .bulletin: return "Bulletin"
-        case .sencha: return "Sencha"
-        case .waves: return "Waves"
+        case .glassHorizon: return "Glass Horizon"
+        case .pulseShift: return "Pulse Shift"
+        case .morningMonks: return "Morning Monks"
+        case .orbitalBounce: return "Orbital Bounce"
+        case .woodWake: return "Wood Wake"
+        case .dreamExit: return "Dream Exit"
+        case .loFiLift: return "Lo-Fi Lift"
+        case .sparkTaps: return "Spark Taps"
+        case .sunGarden: return "SunGarden"
+        case .chronoTriggered: return "ChronoTriggered"
+        case .timesUp: return "Time's Up"
+        case .timerComplete: return "Timer Complete"
         }
     }
     
     var fileName: String {
         switch self {
-        case .default: return "alarm_default"
-        case .radar: return "alarm_radar"
-        case .beacon: return "alarm_beacon"
-        case .signal: return "alarm_signal"
-        case .circuit: return "alarm_circuit"
-        case .reflection: return "alarm_reflection"
-        case .apex: return "alarm_apex"
-        case .bulletin: return "alarm_bulletin"
-        case .sencha: return "alarm_sencha"
-        case .waves: return "alarm_waves"
+        case .glassHorizon: return "alarm_glass_horizon"
+        case .pulseShift: return "alarm_pulse_shift"
+        case .morningMonks: return "alarm_morning_monks"
+        case .orbitalBounce: return "alarm_orbital_bounce"
+        case .woodWake: return "alarm_wood_wake"
+        case .dreamExit: return "alarm_dream_exit"
+        case .loFiLift: return "alarm_lofi_lift"
+        case .sparkTaps: return "alarm_spark_taps"
+        case .sunGarden: return "alarm_sungarden"
+        case .chronoTriggered: return "alarm_chronotriggered"
+        case .timesUp: return "alarm_times_up"
+        case .timerComplete: return "timer_complete"
         }
     }
     
     var url: URL? {
-        Bundle.main.url(forResource: fileName, withExtension: "caf")
+        // Try multiple file extensions for sound resolution
+        let extensions = ["caf", "mp3", "aac"]
+        
+        for ext in extensions {
+            if let url = Bundle.main.url(forResource: fileName, withExtension: ext) {
+                return url
+            }
+        }
+        
+        return nil
     }
 }

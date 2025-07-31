@@ -55,7 +55,7 @@ struct TimersView: View {
                                             viewModel.startTimer(
                                                 duration: preset.duration,
                                                 label: preset.defaultLabel,
-                                                soundIdentifier: "radar"
+                                                soundIdentifier: "timer_complete"
                                             )
                                         } label: {
                                             Text(preset.label)
@@ -499,7 +499,7 @@ struct TimerCreationView: View {
     @State private var minutes = 5
     @State private var seconds = 0
     @State private var label = ""
-    @State private var selectedSound = "radar" // Default timer sound
+    @State private var selectedSound = "timer_complete" // Default timer sound
     
     let onCreate: (TimeInterval, String, String) -> Void
     
@@ -579,7 +579,7 @@ struct TimerCreationView: View {
                                 SoundSelectionView(selectedSound: $selectedSound)
                             } label: {
                                 HStack {
-                                    Text(AlarmSound.allCases.first(where: { $0.rawValue == selectedSound })?.displayName ?? "Radar")
+                                    Text(AlarmSound.allCases.first(where: { $0.rawValue == selectedSound })?.displayName ?? "Timer Complete")
                                         .foregroundColor(.white)
                                     Spacer()
                                     Image(systemName: "chevron.right")
@@ -731,7 +731,7 @@ struct BananaTimer: Identifiable, Codable {
     var startedAt: Date?
     var pausedAt: Date?
     var lastUsedAt: Date
-    let soundIdentifier: String
+    var soundIdentifier: String
     
     init(
         id: UUID = UUID(),
@@ -742,7 +742,7 @@ struct BananaTimer: Identifiable, Codable {
         startedAt: Date? = nil,
         pausedAt: Date? = nil,
         lastUsedAt: Date = Date(),
-        soundIdentifier: String = "radar"
+        soundIdentifier: String = "timer_complete"
     ) {
         self.id = id
         self.label = label
@@ -851,6 +851,25 @@ class TimersViewModel: ObservableObject {
         }
         
         return uniqueTimers
+    }
+    
+    // MARK: - Debug Methods
+    
+    func clearAllTimersData() {
+        print("🗑️ Clearing all timer data from UserDefaults")
+        UserDefaults.standard.removeObject(forKey: timersKey)
+        timers.removeAll()
+        for task in timerTasks.values {
+            task.cancel()
+        }
+        timerTasks.removeAll()
+    }
+    
+    func printAllTimerSounds() {
+        print("🔍 Current timer sound identifiers:")
+        for timer in timers {
+            print("   Timer '\(timer.label)': '\(timer.soundIdentifier)'")
+        }
     }
     
     // Computed properties for selection mode
@@ -1056,7 +1075,9 @@ class TimersViewModel: ObservableObject {
             cancelTimerTask(for: timerId)
             
             // Play sound and haptic
-            AudioService.shared.playSound(timers[index].soundIdentifier)
+            let soundIdentifier = timers[index].soundIdentifier
+            print("⏰ Timer completed! Playing sound: '\(soundIdentifier)' for timer: \(timers[index].label)")
+            AudioService.shared.playSound(soundIdentifier)
             HapticManager.shared.notification(.success)
             
             saveTimers()
@@ -1103,6 +1124,22 @@ class TimersViewModel: ObservableObject {
         }
         
         timers = decoded
+        
+        // Migrate legacy "radar" sound identifiers to "timer_complete"
+        var migratedCount = 0
+        for i in 0..<timers.count {
+            if timers[i].soundIdentifier == "radar" {
+                print("🔄 Migrating timer \(timers[i].id) from 'radar' to 'timer_complete'")
+                timers[i].soundIdentifier = "timer_complete"
+                migratedCount += 1
+            }
+        }
+        
+        // Save migrated timers if any were updated
+        if migratedCount > 0 {
+            saveTimers()
+            print("✅ Migrated \(migratedCount) timers from radar to timer_complete")
+        }
         
         // Restart any running timers
         for timer in timers where timer.state == .running {

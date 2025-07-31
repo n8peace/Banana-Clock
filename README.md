@@ -46,10 +46,10 @@ The AI timezone converter eliminates the mental math of global scheduling:
 ## 🏗️ Architecture & Technology
 
 ### **iOS App (SwiftUI + Native Integration)**
-- **AlarmKit Integration**: Alarms appear in native iOS Clock app (requires iOS 26+)
+- **AlarmKit Integration**: System-level alarm reliability that works even when backgrounded/closed (requires iOS 26+)
 - **Core Data + CloudKit**: Reliable local storage with cloud sync
 - **Premium Design**: Dark-mode interface with signature banana yellow accents
-- **iOS 26+ Required**: Uses AlarmKit framework for native alarm integration
+- **iOS 26+ Required**: Uses AlarmKit framework for system-level alarm reliability
 
 ### **AI-Powered Backend (Supabase + Edge Functions)**
 - **GPT-4o Content Generation**: Creates unique morning scripts daily

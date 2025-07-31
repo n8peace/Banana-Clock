@@ -28,7 +28,7 @@ struct WakeUpAISettingsView: View {
         
         // Initialize state from preferences
         _voice = State(initialValue: preferences?.voice ?? .voice1)
-        _music = State(initialValue: MusicOption.chillVibes) // TODO: Add to UserPreferences
+        _music = State(initialValue: preferences?.music ?? .chillVibes)
         _weatherEnabled = State(initialValue: preferences?.weatherEnabled ?? false)
         _headlinesCategories = State(initialValue: Set(preferences?.headlinesCategories.compactMap { HeadlinesCategory(rawValue: $0) } ?? [.business, .technology]))
         _sportsCategories = State(initialValue: Set(preferences?.sportsCategories.compactMap { SportsCategory(rawValue: $0) } ?? [.football, .basketball]))
@@ -189,6 +189,7 @@ struct WakeUpAISettingsView: View {
             city: preferences?.city,
             state: preferences?.state,
             voice: voice,
+            music: music,
             wakeUpTime: preferences?.wakeUpTime,
             contentPreferences: preferences?.contentPreferences ?? UserPreferences.ContentPreferences(),
             updatedAt: Date(),

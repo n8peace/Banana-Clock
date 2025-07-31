@@ -52,7 +52,7 @@ struct AlarmDetailView: View {
         _time = State(initialValue: alarm?.time ?? Date().addingTimeInterval(3600))
         _label = State(initialValue: alarm?.label ?? "Alarm")
         _isAIEnabled = State(initialValue: alarm?.isAIEnabled ?? false)
-        _selectedSound = State(initialValue: AlarmSound(rawValue: alarm?.soundIdentifier ?? "default") ?? .default)
+        _selectedSound = State(initialValue: AlarmSound(rawValue: alarm?.soundIdentifier ?? "default") ?? .dreamExit)
         _snoozeLength = State(initialValue: alarm?.snoozeLength ?? 9)
         _repeatDays = State(initialValue: Set(alarm?.repeatDays ?? []))
         _volume = State(initialValue: alarm?.volume ?? 0.7)

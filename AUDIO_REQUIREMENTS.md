@@ -15,17 +15,18 @@ This document outlines all cached audio requirements for the Banana Clock iOS ap
 - [] `ai_music_classical` - Classical music selection
 - [] `ai_music_jazz` - Jazz music selection
 
-### 🔔 Alarm Sounds (10 files - .caf)
-- [ ] `alarm_default.caf` - Default alarm sound
-- [ ] `alarm_radar.caf` - Radar sound
-- [ ] `alarm_beacon.caf` - Beacon sound  
-- [ ] `alarm_signal.caf` - Signal sound
-- [ ] `alarm_circuit.caf` - Circuit sound
-- [ ] `alarm_reflection.caf` - Reflection sound
-- [ ] `alarm_apex.caf` - Apex sound
-- [ ] `alarm_bulletin.caf` - Bulletin sound
-- [ ] `alarm_sencha.caf` - Sencha sound
-- [ ] `alarm_waves.caf` - Waves sound
+### 🔔 Alarm Sounds (11 files - .caf)
+- [ ] `alarm_glass_horizon.caf` - Glass Horizon alarm sound
+- [ ] `alarm_pulse_shift.caf` - Pulse Shift alarm sound
+- [ ] `alarm_morning_monks.caf` - Morning Monks alarm sound  
+- [ ] `alarm_orbital_bounce.caf` - Orbital Bounce alarm sound
+- [ ] `alarm_wood_wake.caf` - Wood Wake alarm sound
+- [ ] `alarm_dream_exit.caf` - Dream Exit alarm sound
+- [ ] `alarm_lofi_lift.caf` - Lo-Fi Lift alarm sound
+- [ ] `alarm_spark_taps.caf` - Spark Taps alarm sound
+- [ ] `alarm_sungarden.caf` - SunGarden alarm sound
+- [ ] `alarm_chronotriggered.caf` - ChronoTriggered alarm sound
+- [ ] `alarm_times_up.caf` - Time's Up alarm sound
 
 ### 🔊 UI/Timer Sounds (5 files - .caf)
 - [ ] `timer_complete.caf` - Timer completion sound
@@ -39,7 +40,7 @@ This document outlines all cached audio requirements for the Banana Clock iOS ap
 - [ ] `ai_wakeup_generic_voice2.aac` - Generic wake-up (Voice 2)  
 - [ ] `ai_wakeup_generic_voice3.aac` - Generic wake-up (Voice 3)
 
-**Total: 24 audio files**
+**Total: 25 audio files**
 
 ---
 
@@ -49,16 +50,17 @@ This document outlines all cached audio requirements for the Banana Clock iOS ap
 **Implementation**: Located in `Bundle.main` and loaded via `AVAudioPlayer`
 
 ### Required Files:
-- `alarm_default.caf` - Default alarm sound
-- `alarm_radar.caf` - Radar sound
-- `alarm_beacon.caf` - Beacon sound  
-- `alarm_signal.caf` - Signal sound
-- `alarm_circuit.caf` - Circuit sound
-- `alarm_reflection.caf` - Reflection sound
-- `alarm_apex.caf` - Apex sound
-- `alarm_bulletin.caf` - Bulletin sound
-- `alarm_sencha.caf` - Sencha sound
-- `alarm_waves.caf` - Waves sound
+- `alarm_glass_horizon.caf` - Glass Horizon alarm sound
+- `alarm_pulse_shift.caf` - Pulse Shift alarm sound
+- `alarm_morning_monks.caf` - Morning Monks alarm sound  
+- `alarm_orbital_bounce.caf` - Orbital Bounce alarm sound
+- `alarm_wood_wake.caf` - Wood Wake alarm sound
+- `alarm_dream_exit.caf` - Dream Exit alarm sound
+- `alarm_lofi_lift.caf` - Lo-Fi Lift alarm sound
+- `alarm_spark_taps.caf` - Spark Taps alarm sound
+- `alarm_sungarden.caf` - SunGarden alarm sound
+- `alarm_chronotriggered.caf` - ChronoTriggered alarm sound
+- `alarm_times_up.caf` - Time's Up alarm sound
 
 **Usage**: Standard alarm sounds that loop indefinitely until dismissed. Users can select from picker view.
 

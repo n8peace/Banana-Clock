@@ -121,7 +121,7 @@ struct WakeUpGeneralSettingsView: View {
 
 #Preview {
     WakeUpGeneralSettingsView(
-        selectedSound: .constant(.default),
+        selectedSound: .constant(.dreamExit),
         snoozeLength: .constant(9),
         volume: .constant(0.7)
     )

@@ -12,7 +12,7 @@ This README covers iOS-specific development setup, architecture, and guidelines 
 - **Apple Developer Account** (for signing and AlarmKit capabilities)
 - **macOS Sonoma 14.0+** recommended
 
-> ⚠️ **Important**: This app requires iOS 26 or later due to AlarmKit framework dependency. AlarmKit enables alarms to appear in the native iOS Clock app and must be tested on physical devices.
+> ⚠️ **Important**: This app requires iOS 26 or later due to AlarmKit framework dependency. AlarmKit provides system-level alarm reliability that works even when the app is backgrounded or closed, and must be tested on physical devices.
 
 ### Initial Setup
 

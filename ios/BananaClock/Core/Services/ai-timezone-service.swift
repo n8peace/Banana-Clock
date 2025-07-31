@@ -14,13 +14,9 @@ class AITimezoneService: ObservableObject {
     @Published var isLoading = false
     
     private var recommendationTimer: Foundation.Timer?
-    private let apiKey: String
     private let baseURL = "https://api.openai.com/v1/chat/completions"
     
     init() {
-        // Get API key from Secrets
-        self.apiKey = Secrets.openAIAPIKey
-        
         // Auto-clear recommendation after 5 minutes
         startAutoClearTimer()
     }
@@ -36,9 +32,15 @@ class AITimezoneService: ObservableObject {
             print("🍌 AI:   [\(index)] \(clock.cityName) (\(clock.timeZoneIdentifier))")
         }
         
-        // Only proceed if we have a valid API key and multiple timezones
-        guard !apiKey.contains("YOUR_") && clocks.count >= 2 else {
-            print("🍌 AI: Skipping - invalid API key or insufficient clocks")
+        // Get API key from secure storage
+        guard let apiKey = SecureKeyManager.shared.retrieveAPIKey(service: .openAI) else {
+            print("🍌 AI: Skipping - no OpenAI API key available")
+            return
+        }
+        
+        // Only proceed if we have multiple timezones
+        guard clocks.count >= 2 else {
+            print("🍌 AI: Skipping - insufficient clocks")
             return
         }
         
@@ -63,15 +65,15 @@ class AITimezoneService: ObservableObject {
         }
         
         // Include all regular clocks without limit
-        await requestRecommendation(for: regularClocks, selectedDate: selectedDate)
+        await requestRecommendation(for: regularClocks, selectedDate: selectedDate, apiKey: apiKey)
     }
     
-    private func requestRecommendation(for clocks: [WorldClock], selectedDate: Date) async {
+    private func requestRecommendation(for clocks: [WorldClock], selectedDate: Date, apiKey: String) async {
         print("🍌 AI: Starting request for \(clocks.count) clocks")
         isLoading = true
         
         do {
-            let recommendation = try await callOpenAI(for: clocks, selectedDate: selectedDate)
+            let recommendation = try await callOpenAI(for: clocks, selectedDate: selectedDate, apiKey: apiKey)
             print("🍌 AI: Received recommendation: \(recommendation)")
             currentRecommendation = recommendation
         } catch {
@@ -82,7 +84,7 @@ class AITimezoneService: ObservableObject {
         isLoading = false
     }
     
-    private func callOpenAI(for clocks: [WorldClock], selectedDate: Date) async throws -> String {
+    private func callOpenAI(for clocks: [WorldClock], selectedDate: Date, apiKey: String) async throws -> String {
         print("🍌 AI: callOpenAI called with \(clocks.count) clocks")
         
         let userTimezone = TimeZone.current.identifier

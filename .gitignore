@@ -117,5 +117,10 @@ jspm_packages/
 # External Docs
 .external_docs/*.caf
 
+# Audio files (large files, excluded from git)
+ios/BananaClock/Resources/Audio/*.aac
+ios/BananaClock/Resources/Audio/*.mp3
+ios/BananaClock/Resources/Audio/*.caf
+
 # Test credentials
 test-credentials.md

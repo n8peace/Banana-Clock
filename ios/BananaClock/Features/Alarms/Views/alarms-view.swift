@@ -5,6 +5,7 @@ struct AlarmsView: View {
     @State private var showingAddAlarm = false
     @State private var selectedAlarm: Alarm?
     @State private var showingWakeUpManagement = false
+    @State private var showingAlarmKitTest = false
     @State private var isEditing = false
     
     var body: some View {
@@ -110,6 +111,10 @@ struct AlarmsView: View {
                     await viewModel.loadAlarms()
                 }
             }
+        }
+        .sheet(isPresented: $showingAlarmKitTest) {
+            AlarmKitTestView()
+                .environmentObject(AlarmKitService.shared)
         }
         .onChange(of: isEditing) { _, newValue in
             if !newValue {
@@ -458,8 +463,15 @@ struct AlarmsView: View {
         ToolbarItem(placement: .navigationBarTrailing) {
             if !isEditing {
                 HStack(spacing: 16) {
+                    // Test AlarmKit button
+                    Button("AlarmKit") {
+                        showingAlarmKitTest = true
+                    }
+                    .font(.caption)
+                    .foregroundColor(BananaTheme.Colors.bananaYellow)
+                    
                     // Test Supabase button
-                    Button("Test Supabase") {
+                    Button("Supabase") {
                         Task {
                             await testSupabaseConnection()
                         }

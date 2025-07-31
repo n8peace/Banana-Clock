@@ -175,18 +175,58 @@ class AudioService: ObservableObject {
     // MARK: - Standard Alarm Sounds
     
     func playSound(_ soundIdentifier: String, volume: Float = 0.7) {
+        print("🔊 AudioService.playSound called with identifier: '\(soundIdentifier)'")
         do {
             try playAlarmSound(soundIdentifier, volume: volume)
+            print("✅ Successfully playing sound: \(soundIdentifier)")
         } catch {
-            print("Failed to play sound \(soundIdentifier): \(error)")
+            print("❌ Failed to play sound \(soundIdentifier): \(error)")
+            
+            // Fallback: try timer_complete as default for any failed sound
+            if soundIdentifier != "timer_complete" {
+                print("🔄 Attempting fallback to timer_complete...")
+                do {
+                    try playAlarmSound("timer_complete", volume: volume)
+                    print("✅ Fallback successful: timer_complete")
+                } catch {
+                    print("❌ Fallback also failed: \(error)")
+                    print("🔍 Available audio files in bundle:")
+                    if let bundlePath = Bundle.main.resourcePath {
+                        let extensions = ["mp3", "aac", "caf"]
+                        for ext in extensions {
+                            if let files = try? FileManager.default.contentsOfDirectory(atPath: bundlePath).filter({ $0.hasSuffix(".\(ext)") }) {
+                                print("   \(ext.uppercased()): \(files)")
+                            }
+                        }
+                    }
+                }
+            } else {
+                print("🔍 Available audio files in bundle:")
+                if let bundlePath = Bundle.main.resourcePath {
+                    let extensions = ["mp3", "aac", "caf"]
+                    for ext in extensions {
+                        if let files = try? FileManager.default.contentsOfDirectory(atPath: bundlePath).filter({ $0.hasSuffix(".\(ext)") }) {
+                            print("   \(ext.uppercased()): \(files)")
+                        }
+                    }
+                }
+            }
         }
     }
     
     func playAlarmSound(_ soundIdentifier: String, volume: Float = 0.7) throws {
-        guard let soundURL = Bundle.main.url(
-            forResource: soundIdentifier,
-            withExtension: "caf"
-        ) else {
+        // Try multiple file extensions for sound resolution
+        var soundURL: URL?
+        let extensions = ["caf", "mp3", "aac"]
+        
+        for ext in extensions {
+            if let url = Bundle.main.url(forResource: soundIdentifier, withExtension: ext) {
+                soundURL = url
+                break
+            }
+        }
+        
+        guard let soundURL = soundURL else {
             throw AudioError.soundNotFound
         }
         
@@ -212,7 +252,7 @@ class AudioService: ObservableObject {
     func playTimerComplete() {
         do {
             guard let soundURL = Bundle.main.url(
-                forResource: "timer_complete",
+                forResource: "alarm_times_up",
                 withExtension: "caf"
             ) else { return }
             
@@ -292,6 +332,54 @@ class AudioService: ObservableObject {
         return localURL
     }
     
+    func getFallbackAIAudioURL(for voice: String) -> URL? {
+        let fileName: String
+        switch voice {
+        case "voice_1":
+            fileName = "ai_wakeup_generic_voice1"
+        case "voice_2":
+            fileName = "ai_wakeup_generic_voice2"
+        case "voice_3":
+            fileName = "ai_wakeup_generic_voice3"
+        default:
+            fileName = "ai_wakeup_generic_voice1" // Default to voice 1
+        }
+        
+        return Bundle.main.url(forResource: fileName, withExtension: "aac")
+    }
+    
+    func getAIAudioURL(for date: Date, voice: String) async -> URL? {
+        // First try to get cached audio
+        if let cachedURL = getCachedAudioURL(for: date, voice: voice) {
+            print("✅ Using cached AI audio for \(voice)")
+            return cachedURL
+        }
+        
+        // If no cached audio, try to get fallback audio
+        if let fallbackURL = getFallbackAIAudioURL(for: voice) {
+            print("🔄 Using fallback AI audio for \(voice)")
+            return fallbackURL
+        }
+        
+        print("❌ No AI audio available for \(voice)")
+        return nil
+    }
+    
+    func playAIWakeUpWithFallback(
+        musicURL: URL,
+        date: Date,
+        voice: String,
+        volume: Float = 0.7
+    ) async throws {
+        // Try to get AI audio with fallback
+        guard let aiAudioURL = await getAIAudioURL(for: date, voice: voice) else {
+            throw AudioError.playbackError("No AI audio available")
+        }
+        
+        // Play the AI wake-up sequence
+        try await playAIWakeUpSequence(musicURL: musicURL, aiAudioURL: aiAudioURL, volume: volume)
+    }
+    
     func getCachedAudioURL(for date: Date, voice: String) -> URL? {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withFullDate, .withDashSeparatorInDate]
@@ -305,6 +393,103 @@ class AudioService: ObservableObject {
         let localURL = documentsPath.appendingPathComponent(fileName)
         
         return FileManager.default.fileExists(atPath: localURL.path) ? localURL : nil
+    }
+    
+    // MARK: - Background Music Preview
+    
+    private var previewPlayer: AVAudioPlayer?
+    @Published var isPlayingPreview = false
+    @Published var currentPreviewMusic: MusicOption?
+    
+    func playMusicPreview(_ music: MusicOption, volume: Float = 0.7) {
+        // Stop any existing preview
+        stopMusicPreview()
+        
+        // Load AAC music files
+        print("🎵 Attempting to play music preview: \(music.displayName)")
+        print("📁 Looking for file: \(music.fileName).aac")
+        
+        guard let audioURL = Bundle.main.url(forResource: music.fileName, withExtension: "aac") else {
+            print("❌ Failed to find audio file for \(music.fileName).aac")
+            print("📂 Bundle path: \(Bundle.main.bundlePath)")
+            print("🔍 Available resources in bundle:")
+            if let resourcePath = Bundle.main.resourcePath {
+                do {
+                    let files = try FileManager.default.contentsOfDirectory(atPath: resourcePath)
+                    files.filter { $0.contains("ai_music") }.forEach { print("   - \($0)") }
+                } catch {
+                    print("   Error listing bundle contents: \(error)")
+                }
+            }
+            return
+        }
+        
+        print("✅ Found audio file: \(audioURL.path)")
+        
+        do {
+            let player = try AVAudioPlayer(contentsOf: audioURL)
+            print("🎵 Audio player created successfully")
+            print("⏱️ Duration: \(player.duration) seconds")
+            
+            player.volume = 0 // Start at 0 for fade-in
+            player.prepareToPlay()
+            let playResult = player.play()
+            print("▶️ Play result: \(playResult)")
+            
+            previewPlayer = player
+            currentPreviewMusic = music
+            isPlayingPreview = true
+            
+            // Fade in over 3 seconds
+            Task {
+                await fadePreviewVolume(from: 0, to: volume, duration: 3.0)
+                
+                // Play for 14 seconds at full volume
+                try await Task.sleep(nanoseconds: 14_000_000_000)
+                
+                // Fade out over 3 seconds
+                await fadePreviewVolume(from: volume, to: 0, duration: 3.0)
+                
+                // Stop preview
+                await MainActor.run {
+                    stopMusicPreview()
+                }
+            }
+            
+        } catch {
+            print("❌ Failed to play music preview: \(error)")
+            print("📁 Audio file path: \(audioURL.path)")
+            print("🔍 Error details: \(error.localizedDescription)")
+        }
+    }
+    
+    func stopMusicPreview() {
+        previewPlayer?.stop()
+        previewPlayer = nil
+        isPlayingPreview = false
+        currentPreviewMusic = nil
+    }
+    
+    private func fadePreviewVolume(
+        from startVolume: Float,
+        to endVolume: Float,
+        duration: TimeInterval
+    ) async {
+        guard let player = previewPlayer else { return }
+        
+        let steps = Int(duration * 10) // 10 updates per second
+        let increment = (endVolume - startVolume) / Float(steps)
+        
+        for _ in 0..<steps {
+            await MainActor.run {
+                player.volume = min(1.0, max(0, player.volume + increment))
+            }
+            try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 second
+        }
+        
+        await MainActor.run {
+            player.volume = endVolume
+        }
     }
 }
 

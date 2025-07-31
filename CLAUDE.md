@@ -136,11 +136,18 @@ Banana-Clock/
 ### iOS Development
 
 1. **Environment Setup**:
-   - Create `ios/BananaClock/App/Config/Secrets.swift` (gitignored)
-   - Add Supabase and RevenueCat API keys
    - Configure signing in Xcode
+   - API keys are managed via SecureKeyManager (iOS Keychain)
+   - For development: Use `SecureKeyManager.shared.storeAPIKey()` to add keys
+   - For production: Keys are stored in Supabase secrets
 
-2. **Code Style**:
+2. **API Key Management**:
+   - **Development**: Keys stored in iOS Keychain via SecureKeyManager
+   - **Production**: OpenAI API calls proxied through Supabase Edge Functions
+   - Never commit API keys to source control
+   - Use `AppEnvironment.openAIAPIKey` to retrieve keys in iOS
+
+3. **Code Style**:
    - Follow iOS development rules in `.cursor/rules/ios-developent-cursor-rules.mdc`
    - Use Swift 6 features where appropriate
    - Prefer value types (structs) over reference types
@@ -172,12 +179,16 @@ Banana-Clock/
    # Deploy single function
    supabase functions deploy generate-banana-content
    
+   # Deploy OpenAI proxy
+   supabase functions deploy openai-proxy
+   
    # Test functions available:
    - test-user: Test user data
    - test-user-weather-data: Test weather integration
    - test-banana-content: Test content generation
    - test-user-preferences: Test preference handling
    - health-check: Runs on cron job for monitoring
+   - openai-proxy: Secure proxy for OpenAI API calls
    ```
 
 ## Key Integration Points
@@ -195,6 +206,13 @@ Banana-Clock/
 4. Monitor playback, fallback if needed
 5. Offline: Use cached general audio content
 
+### OpenAI Integration (via Proxy)
+- **Development**: Keys stored in iOS Keychain, accessed via `SecureKeyManager`
+- **Production**: All OpenAI calls go through `/functions/v1/openai-proxy`
+- Proxy validates user authentication and subscription status
+- OpenAI API key stored as Supabase secret (`OPENAI_API_KEY`)
+- Usage tracked per user for monitoring
+
 ### RevenueCat Subscription
 - Monthly: $4.99/month (3-day free trial)
 - Annual: $39.99/year (7-day free trial)
@@ -203,7 +221,11 @@ Banana-Clock/
 
 ## Important Notes
 
-1. **Security**: Never commit API keys. Use Secrets.swift for iOS, .env for backend
+1. **Security**: 
+   - Never commit API keys to source control
+   - Development: Use SecureKeyManager for iOS Keychain storage
+   - Production: Store secrets in Supabase (`supabase secrets set`)
+   - OpenAI calls must go through proxy in production
 2. **Audio Format**: All audio files must be AAC format for iOS compatibility
 3. **Testing**: Physical iOS device required for AlarmKit testing
 4. **Database**: Always write migrations for schema changes
@@ -213,6 +235,9 @@ Banana-Clock/
 8. **Voice Configuration**: Voice personalities configured in ElevenLabs prompts
 9. **Error Monitoring**: Check Supabase logs for debugging
 10. **Subscription Expiry**: Alarms must still function even if subscription expires during active alarm
+11. **API Keys Setup**:
+    - Development: `SecureKeyManager.shared.storeAPIKey("key", service: .openAI)`
+    - Production: `supabase secrets set OPENAI_API_KEY=sk-...`
 
 ## Known TODOs
 

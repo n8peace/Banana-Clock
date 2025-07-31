@@ -9,12 +9,15 @@ import SwiftUI
 import CoreData
 import Supabase
 import RevenueCat
+import AppIntents
 
 @main
 struct BananaClockApp: App {
     @StateObject private var coreDataManager = CoreDataManager.shared
     @StateObject private var appState = AppState()
     @StateObject private var purchaseService = PurchaseService.shared
+    @StateObject private var secureKeyManager = SecureKeyManager.shared
+    @StateObject private var alarmKitService = AlarmKitService.shared
     // @Environment(\.scenePhase) private var scenePhase  // Temporarily disabled
     
     var body: some Scene {
@@ -34,6 +37,8 @@ struct BananaClockApp: App {
                 }
             }
             .preferredColorScheme(.dark)
+            .environmentObject(secureKeyManager)
+            .environmentObject(alarmKitService)
             .onAppear {
                 configureApp()
             }
@@ -46,6 +51,11 @@ struct BananaClockApp: App {
     private func configureApp() {
         print("🚀 App starting configuration...")
         
+        // Development setup check
+        #if DEBUG
+        SecureKeyManager.setupDevelopmentEnvironment()
+        #endif
+        
         // Configure Supabase (for AI features only)
         print("🔧 About to configure Supabase...")
         SupabaseService.shared.configure()
@@ -53,6 +63,19 @@ struct BananaClockApp: App {
         
         // Configure RevenueCat
         purchaseService.configure()
+        
+        // App Intents are automatically discovered by the system
+        print("✅ App Intents ready for AlarmKit actions")
+        
+        // Configure AlarmKit
+        Task {
+            let authorized = await alarmKitService.requestAuthorization()
+            if authorized {
+                print("✅ AlarmKit authorized successfully")
+            } else {
+                print("⚠️ AlarmKit authorization denied - some features may not work")
+            }
+        }
         
         // Configure appearance
         configureAppearance()

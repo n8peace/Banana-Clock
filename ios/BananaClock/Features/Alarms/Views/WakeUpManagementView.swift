@@ -17,7 +17,7 @@ struct WakeUpManagementView: View {
     @State private var nextAlarmTime: Date = Date().addingTimeInterval(3600) // Default to 1 hour from now
     
     // General settings state
-    @State private var selectedSound: AlarmSound = .radar
+    @State private var selectedSound: AlarmSound = .dreamExit
     @State private var snoozeLength: Int? = 9
     @State private var volume: Double = 0.7
     

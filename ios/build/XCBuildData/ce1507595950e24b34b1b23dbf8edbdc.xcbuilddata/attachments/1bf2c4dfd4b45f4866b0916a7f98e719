@@ -1,0 +1,18 @@
+{
+  "" : {
+    "diagnostics" : "/Users/natep/Library/Developer/Xcode/DerivedData/BananaClock-acaunpttwwchgjdlgvmeisimtkog/SourcePackages/checkouts/xctest-dynamic-overlay/build/xctest-dynamic-overlay.build/Debug-iphonesimulator/IssueReportingPackageSupport.build/Objects-normal/x86_64/IssueReportingPackageSupport-master.dia",
+    "emit-module-dependencies" : "/Users/natep/Library/Developer/Xcode/DerivedData/BananaClock-acaunpttwwchgjdlgvmeisimtkog/SourcePackages/checkouts/xctest-dynamic-overlay/build/xctest-dynamic-overlay.build/Debug-iphonesimulator/IssueReportingPackageSupport.build/Objects-normal/x86_64/IssueReportingPackageSupport-master-emit-module.d",
+    "emit-module-diagnostics" : "/Users/natep/Library/Developer/Xcode/DerivedData/BananaClock-acaunpttwwchgjdlgvmeisimtkog/SourcePackages/checkouts/xctest-dynamic-overlay/build/xctest-dynamic-overlay.build/Debug-iphonesimulator/IssueReportingPackageSupport.build/Objects-normal/x86_64/IssueReportingPackageSupport-master-emit-module.dia",
+    "swift-dependencies" : "/Users/natep/Library/Developer/Xcode/DerivedData/BananaClock-acaunpttwwchgjdlgvmeisimtkog/SourcePackages/checkouts/xctest-dynamic-overlay/build/xctest-dynamic-overlay.build/Debug-iphonesimulator/IssueReportingPackageSupport.build/Objects-normal/x86_64/IssueReportingPackageSupport-master.swiftdeps"
+  },
+  "/Users/natep/Library/Developer/Xcode/DerivedData/BananaClock-acaunpttwwchgjdlgvmeisimtkog/SourcePackages/checkouts/xctest-dynamic-overlay/Sources/IssueReportingPackageSupport/_Test.swift" : {
+    "const-values" : "/Users/natep/Library/Developer/Xcode/DerivedData/BananaClock-acaunpttwwchgjdlgvmeisimtkog/SourcePackages/checkouts/xctest-dynamic-overlay/build/xctest-dynamic-overlay.build/Debug-iphonesimulator/IssueReportingPackageSupport.build/Objects-normal/x86_64/_Test.swiftconstvalues",
+    "dependencies" : "/Users/natep/Library/Developer/Xcode/DerivedData/BananaClock-acaunpttwwchgjdlgvmeisimtkog/SourcePackages/checkouts/xctest-dynamic-overlay/build/xctest-dynamic-overlay.build/Debug-iphonesimulator/IssueReportingPackageSupport.build/Objects-normal/x86_64/_Test.d",
+    "diagnostics" : "/Users/natep/Library/Developer/Xcode/DerivedData/BananaClock-acaunpttwwchgjdlgvmeisimtkog/SourcePackages/checkouts/xctest-dynamic-overlay/build/xctest-dynamic-overlay.build/Debug-iphonesimulator/IssueReportingPackageSupport.build/Objects-normal/x86_64/_Test.dia",
+    "index-unit-output-path" : "/xctest-dynamic-overlay.build/Debug-iphonesimulator/IssueReportingPackageSupport.build/Objects-normal/x86_64/_Test.o",
+    "llvm-bc" : "/Users/natep/Library/Developer/Xcode/DerivedData/BananaClock-acaunpttwwchgjdlgvmeisimtkog/SourcePackages/checkouts/xctest-dynamic-overlay/build/xctest-dynamic-overlay.build/Debug-iphonesimulator/IssueReportingPackageSupport.build/Objects-normal/x86_64/_Test.bc",
+    "object" : "/Users/natep/Library/Developer/Xcode/DerivedData/BananaClock-acaunpttwwchgjdlgvmeisimtkog/SourcePackages/checkouts/xctest-dynamic-overlay/build/xctest-dynamic-overlay.build/Debug-iphonesimulator/IssueReportingPackageSupport.build/Objects-normal/x86_64/_Test.o",
+    "swift-dependencies" : "/Users/natep/Library/Developer/Xcode/DerivedData/BananaClock-acaunpttwwchgjdlgvmeisimtkog/SourcePackages/checkouts/xctest-dynamic-overlay/build/xctest-dynamic-overlay.build/Debug-iphonesimulator/IssueReportingPackageSupport.build/Objects-normal/x86_64/_Test.swiftdeps",
+    "swiftmodule" : "/Users/natep/Library/Developer/Xcode/DerivedData/BananaClock-acaunpttwwchgjdlgvmeisimtkog/SourcePackages/checkouts/xctest-dynamic-overlay/build/xctest-dynamic-overlay.build/Debug-iphonesimulator/IssueReportingPackageSupport.build/Objects-normal/x86_64/_Test~partial.swiftmodule"
+  }
+}

@@ -502,13 +502,13 @@ struct WorldClockRow: View {
             // Check for holiday when converter is active
             if viewModel.isConverterActive {
                 let city = City(name: clock.cityName, country: getCountryForCity(clock.cityName), timeZoneIdentifier: clock.timeZoneIdentifier, isPlanet: false)
-                if let holidayText = HolidayDatabase.getHolidayTextForDate(for: city, date: baseTime) {
+                if let holidayText = EnhancedHolidayDatabase.getHolidayTextForDate(for: city, date: baseTime) {
                     return holidayText
                 }
             } else {
                 // Check for holiday in current time (non-converter mode)
                 let city = City(name: clock.cityName, country: getCountryForCity(clock.cityName), timeZoneIdentifier: clock.timeZoneIdentifier, isPlanet: false)
-                if let holidayText = HolidayDatabase.getHolidayText(for: city) {
+                if let holidayText = EnhancedHolidayDatabase.getHolidayText(for: city) {
                     return holidayText
                 }
             }
@@ -591,7 +591,58 @@ struct WorldClockRow: View {
             "Calgary": "Canada", "Edmonton": "Canada",
             
             // Mexico
-            "Mexico City": "Mexico", "Guadalajara": "Mexico", "Monterrey": "Mexico"
+            "Mexico City": "Mexico", "Guadalajara": "Mexico", "Monterrey": "Mexico",
+            
+            // Australia
+            "Sydney": "Australia", "Melbourne": "Australia", "Brisbane": "Australia",
+            "Perth": "Australia", "Adelaide": "Australia", "Darwin": "Australia",
+            
+            // Japan
+            "Tokyo": "Japan", "Osaka": "Japan", "Nagoya": "Japan",
+            
+            // Germany
+            "Berlin": "Germany", "Munich": "Germany", "Hamburg": "Germany",
+            
+            // France
+            "Paris": "France", "Lyon": "France", "Marseille": "France",
+            
+            // India
+            "Mumbai": "India", "New Delhi": "India", "Kolkata": "India",
+            "Chennai": "India", "Bangalore": "India", "Hyderabad": "India",
+            
+            // China
+            "Beijing": "China", "Shanghai": "China", "Guangzhou": "China",
+            "Hong Kong": "China",
+            
+            // Brazil
+            "São Paulo": "Brazil", "Rio de Janeiro": "Brazil", "Brasília": "Brazil",
+            
+            // South Africa
+            "Johannesburg": "South Africa", "Cape Town": "South Africa", "Durban": "South Africa",
+            
+            // Singapore
+            "Singapore": "Singapore",
+            
+            // Malaysia
+            "Kuala Lumpur": "Malaysia", "Penang": "Malaysia", "Johor Bahru": "Malaysia",
+            
+            // Saudi Arabia
+            "Riyadh": "Saudi Arabia", "Jeddah": "Saudi Arabia", "Mecca": "Saudi Arabia",
+            
+            // UAE
+            "Abu Dhabi": "UAE", "Dubai": "UAE", "Sharjah": "UAE",
+            
+            // Qatar
+            "Doha": "Qatar",
+            
+            // Israel
+            "Jerusalem": "Israel", "Tel Aviv": "Israel", "Haifa": "Israel",
+            
+            // Sri Lanka
+            "Colombo": "Sri Lanka", "Kandy": "Sri Lanka", "Galle": "Sri Lanka",
+            
+            // Thailand
+            "Bangkok": "Thailand", "Chiang Mai": "Thailand", "Phuket": "Thailand"
         ]
         
         return cityCountryMap[cityName] ?? "Unknown"
@@ -1144,90 +1195,7 @@ struct WorldClock: Identifiable, Codable {
 }
 
 // MARK: - Holiday System
-struct Holiday: Codable {
-    let name: String
-    let emoji: String
-    let month: Int
-    let day: Int
-    let country: String
-    
-    var isToday: Bool {
-        let calendar = Calendar.current
-        let today = Date()
-        return calendar.component(.month, from: today) == month &&
-               calendar.component(.day, from: today) == day
-    }
-    
-    var isTomorrow: Bool {
-        let calendar = Calendar.current
-        let tomorrow = calendar.date(byAdding: .day, value: 1, to: Date()) ?? Date()
-        return calendar.component(.month, from: tomorrow) == month &&
-               calendar.component(.day, from: tomorrow) == day
-    }
-}
-
-struct HolidayDatabase {
-    static let holidays: [Holiday] = [
-        // United States
-        Holiday(name: "New Year's Day", emoji: "🎆", month: 1, day: 1, country: "United States"),
-        Holiday(name: "Independence Day", emoji: "🇺🇸", month: 7, day: 4, country: "United States"),
-        Holiday(name: "Christmas Day", emoji: "🎄", month: 12, day: 25, country: "United States"),
-        
-        // United Kingdom
-        Holiday(name: "New Year's Day", emoji: "🎆", month: 1, day: 1, country: "United Kingdom"),
-        Holiday(name: "Christmas Day", emoji: "🎄", month: 12, day: 25, country: "United Kingdom"),
-        Holiday(name: "Boxing Day", emoji: "📦", month: 12, day: 26, country: "United Kingdom"),
-        
-        // Canada
-        Holiday(name: "New Year's Day", emoji: "🎆", month: 1, day: 1, country: "Canada"),
-        Holiday(name: "Canada Day", emoji: "🍁", month: 7, day: 1, country: "Canada"),
-        Holiday(name: "Christmas Day", emoji: "🎄", month: 12, day: 25, country: "Canada"),
-        Holiday(name: "Boxing Day", emoji: "📦", month: 12, day: 26, country: "Canada"),
-        
-        // Mexico
-        Holiday(name: "New Year's Day", emoji: "🎆", month: 1, day: 1, country: "Mexico"),
-        Holiday(name: "Independence Day", emoji: "🇲🇽", month: 9, day: 16, country: "Mexico"),
-        Holiday(name: "Christmas Day", emoji: "🎄", month: 12, day: 25, country: "Mexico")
-    ]
-    
-    static func getHoliday(for city: City) -> Holiday? {
-        return holidays.first { holiday in
-            holiday.country == city.country && (holiday.isToday || holiday.isTomorrow)
-        }
-    }
-    
-    static func getHolidayText(for city: City) -> String? {
-        guard let holiday = getHoliday(for: city) else { return nil }
-        
-        let prefix = holiday.isToday ? "" : "Tomorrow, "
-        return "\(prefix)\(holiday.emoji) \(holiday.name)"
-    }
-    
-    static func getHolidayTextForDate(for city: City, date: Date) -> String? {
-        let calendar = Calendar.current
-        let targetMonth = calendar.component(.month, from: date)
-        let targetDay = calendar.component(.day, from: date)
-        
-        // Find holiday that matches the target date
-        let holiday = holidays.first { holiday in
-            holiday.country == city.country && 
-            holiday.month == targetMonth && 
-            holiday.day == targetDay
-        }
-        
-        guard let holiday = holiday else { return nil }
-        
-        // Check if this is today or tomorrow relative to the target date
-        let today = Date()
-        let tomorrow = calendar.date(byAdding: .day, value: 1, to: today) ?? today
-        
-        let isToday = calendar.isDate(date, inSameDayAs: today)
-        let isTomorrow = calendar.isDate(date, inSameDayAs: tomorrow)
-        
-        let prefix = isToday ? "" : (isTomorrow ? "Tomorrow, " : "")
-        return "\(prefix)\(holiday.emoji) \(holiday.name)"
-    }
-}
+// Using EnhancedHolidayDatabase from holiday-database.swift
 
 struct City: Identifiable {
     let id = UUID()
@@ -1380,6 +1348,8 @@ struct City: Identifiable {
         // Africa
         City(name: "Cairo", country: "Egypt", timeZoneIdentifier: "Africa/Cairo", isPlanet: false),
         City(name: "Johannesburg", country: "South Africa", timeZoneIdentifier: "Africa/Johannesburg", isPlanet: false),
+        City(name: "Cape Town", country: "South Africa", timeZoneIdentifier: "Africa/Johannesburg", isPlanet: false),
+        City(name: "Durban", country: "South Africa", timeZoneIdentifier: "Africa/Johannesburg", isPlanet: false),
         City(name: "Lagos", country: "Nigeria", timeZoneIdentifier: "Africa/Lagos", isPlanet: false),
         City(name: "Nairobi", country: "Kenya", timeZoneIdentifier: "Africa/Nairobi", isPlanet: false),
         City(name: "Casablanca", country: "Morocco", timeZoneIdentifier: "Africa/Casablanca", isPlanet: false),
@@ -1479,15 +1449,21 @@ struct City: Identifiable {
         City(name: "Tehran", country: "Iran", timeZoneIdentifier: "Asia/Tehran", isPlanet: false),
         City(name: "Baghdad", country: "Iraq", timeZoneIdentifier: "Asia/Baghdad", isPlanet: false),
         City(name: "Riyadh", country: "Saudi Arabia", timeZoneIdentifier: "Asia/Riyadh", isPlanet: false),
+        City(name: "Jeddah", country: "Saudi Arabia", timeZoneIdentifier: "Asia/Riyadh", isPlanet: false),
+        City(name: "Mecca", country: "Saudi Arabia", timeZoneIdentifier: "Asia/Riyadh", isPlanet: false),
         City(name: "Kuwait City", country: "Kuwait", timeZoneIdentifier: "Asia/Kuwait", isPlanet: false),
         City(name: "Doha", country: "Qatar", timeZoneIdentifier: "Asia/Qatar", isPlanet: false),
         City(name: "Abu Dhabi", country: "UAE", timeZoneIdentifier: "Asia/Dubai", isPlanet: false),
+        City(name: "Dubai", country: "UAE", timeZoneIdentifier: "Asia/Dubai", isPlanet: false),
+        City(name: "Sharjah", country: "UAE", timeZoneIdentifier: "Asia/Dubai", isPlanet: false),
         City(name: "Muscat", country: "Oman", timeZoneIdentifier: "Asia/Muscat", isPlanet: false),
         City(name: "Sana'a", country: "Yemen", timeZoneIdentifier: "Asia/Aden", isPlanet: false),
         City(name: "Amman", country: "Jordan", timeZoneIdentifier: "Asia/Amman", isPlanet: false),
         City(name: "Beirut", country: "Lebanon", timeZoneIdentifier: "Asia/Beirut", isPlanet: false),
         City(name: "Damascus", country: "Syria", timeZoneIdentifier: "Asia/Damascus", isPlanet: false),
         City(name: "Jerusalem", country: "Israel", timeZoneIdentifier: "Asia/Jerusalem", isPlanet: false),
+        City(name: "Tel Aviv", country: "Israel", timeZoneIdentifier: "Asia/Jerusalem", isPlanet: false),
+        City(name: "Haifa", country: "Israel", timeZoneIdentifier: "Asia/Jerusalem", isPlanet: false),
         City(name: "Nicosia", country: "Cyprus", timeZoneIdentifier: "Asia/Nicosia", isPlanet: false),
         City(name: "Yekaterinburg", country: "Russia", timeZoneIdentifier: "Asia/Yekaterinburg", isPlanet: false),
         City(name: "Krasnoyarsk", country: "Russia", timeZoneIdentifier: "Asia/Krasnoyarsk", isPlanet: false),

@@ -76,7 +76,7 @@ struct Alarm: Identifiable, Codable, Equatable {
         label: String = "Alarm",
         isEnabled: Bool = true,
         isAIEnabled: Bool = false,
-        soundIdentifier: String = AlarmSound.default.rawValue,
+        soundIdentifier: String = AlarmSound.dreamExit.rawValue,
         snoozeLength: Int? = 9,
         repeatDays: [Weekday]? = nil,
         volume: Float = 0.7,
@@ -271,6 +271,21 @@ enum MusicOption: String, CaseIterable, Codable {
         case .classical: return "Classical morning music"
         case .jazz: return "Smooth jazz vibes"
         }
+    }
+    
+    var fileName: String {
+        switch self {
+        case .chillVibes: return "ai_music_chill_vibes"
+        case .upbeat: return "ai_music_upbeat"
+        case .natureSounds: return "ai_music_nature_sounds"
+        case .ambient: return "ai_music_ambient"
+        case .classical: return "ai_music_classical"
+        case .jazz: return "ai_music_jazz"
+        }
+    }
+    
+    var url: URL? {
+        Bundle.main.url(forResource: fileName, withExtension: "aac")
     }
 }
 

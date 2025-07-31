@@ -30,23 +30,23 @@ class PurchaseService: NSObject, ObservableObject {
     // MARK: - Configuration
     
     func configure() {
-        let apiKey = AppEnvironment.revenueCatAPIKey
+        guard let apiKey = SecureKeyManager.shared.retrieveAPIKey(service: .revenueCat) else {
+            print("❌ RevenueCat API Key not found in secure storage")
+            print("📱 App will run in demo mode without subscription features")
+            return
+        }
+        
         print("🔑 RevenueCat API Key: \(apiKey)")
         
         // Validate API key format
         if apiKey.isEmpty {
             print("❌ RevenueCat API Key is empty!")
+            return
         } else if !apiKey.hasPrefix("appl_") {
             print("❌ RevenueCat API Key format is invalid (should start with 'appl_')")
+            return
         } else {
             print("✅ RevenueCat API Key format looks correct")
-        }
-        
-        // TEMPORARY: Skip RevenueCat configuration if API key is invalid
-        if apiKey.isEmpty || !apiKey.hasPrefix("appl_") {
-            print("⚠️ Skipping RevenueCat configuration due to invalid API key")
-            print("📱 App will run in demo mode without subscription features")
-            return
         }
         
         Purchases.configure(

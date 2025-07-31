@@ -57,6 +57,7 @@ struct UserPreferences: Identifiable, Codable {
     var city: String?
     var state: String?
     var voice: AIVoiceOption
+    var music: MusicOption
     var wakeUpTime: Date?
     var contentPreferences: ContentPreferences
     var updatedAt: Date
@@ -75,6 +76,7 @@ struct UserPreferences: Identifiable, Codable {
         city: String? = nil,
         state: String? = nil,
         voice: AIVoiceOption = .voice1,
+        music: MusicOption = .chillVibes,
         wakeUpTime: Date? = nil,
         contentPreferences: ContentPreferences = ContentPreferences(),
         updatedAt: Date = Date(),
@@ -90,6 +92,7 @@ struct UserPreferences: Identifiable, Codable {
         self.city = city
         self.state = state
         self.voice = voice
+        self.music = music
         self.wakeUpTime = wakeUpTime
         self.contentPreferences = contentPreferences
         self.updatedAt = updatedAt
