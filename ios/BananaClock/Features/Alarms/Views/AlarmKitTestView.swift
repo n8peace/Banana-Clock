@@ -17,8 +17,7 @@ struct AlarmKitTestView: View {
     @State private var testDate = Date()
     @State private var isLoading = false
     @State private var statusMessage = ""
-    @State private var openAIKey = ""
-    @State private var showingKeyInput = false
+
     
     var body: some View {
         NavigationView {
@@ -127,66 +126,7 @@ struct AlarmKitTestView: View {
                         .multilineTextAlignment(.center)
                 }
                 
-                // OpenAI Key Configuration
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        Text("OpenAI API Key")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                        
-                        Spacer()
-                        
-                        Button("Check Status") {
-                            SecureKeyManager.shared.checkAllKeyStatuses()
-                        }
-                        .font(.caption)
-                        .foregroundColor(.bananaYellow)
-                    }
-                    
-                    HStack {
-                        Circle()
-                            .fill(SecureKeyManager.shared.hasAPIKey(service: .openAI) ? .green : .red)
-                            .frame(width: 12, height: 12)
-                        Text(SecureKeyManager.shared.hasAPIKey(service: .openAI) ? "OpenAI Key Available ✅" : "OpenAI Key Missing ❌")
-                            .foregroundColor(.white)
-                            .font(.subheadline)
-                    }
-                    
-                    if !SecureKeyManager.shared.hasAPIKey(service: .openAI) {
-                        VStack(spacing: 8) {
-                            HStack {
-                                TextField("Enter OpenAI API Key (sk-...)", text: $openAIKey)
-                                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                                    .autocapitalization(.none)
-                                    .disableAutocorrection(true)
-                                
-                                Button("Store") {
-                                    storeOpenAIKey()
-                                }
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 8)
-                                .background(Color.bananaYellow)
-                                .foregroundColor(.black)
-                                .cornerRadius(8)
-                                .disabled(openAIKey.isEmpty || !openAIKey.hasPrefix("sk-"))
-                            }
-                            
-                            Text("Get your API key from: platform.openai.com/api-keys")
-                                .font(.caption)
-                                .foregroundColor(.textSecondary)
-                        }
-                    } else {
-                        Button("Remove OpenAI Key") {
-                            try? SecureKeyManager.shared.removeAPIKey(service: .openAI)
-                            statusMessage = "OpenAI key removed"
-                        }
-                        .font(.caption)
-                        .foregroundColor(.red)
-                    }
-                }
-                .padding()
-                .background(Color.backgroundSecondary)
-                .cornerRadius(12)
+
                 
                 Spacer()
             }
@@ -302,21 +242,7 @@ struct AlarmKitTestView: View {
         }
     }
     
-    private func storeOpenAIKey() {
-        guard !openAIKey.isEmpty, openAIKey.hasPrefix("sk-") else {
-            statusMessage = "❌ Invalid OpenAI key format. Key should start with 'sk-'"
-            return
-        }
-        
-        SecureKeyManager.shared.storeOpenAIKey(openAIKey)
-        openAIKey = "" // Clear the input field
-        statusMessage = "🎉 OpenAI API key stored successfully in keychain!"
-        
-        // Test the timezone converter immediately
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-            statusMessage += "\n🍌 AI timezone converter is now ready!"
-        }
-    }
+
 }
 
 // MARK: - Preview

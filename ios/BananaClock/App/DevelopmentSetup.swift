@@ -2,7 +2,7 @@
 //  DevelopmentSetup.swift
 //  BananaClock
 //
-//  Development-only setup helpers for API keys
+//  Development-only setup helpers for API keys and authentication
 //  This file should only be used in DEBUG builds
 //
 
@@ -11,10 +11,9 @@ import Foundation
 import SwiftUI
 
 struct DevelopmentSetupView: View {
-    @State private var openAIKey = ""
     @State private var showSuccess = false
     @State private var errorMessage = ""
-    @State private var isValidating = false
+    @State private var isCheckingAuth = false
     
     var body: some View {
         NavigationView {
@@ -23,38 +22,62 @@ struct DevelopmentSetupView: View {
                     .font(.largeTitle)
                     .fontWeight(.bold)
                 
-                Text("Enter your OpenAI API key for development")
+                Text("AI features now use Supabase proxy")
                     .font(.headline)
                     .foregroundColor(.secondary)
                 
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("OpenAI API Key")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                VStack(alignment: .leading, spacing: 15) {
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text("✨ What's New")
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                        
+                        Text("OpenAI features are now proxied through Supabase Edge Functions. No local API keys needed!")
+                            .font(.body)
+                            .foregroundColor(.secondary)
+                    }
                     
-                    SecureField("sk-...", text: $openAIKey)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                        .autocapitalization(.none)
-                        .disableAutocorrection(true)
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text("🔐 Authentication Required")
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                        
+                        Text("AI features require user authentication through Supabase. Sign in to access AI-powered timezone recommendations.")
+                            .font(.body)
+                            .foregroundColor(.secondary)
+                    }
                     
-                    if !errorMessage.isEmpty {
-                        Text(errorMessage)
-                            .font(.caption)
-                            .foregroundColor(.red)
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text("🛠️ Development Notes")
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                        
+                        Text("All AI requests go through the 'openai-proxy' Edge Function. Check Supabase logs for debugging.")
+                            .font(.body)
+                            .foregroundColor(.secondary)
                     }
                 }
                 .padding(.horizontal)
                 
-                Button(action: saveKey) {
-                    if isValidating {
+                if !errorMessage.isEmpty {
+                    Text(errorMessage)
+                        .font(.caption)
+                        .foregroundColor(.red)
+                        .padding()
+                        .background(Color.red.opacity(0.1))
+                        .cornerRadius(8)
+                }
+                
+                Button(action: checkAuthStatus) {
+                    if isCheckingAuth {
                         ProgressView()
                             .progressViewStyle(CircularProgressViewStyle())
                     } else {
-                        Text("Save API Key")
+                        Text("Check Authentication Status")
                     }
                 }
                 .buttonStyle(.borderedProminent)
-                .disabled(openAIKey.isEmpty || isValidating)
+                .disabled(isCheckingAuth)
                 
                 if showSuccess {
                     VStack(spacing: 10) {
@@ -62,11 +85,11 @@ struct DevelopmentSetupView: View {
                             .font(.system(size: 50))
                             .foregroundColor(.green)
                         
-                        Text("API Key Saved Successfully!")
+                        Text("Authentication Active!")
                             .font(.headline)
                             .foregroundColor(.green)
                         
-                        Text("You can now use OpenAI features")
+                        Text("AI features are ready to use")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -78,14 +101,28 @@ struct DevelopmentSetupView: View {
                 Spacer()
                 
                 VStack(spacing: 10) {
-                    Text("Current Status")
+                    Text("Service Status")
                         .font(.headline)
                     
-                    HStack {
-                        Text("OpenAI Key:")
-                        Text(SecureKeyManager.shared.hasAPIKey(service: .openAI) ? "✅ Configured" : "❌ Not Set")
+                    VStack(spacing: 5) {
+                        HStack {
+                            Text("Supabase Service:")
+                            Text(SecureKeyManager.shared.hasAPIKey(service: .supabaseService) ? "✅ Configured" : "❌ Not Set")
+                        }
+                        .font(.caption)
+                        
+                        HStack {
+                            Text("Supabase Anon:")
+                            Text(SecureKeyManager.shared.hasAPIKey(service: .supabaseAnon) ? "✅ Configured" : "❌ Not Set")
+                        }
+                        .font(.caption)
+                        
+                        HStack {
+                            Text("RevenueCat:")
+                            Text(SecureKeyManager.shared.hasAPIKey(service: .revenueCat) ? "✅ Configured" : "❌ Not Set")
+                        }
+                        .font(.caption)
                     }
-                    .font(.caption)
                 }
                 .padding()
                 .background(Color.gray.opacity(0.1))
@@ -96,32 +133,40 @@ struct DevelopmentSetupView: View {
         }
     }
     
-    private func saveKey() {
+    private func checkAuthStatus() {
         errorMessage = ""
-        isValidating = true
+        isCheckingAuth = true
         
-        // Basic validation
-        guard openAIKey.hasPrefix("sk-") else {
-            errorMessage = "Invalid key format. OpenAI keys start with 'sk-'"
-            isValidating = false
-            return
-        }
-        
-        // Save to keychain
-        do {
-            try SecureKeyManager.shared.storeAPIKey(openAIKey, service: .openAI)
-            showSuccess = true
-            openAIKey = "" // Clear the field
-            
-            // Hide success message after 3 seconds
-            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-                showSuccess = false
+        Task {
+            do {
+                // Check if user is authenticated with Supabase
+                let session = try await SupabaseService.shared.getCurrentSession()
+                
+                await MainActor.run {
+                    if session != nil {
+                        showSuccess = true
+                        errorMessage = ""
+                        
+                        // Hide success message after 3 seconds
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                            showSuccess = false
+                        }
+                    } else {
+                        errorMessage = "No active authentication session. Please sign in to use AI features."
+                        showSuccess = false
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    errorMessage = "Failed to check authentication: \(error.localizedDescription)"
+                    showSuccess = false
+                }
             }
-        } catch {
-            errorMessage = "Failed to save key: \(error.localizedDescription)"
+            
+            await MainActor.run {
+                isCheckingAuth = false
+            }
         }
-        
-        isValidating = false
     }
 }
 
@@ -138,14 +183,19 @@ extension SecureKeyManager {
         // Check current status
         manager.checkAllKeyStatuses()
         
-        // If OpenAI key is missing, provide instructions
-        if !manager.hasAPIKey(service: .openAI) {
-            print("\n⚠️  OpenAI API Key Not Found!")
-            print("📝 To set up your OpenAI key:")
-            print("   1. Get your key from: https://platform.openai.com/api-keys")
-            print("   2. In the app, go to Settings > Development Setup")
-            print("   3. Or programmatically: SecureKeyManager.shared.storeOpenAIKey(\"sk-...\")")
+        // Check for required Supabase keys
+        if !manager.hasAPIKey(service: .supabaseAnon) || !manager.hasAPIKey(service: .supabaseService) {
+            print("\n⚠️  Supabase Keys Missing!")
+            print("📝 To set up Supabase:")
+            print("   1. Configure keys in environment-config.swift")
+            print("   2. Or add to your .env file")
+            print("   3. Supabase keys are required for AI features")
         }
+        
+        print("\n✨ OpenAI Integration:")
+        print("   • Now uses Supabase proxy (no local keys needed)")
+        print("   • Requires user authentication")
+        print("   • Check 'openai-proxy' Edge Function in Supabase")
         
         print("================================\n")
         #endif

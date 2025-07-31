@@ -2,7 +2,7 @@
 //  AITimezoneService.swift
 //  BananaClock
 //
-//  AI-powered timezone recommendations using OpenAI
+//  AI-powered timezone recommendations using OpenAI via Supabase proxy
 //
 
 import Foundation
@@ -14,7 +14,6 @@ class AITimezoneService: ObservableObject {
     @Published var isLoading = false
     
     private var recommendationTimer: Foundation.Timer?
-    private let baseURL = "https://api.openai.com/v1/chat/completions"
     
     init() {
         // Auto-clear recommendation after 5 minutes
@@ -30,12 +29,6 @@ class AITimezoneService: ObservableObject {
         print("🍌 AI: Clock details:")
         for (index, clock) in clocks.enumerated() {
             print("🍌 AI:   [\(index)] \(clock.cityName) (\(clock.timeZoneIdentifier))")
-        }
-        
-        // Get API key from secure storage
-        guard let apiKey = SecureKeyManager.shared.retrieveAPIKey(service: .openAI) else {
-            print("🍌 AI: Skipping - no OpenAI API key available")
-            return
         }
         
         // Only proceed if we have multiple timezones
@@ -65,15 +58,15 @@ class AITimezoneService: ObservableObject {
         }
         
         // Include all regular clocks without limit
-        await requestRecommendation(for: regularClocks, selectedDate: selectedDate, apiKey: apiKey)
+        await requestRecommendation(for: regularClocks, selectedDate: selectedDate)
     }
     
-    private func requestRecommendation(for clocks: [WorldClock], selectedDate: Date, apiKey: String) async {
+    private func requestRecommendation(for clocks: [WorldClock], selectedDate: Date) async {
         print("🍌 AI: Starting request for \(clocks.count) clocks")
         isLoading = true
         
         do {
-            let recommendation = try await callOpenAI(for: clocks, selectedDate: selectedDate, apiKey: apiKey)
+            let recommendation = try await callOpenAI(for: clocks, selectedDate: selectedDate)
             print("🍌 AI: Received recommendation: \(recommendation)")
             currentRecommendation = recommendation
         } catch {
@@ -84,7 +77,7 @@ class AITimezoneService: ObservableObject {
         isLoading = false
     }
     
-    private func callOpenAI(for clocks: [WorldClock], selectedDate: Date, apiKey: String) async throws -> String {
+    private func callOpenAI(for clocks: [WorldClock], selectedDate: Date) async throws -> String {
         print("🍌 AI: callOpenAI called with \(clocks.count) clocks")
         
         let userTimezone = TimeZone.current.identifier
@@ -124,7 +117,7 @@ class AITimezoneService: ObservableObject {
         dateFormatter.dateFormat = "EEEE, MMMM d"
         let dateString = dateFormatter.string(from: selectedDate)
         
-        let prompt = """
+        let userPrompt = """
         You are a timezone meeting scheduler.
 
         Given these timezones:
@@ -151,48 +144,27 @@ class AITimezoneService: ObservableObject {
         Before finalizing your answer, double-check the local time for each city. If a city is within 6 AM to 10 PM local time, it is not excluded.
         """
         
+        let systemPrompt = "You are a helpful timezone meeting scheduler. Be concise and practical."
+        
         // Debug: Log what timezones are being sent to GPT
         print("🍌 AI: Sending timezones to GPT: \(timezoneList)")
-        print("🍌 AI: Full prompt: \(prompt)")
+        print("🍌 AI: Full prompt: \(userPrompt)")
         
-        let requestBody: [String: Any] = [
-            "model": "gpt-4",
-            "messages": [
-                ["role": "system", "content": "You are a helpful timezone meeting scheduler. Be concise and practical."],
-                ["role": "user", "content": prompt]
-            ],
-            "max_tokens": 600,
-            "temperature": 0.2
-        ]
-        
-        guard let url = URL(string: baseURL) else {
-            throw AIError.invalidURL
-        }
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        
-        let jsonData = try JSONSerialization.data(withJSONObject: requestBody)
-        request.httpBody = jsonData
-        
-        let (data, response) = try await URLSession.shared.data(for: request)
-        
-        guard let httpResponse = response as? HTTPURLResponse,
-              httpResponse.statusCode == 200 else {
+        // Use the OpenAI service instead of direct API calls
+        do {
+            let response = try await OpenAIService.shared.generateText(
+                prompt: userPrompt,
+                systemPrompt: systemPrompt,
+                model: "gpt-4",
+                temperature: 0.2,
+                maxTokens: 600
+            )
+            
+            return response.trimmingCharacters(in: .whitespacesAndNewlines)
+        } catch {
+            print("🍌 AI: OpenAI service error: \(error)")
             throw AIError.apiError
         }
-        
-        let responseDict = try JSONSerialization.jsonObject(with: data) as? [String: Any]
-        guard let choices = responseDict?["choices"] as? [[String: Any]],
-              let firstChoice = choices.first,
-              let message = firstChoice["message"] as? [String: Any],
-              let content = message["content"] as? String else {
-            throw AIError.invalidResponse
-        }
-        
-        return content.trimmingCharacters(in: .whitespacesAndNewlines)
     }
     
     private func startAutoClearTimer() {
