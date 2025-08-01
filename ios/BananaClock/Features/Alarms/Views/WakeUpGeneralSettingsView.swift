@@ -53,7 +53,7 @@ struct WakeUpGeneralSettingsView: View {
                                 Spacer()
                                 Picker("", selection: $snoozeLength) {
                                     Text("Off").tag(nil as Int?)
-                                    ForEach(1...15, id: \.self) { minutes in
+                                    ForEach(Array(1...10) + [15, 30, 45, 60], id: \.self) { minutes in
                                         Text("\(minutes) min").tag(minutes as Int?)
                                     }
                                 }

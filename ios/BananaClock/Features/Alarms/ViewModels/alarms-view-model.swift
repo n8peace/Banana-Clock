@@ -19,6 +19,10 @@ class AlarmsViewModel: ObservableObject {
     // Wake-up alarm management
     let wakeUpViewModel = WakeUpAlarmsViewModel()
     
+    init() {
+        print("DEBUG: AlarmsViewModel - created SHARED wakeUpViewModel instance: \(ObjectIdentifier(wakeUpViewModel))")
+    }
+    
     var navigationTitle: String { "⏰ Alarms" }
     
     // Computed properties for sections
@@ -59,6 +63,10 @@ class AlarmsViewModel: ObservableObject {
     private let supabaseService = SupabaseService.shared
     
     func loadAlarms() async {
+        await loadAlarms(refreshWakeUpAlarms: true)
+    }
+    
+    func loadAlarms(refreshWakeUpAlarms: Bool = true) async {
         isLoading = true
         defer { isLoading = false }
         
@@ -69,8 +77,10 @@ class AlarmsViewModel: ObservableObject {
             // Clean up old alarms
             cleanupOldAlarms()
             
-            // Load wake-up alarms state
-            await wakeUpViewModel.loadWakeUpAlarms()
+            // Only refresh wake-up alarms if requested (prevents cross-contamination)
+            if refreshWakeUpAlarms {
+                await wakeUpViewModel.loadWakeUpAlarms()
+            }
             
             // Sync with AlarmKit
             for alarm in alarms where alarm.isEnabled {
@@ -133,8 +143,8 @@ class AlarmsViewModel: ObservableObject {
             //     try await supabaseService.triggerAIContentGeneration(for: alarm)
             // }
             
-            // Reload alarms
-            await loadAlarms()
+            // Reload alarms (refresh wake-up alarms only if this is a wake-up alarm)
+            await loadAlarms(refreshWakeUpAlarms: alarm.isWakeUpAlarm)
             
             HapticManager.shared.notification(.success)
         } catch {
@@ -171,8 +181,8 @@ class AlarmsViewModel: ObservableObject {
             //     try await supabaseService.triggerAIContentGeneration(for: alarm)
             // }
             
-            // Reload alarms
-            await loadAlarms()
+            // Reload alarms (refresh wake-up alarms only if this is a wake-up alarm)  
+            await loadAlarms(refreshWakeUpAlarms: alarm.isWakeUpAlarm)
             
             HapticManager.shared.impact(.light)
         } catch {
@@ -195,8 +205,8 @@ class AlarmsViewModel: ObservableObject {
             // Cancel in AlarmKit
             try await alarmService.cancelAlarm(withId: alarm.id)
             
-            // Reload alarms
-            await loadAlarms()
+            // Reload alarms (no need to refresh wake-up alarms since this is only for non-wake-up alarms)
+            await loadAlarms(refreshWakeUpAlarms: false)
             
             HapticManager.shared.notification(.success)
         } catch {
@@ -206,18 +216,41 @@ class AlarmsViewModel: ObservableObject {
     }
     
     func toggleAlarm(_ alarm: Alarm, isEnabled: Bool) async {
-        print("DEBUG: toggleAlarm called for alarm \(alarm.id), isWakeUp: \(alarm.isWakeUpAlarm), newEnabled: \(isEnabled)")
+        print("DEBUG: AlarmsViewModel.toggleAlarm called for alarm \(alarm.id), isWakeUp: \(alarm.isWakeUpAlarm), newEnabled: \(isEnabled)")
         var updatedAlarm = alarm
         updatedAlarm.isEnabled = isEnabled
         
         if alarm.isWakeUpAlarm {
             // Use wake-up view model for wake-up alarms
-            print("DEBUG: Using wake-up view model for toggle")
+            print("DEBUG: AlarmsViewModel delegating to SHARED wakeUpViewModel instance: \(ObjectIdentifier(wakeUpViewModel))")
             await wakeUpViewModel.toggleAlarm(alarm, isEnabled: isEnabled)
+            
+            // Sync the updated alarm back to the main alarms array
+            await syncWakeUpAlarmToMainArray(alarmId: alarm.id)
         } else {
             // Update lastUsedAt for non-wake-up alarms
             updatedAlarm.lastUsedAt = Date()
             await updateAlarm(updatedAlarm)
+        }
+    }
+    
+    // MARK: - Synchronization Helper
+    
+    private func syncWakeUpAlarmToMainArray(alarmId: UUID) async {
+        do {
+            // Fetch the updated alarm from CoreData
+            let updatedAlarms = try coreDataManager.fetchAlarms()
+            
+            // Find the specific updated alarm
+            if let updatedAlarm = updatedAlarms.first(where: { $0.id == alarmId }) {
+                // Update just this alarm in the main array
+                if let index = alarms.firstIndex(where: { $0.id == alarmId }) {
+                    alarms[index] = updatedAlarm
+                    print("DEBUG: Synchronized wake-up alarm \(alarmId) in main alarms array")
+                }
+            }
+        } catch {
+            print("ERROR: Failed to sync wake-up alarm to main array: \(error)")
         }
     }
     

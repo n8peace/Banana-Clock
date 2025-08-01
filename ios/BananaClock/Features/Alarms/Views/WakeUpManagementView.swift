@@ -7,25 +7,24 @@
 
 import SwiftUI
 import CoreData
+import Combine
 
 struct WakeUpManagementView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var appState: AppState
-    @StateObject private var viewModel = WakeUpAlarmsViewModel()
-    @State private var showingScheduleEditor = false
+    @ObservedObject var viewModel: WakeUpAlarmsViewModel // Shared instance, not created locally
     @State private var showingAISettings = false
-    @State private var nextAlarmTime: Date = Date().addingTimeInterval(3600) // Default to 1 hour from now
+    @State private var showingScheduleEditor = false
     
-    // General settings state
-    @State private var selectedSound: AlarmSound = .dreamExit
-    @State private var snoozeLength: Int? = 9
-    @State private var volume: Double = 0.7
+    // No local state needed - bind directly to viewModel
     
     // Callback to notify parent of changes
     let onChangesMade: (() -> Void)?
     
-    init(onChangesMade: (() -> Void)? = nil) {
+    init(wakeUpViewModel: WakeUpAlarmsViewModel, onChangesMade: (() -> Void)? = nil) {
+        self.viewModel = wakeUpViewModel
         self.onChangesMade = onChangesMade
+        print("DEBUG: WakeUpManagementView - initialized with SHARED viewModel instance: \(ObjectIdentifier(wakeUpViewModel))")
     }
     
     var body: some View {
@@ -33,108 +32,78 @@ struct WakeUpManagementView: View {
             ZStack {
                 Color.black.ignoresSafeArea()
                 
-                ScrollView {
-                    VStack(spacing: BananaTheme.Spacing.md) {
-                        // Time Picker Section
-                        DatePicker("", selection: $nextAlarmTime, displayedComponents: .hourAndMinute)
+                // Unified scrollable List
+                List {
+                    // Time Picker Row
+                    VStack {
+                        DatePicker("", selection: nextAlarmTimeBinding, displayedComponents: .hourAndMinute)
                             .datePickerStyle(.wheel)
                             .labelsHidden()
                             .colorScheme(.dark)
-                            .padding()
-                            .onChange(of: nextAlarmTime) { _, newTime in
-                                updateNextAlarmTime(newTime)
-                            }
-                        
-                        // Edit Schedule Button
-                        Button {
-                            showingScheduleEditor = true
-                        } label: {
+                    }
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                    
+                    // Edit Schedule Row
+                    Button {
+                        showingScheduleEditor = true
+                    } label: {
+                        HStack {
+                            Spacer()
+                            Text("Edit Wake Up Schedule")
+                                .font(.headline)
+                                .foregroundColor(.bananaYellow)
+                            Image(systemName: "chevron.right")
+                                .font(.headline)
+                                .foregroundColor(.bananaYellow)
+                            Spacer()
+                        }
+                        .padding(.vertical, BananaTheme.Spacing.sm)
+                    }
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                    
+                    // Next Alarm Section
+                    Section("Next Alarm") {
+                            // Next Alarm Toggle
                             HStack {
-                                Text("Edit Wake Up Schedule")
-                                    .font(.headline)
+                                Text("Next Alarm")
                                     .foregroundColor(.white)
                                 
                                 Spacer()
                                 
-                                Image(systemName: "chevron.right")
-                                    .font(.caption)
-                                    .foregroundColor(.textTertiary)
-                            }
-                            .padding(.vertical, BananaTheme.Spacing.sm)
-                            .padding(.horizontal, BananaTheme.Layout.cardPadding)
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                        .bananaCard()
-                        .padding(.horizontal)
-                        
-                        // Next Alarm Section
-                        VStack(spacing: 0) {
-                            // Next Alarm Toggle
-                            HStack {
-                                VStack(alignment: .leading, spacing: BananaTheme.Spacing.xxs) {
-                                    Text("Next Alarm")
-                                        .font(.headline)
-                                        .foregroundColor(.white)
-                                }
-                                
-                                Spacer()
-                                
-                                Toggle("", isOn: Binding(
-                                    get: { isTomorrowAlarmEnabled },
-                                    set: { newValue in
-                                        toggleTomorrowAlarm(newValue)
-                                    }
-                                ))
+                                Toggle("", isOn: nextAlarmEnabledBinding)
                                 .toggleStyle(SwitchToggleStyle(tint: .bananaYellow))
                                 .labelsHidden()
                             }
-                            .padding(.vertical, BananaTheme.Spacing.sm)
-                            .padding(.horizontal, BananaTheme.Layout.cardPadding)
                             
-                            Divider().background(BananaTheme.Colors.divider)
-                                .padding(.horizontal, BananaTheme.Layout.cardPadding)
-                            
-                            // 🍌🧠 Wake Up toggle below Next Alarm toggle
+                            // 🍌🧠 Wake Up toggle
                             HStack {
                                 Text("🍌🧠 Wake Up")
-                                    .font(.headline)
-                                    .foregroundColor(isTomorrowAlarmEnabled ? .white : .textSecondary)
+                                    .foregroundColor(nextAlarmEnabledBinding.wrappedValue ? .white : .textSecondary)
                                 
                                 Spacer()
                                 
-                                Toggle("", isOn: Binding(
-                                    get: { isAIEnabled },
-                                    set: { newValue in
-                                        toggleAIEnabled(newValue)
-                                    }
-                                ))
+                                Toggle("", isOn: aiAlarmEnabledBinding)
                                 .toggleStyle(SwitchToggleStyle(tint: .bananaYellow))
                                 .labelsHidden()
-                                .disabled(!isTomorrowAlarmEnabled)
+                                .disabled(!nextAlarmEnabledBinding.wrappedValue)
                             }
-                            .padding(.vertical, BananaTheme.Spacing.sm)
-                            .padding(.horizontal, BananaTheme.Layout.cardPadding)
-                            .padding(.bottom, BananaTheme.Spacing.sm)
                         }
-                        .bananaCard()
-                        .padding(.horizontal)
                         
-                        // Rest of Settings Section
-                        VStack(spacing: 0) {
-                            
-                            // AI Settings Button (always visible, grayed out when disabled)
+                        // AI Settings Section
+                        Section("AI Settings") {
                             Button {
                                 showingAISettings = true
                             } label: {
                                 HStack {
                                     HStack(spacing: BananaTheme.Spacing.xs) {
                                         Text("AI Settings")
-                                            .font(.body)
-                                            .foregroundColor(isAIEnabled ? .white : .textSecondary)
+                                            .foregroundColor(aiAlarmEnabledBinding.wrappedValue ? .white : .textSecondary)
                                         
                                         Image(systemName: "sparkles")
                                             .font(.caption)
-                                            .foregroundColor(isAIEnabled ? .bananaYellow : .textSecondary)
+                                            .foregroundColor(aiAlarmEnabledBinding.wrappedValue ? .bananaYellow : .textSecondary)
                                     }
                                     
                                     Spacer()
@@ -143,79 +112,77 @@ struct WakeUpManagementView: View {
                                         .font(.caption)
                                         .foregroundColor(.textTertiary)
                                 }
-                                .padding(.vertical, BananaTheme.Spacing.sm)
-                                .padding(.horizontal, BananaTheme.Layout.cardPadding)
                             }
                             .buttonStyle(PlainButtonStyle())
-                            
-                            Divider().background(BananaTheme.Colors.divider)
-                                .padding(.horizontal, BananaTheme.Layout.cardPadding)
-                            
+                        }
+                        
+                        // General Alarm Settings Section
+                        Section("General Alarm Settings") {
                             // Sound Selection
                             NavigationLink {
-                                SoundPickerView(selectedSound: $selectedSound)
+                                SoundPickerView(
+                                    selectedSound: Binding(
+                                        get: { selectedSound },
+                                        set: { newSound in
+                                            updateAlarmSound(newSound)
+                                        }
+                                    )
+                                )
                             } label: {
                                 HStack {
                                     Text("Sound")
-                                        .foregroundColor(.textPrimary)
+                                        .foregroundColor(.white)
                                     Spacer()
                                     Text(selectedSound.displayName)
-                                        .foregroundColor(BananaTheme.Colors.textSecondary)
-                                    Image(systemName: "chevron.right")
-                                        .font(.caption)
-                                        .foregroundColor(BananaTheme.Colors.textTertiary)
+                                        .foregroundColor(.textSecondary)
                                 }
-                                .padding(.vertical, BananaTheme.Spacing.sm)
-                                .padding(.horizontal, BananaTheme.Layout.cardPadding)
                             }
-                            
-                            Divider().background(BananaTheme.Colors.divider)
-                                .padding(.horizontal, BananaTheme.Layout.cardPadding)
                             
                             // Snooze
                             HStack {
                                 Text("Snooze")
-                                    .foregroundColor(.textPrimary)
+                                    .foregroundColor(.white)
                                 Spacer()
-                                Picker("", selection: $snoozeLength) {
+                                Picker("", selection: Binding(
+                                    get: { snoozeLength },
+                                    set: { newLength in
+                                        updateSnoozeLength(newLength)
+                                    }
+                                )) {
                                     Text("Off").tag(nil as Int?)
-                                    ForEach(1...15, id: \.self) { minutes in
+                                    ForEach(Array(1...10) + [15, 30, 45, 60], id: \.self) { minutes in
                                         Text("\(minutes) min").tag(minutes as Int?)
                                     }
                                 }
                                 .pickerStyle(.menu)
-                                .accentColor(BananaTheme.Colors.textSecondary)
+                                .accentColor(.textSecondary)
                             }
-                            .padding(.vertical, BananaTheme.Spacing.sm)
-                            .padding(.horizontal, BananaTheme.Layout.cardPadding)
-                            
-                            Divider().background(BananaTheme.Colors.divider)
-                                .padding(.horizontal, BananaTheme.Layout.cardPadding)
                             
                             // Volume
                             VStack(alignment: .leading, spacing: BananaTheme.Spacing.xs) {
                                 HStack {
                                     Text("Volume")
-                                        .font(.body)
                                         .foregroundColor(.white)
                                     
                                     Spacer()
                                     
                                     Text("\(Int(volume * 100))%")
-                                        .font(.body)
                                         .foregroundColor(.textSecondary)
                                 }
                                 
-                                Slider(value: $volume, in: 0...1, step: 0.1)
+                                Slider(value: Binding(
+                                    get: { volume },
+                                    set: { newVolume in
+                                        updateVolume(newVolume)
+                                    }
+                                ), in: 0...1, step: 0.1)
                                     .accentColor(.bananaYellow)
                             }
-                            .padding(.vertical, BananaTheme.Spacing.sm)
-                            .padding(.horizontal, BananaTheme.Layout.cardPadding)
                         }
-                        .bananaCard()
-                        .padding(.horizontal)
-                    }
                 }
+                .listStyle(.insetGrouped)
+                .scrollContentBackground(.hidden)
+                .background(Color.black)
             }
             .navigationTitle("Change Wake Up")
             .navigationBarTitleDisplayMode(.inline)
@@ -244,15 +211,6 @@ struct WakeUpManagementView: View {
                 }
             }
         }
-        .sheet(isPresented: $showingScheduleEditor) {
-            WakeUpScheduleView {
-                Task {
-                    await viewModel.loadWakeUpAlarms()
-                    loadNextAlarmTime()
-                    onChangesMade?()
-                }
-            }
-        }
         .sheet(isPresented: $showingAISettings) {
             WakeUpAISettingsView(
                 preferences: viewModel.userPreferences,
@@ -264,56 +222,179 @@ struct WakeUpManagementView: View {
                 }
             )
         }
+        .sheet(isPresented: $showingScheduleEditor) {
+            WakeUpScheduleView(wakeUpViewModel: viewModel) {
+                Task {
+                    await viewModel.loadWakeUpAlarms()
+                    onChangesMade?()
+                }
+            }
+        }
         .task {
+            print("DEBUG: WakeUpManagementView - task started, loading wake up alarms")
             await viewModel.loadWakeUpAlarms()
-            loadNextAlarmTime()
+            print("DEBUG: WakeUpManagementView - initial data load completed")
+        }
+        .onReceive(viewModel.$nextVisibleWakeUpAlarm) { alarm in
+            print("DEBUG: WakeUpManagementView - nextVisibleWakeUpAlarm changed: \(alarm?.id.uuidString.prefix(8) ?? "nil")")
+            // No need to sync toggle states - bindings update automatically
         }
     }
     
     // MARK: - Helper Methods
     
-    private var isTomorrowAlarmEnabled: Bool {
-        guard let nextAlarm = viewModel.nextVisibleWakeUpAlarm else { return false }
-        return nextAlarm.isEnabled
+    // MARK: - Toggle Binding Properties
+    
+    private var nextAlarmEnabledBinding: Binding<Bool> {
+        Binding(
+            get: {
+                guard let nextVisibleAlarm = viewModel.nextVisibleWakeUpAlarm else { return false }
+                return nextVisibleAlarm.isEnabled
+            },
+            set: { newValue in
+                guard let nextVisibleAlarm = viewModel.nextVisibleWakeUpAlarm else { return }
+                print("DEBUG: WakeUpManagementView.nextAlarmEnabledBinding - setting to \(newValue)")
+                Task {
+                    await viewModel.toggleAlarm(nextVisibleAlarm, isEnabled: newValue)
+                    onChangesMade?()
+                }
+            }
+        )
     }
     
-    private var isAIEnabled: Bool {
-        guard let nextAlarm = viewModel.nextVisibleWakeUpAlarm else { return false }
-        return nextAlarm.isAIEnabled
+    private var aiAlarmEnabledBinding: Binding<Bool> {
+        Binding(
+            get: {
+                guard let nextVisibleAlarm = viewModel.nextVisibleWakeUpAlarm else { return false }
+                return nextVisibleAlarm.isAIEnabled
+            },
+            set: { newValue in
+                guard let nextVisibleAlarm = viewModel.nextVisibleWakeUpAlarm else { return }
+                print("DEBUG: WakeUpManagementView.aiAlarmEnabledBinding - setting to \(newValue)")
+                Task {
+                    var updatedAlarm = nextVisibleAlarm
+                    updatedAlarm.isAIEnabled = newValue
+                    await viewModel.updateSchedule(updatedAlarm)
+                    onChangesMade?()
+                }
+            }
+        )
     }
     
-    private func loadNextAlarmTime() {
-        if let nextAlarm = viewModel.nextVisibleWakeUpAlarm {
-            nextAlarmTime = nextAlarm.time
+    // MARK: - Settings Computed Properties
+    
+    private var nextAlarmTimeBinding: Binding<Date> {
+        Binding(
+            get: {
+                guard let nextAlarm = viewModel.nextVisibleWakeUpAlarm else {
+                    print("DEBUG: WakeUpManagementView.nextAlarmTimeBinding.get - no nextVisibleWakeUpAlarm, returning default")
+                    return Date().addingTimeInterval(3600) // Default to 1 hour from now
+                }
+                print("DEBUG: WakeUpManagementView.nextAlarmTimeBinding.get - returning \(nextAlarm.time)")
+                return nextAlarm.time
+            },
+            set: { newTime in
+                print("DEBUG: WakeUpManagementView.nextAlarmTimeBinding.set - updating to \(newTime)")
+                updateNextAlarmTime(newTime)
+            }
+        )
+    }
+    
+    private var selectedSound: AlarmSound {
+        guard let nextAlarm = viewModel.nextVisibleWakeUpAlarm else { 
+            print("DEBUG: WakeUpManagementView.selectedSound - no nextVisibleWakeUpAlarm, defaulting to .dreamExit")
+            return .dreamExit 
         }
+        let sound = AlarmSound(rawValue: nextAlarm.soundIdentifier) ?? .dreamExit
+        print("DEBUG: WakeUpManagementView.selectedSound - \(sound.displayName)")
+        return sound
     }
+    
+    private var snoozeLength: Int? {
+        guard let nextAlarm = viewModel.nextVisibleWakeUpAlarm else { 
+            print("DEBUG: WakeUpManagementView.snoozeLength - no nextVisibleWakeUpAlarm, defaulting to 9")
+            return 9 
+        }
+        print("DEBUG: WakeUpManagementView.snoozeLength - \(nextAlarm.snoozeLength?.description ?? "nil")")
+        return nextAlarm.snoozeLength
+    }
+    
+    private var volume: Double {
+        guard let nextAlarm = viewModel.nextVisibleWakeUpAlarm else { 
+            print("DEBUG: WakeUpManagementView.volume - no nextVisibleWakeUpAlarm, defaulting to 0.7")
+            return 0.7 
+        }
+        let vol = Double(nextAlarm.volume)
+        print("DEBUG: WakeUpManagementView.volume - \(vol)")
+        return vol
+    }
+    
+    // syncToggleStates method removed - using direct bindings now
     
     private func updateNextAlarmTime(_ newTime: Date) {
-        guard let nextAlarm = viewModel.nextVisibleWakeUpAlarm else { return }
+        guard let nextAlarm = viewModel.nextVisibleWakeUpAlarm else { 
+            print("DEBUG: WakeUpManagementView.updateNextAlarmTime - no nextVisibleWakeUpAlarm")
+            return 
+        }
         
+        print("DEBUG: WakeUpManagementView.updateNextAlarmTime - using SHARED viewModel instance: \(ObjectIdentifier(viewModel))")
+        print("DEBUG: WakeUpManagementView.updateNextAlarmTime - updating time from \(nextAlarm.time) to \(newTime)")
         Task {
             var updatedAlarm = nextAlarm
             updatedAlarm.time = newTime
+            updatedAlarm.updatedAt = Date()
             await viewModel.updateSchedule(updatedAlarm)
             onChangesMade?()
         }
     }
     
-    private func toggleTomorrowAlarm(_ isEnabled: Bool) {
-        guard let nextAlarm = viewModel.nextVisibleWakeUpAlarm else { return }
+    // toggleTomorrowAlarm and toggleAIEnabled methods removed - using direct bindings now
+    
+    // MARK: - Settings Update Methods
+    
+    private func updateAlarmSound(_ sound: AlarmSound) {
+        guard let nextAlarm = viewModel.nextVisibleWakeUpAlarm else { 
+            print("DEBUG: WakeUpManagementView.updateAlarmSound - no nextVisibleWakeUpAlarm")
+            return 
+        }
         
+        print("DEBUG: WakeUpManagementView.updateAlarmSound - updating to \(sound.displayName)")
         Task {
-            await viewModel.toggleAlarm(nextAlarm, isEnabled: isEnabled)
+            var updatedAlarm = nextAlarm
+            updatedAlarm.soundIdentifier = sound.rawValue
+            updatedAlarm.updatedAt = Date()
+            await viewModel.updateSchedule(updatedAlarm)
             onChangesMade?()
         }
     }
     
-    private func toggleAIEnabled(_ isEnabled: Bool) {
-        guard let nextAlarm = viewModel.nextVisibleWakeUpAlarm else { return }
+    private func updateSnoozeLength(_ length: Int?) {
+        guard let nextAlarm = viewModel.nextVisibleWakeUpAlarm else { 
+            print("DEBUG: WakeUpManagementView.updateSnoozeLength - no nextVisibleWakeUpAlarm")
+            return 
+        }
         
+        print("DEBUG: WakeUpManagementView.updateSnoozeLength - updating to \(length?.description ?? "nil")")
         Task {
             var updatedAlarm = nextAlarm
-            updatedAlarm.isAIEnabled = isEnabled
+            updatedAlarm.snoozeLength = length
+            updatedAlarm.updatedAt = Date()
+            await viewModel.updateSchedule(updatedAlarm)
+            onChangesMade?()
+        }
+    }
+    
+    private func updateVolume(_ newVolume: Double) {
+        guard let nextAlarm = viewModel.nextVisibleWakeUpAlarm else { 
+            print("DEBUG: WakeUpManagementView.updateVolume - no nextVisibleWakeUpAlarm")
+            return 
+        }
+        
+        print("DEBUG: WakeUpManagementView.updateVolume - updating to \(newVolume)")
+        Task {
+            var updatedAlarm = nextAlarm
+            updatedAlarm.volume = Float(newVolume)
+            updatedAlarm.updatedAt = Date()
             await viewModel.updateSchedule(updatedAlarm)
             onChangesMade?()
         }
@@ -321,7 +402,7 @@ struct WakeUpManagementView: View {
 }
 
 #Preview {
-    WakeUpManagementView {
+    WakeUpManagementView(wakeUpViewModel: WakeUpAlarmsViewModel()) {
         // Preview callback
     }
     .environmentObject(AppState())

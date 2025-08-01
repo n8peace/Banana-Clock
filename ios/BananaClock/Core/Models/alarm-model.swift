@@ -15,7 +15,7 @@ struct Alarm: Identifiable, Codable, Equatable {
     var isEnabled: Bool
     var isAIEnabled: Bool
     var soundIdentifier: String
-    var snoozeLength: Int? // minutes (1-15), nil means snooze is disabled
+    var snoozeLength: Int? // minutes (1-10, 15, 30, 45, 60), nil means snooze is disabled
     var repeatDays: [Weekday]
     var volume: Float // 0.0-1.0
     var isWakeUpAlarm: Bool
@@ -109,7 +109,18 @@ struct Alarm: Identifiable, Codable, Equatable {
         self.isEnabled = isEnabled
         self.isAIEnabled = isAIEnabled
         self.soundIdentifier = soundIdentifier
-        self.snoozeLength = snoozeLength.map { max(1, min(15, $0)) }
+        self.snoozeLength = snoozeLength.map { value in
+            // Valid snooze options: 1-10, 15, 30, 45, 60 minutes
+            let validOptions = Array(1...10) + [15, 30, 45, 60]
+            
+            // If the value is already valid, use it
+            if validOptions.contains(value) {
+                return value
+            }
+            
+            // Otherwise, find the closest valid option
+            return validOptions.min(by: { abs($0 - value) < abs($1 - value) }) ?? 9
+        }
         self.repeatDays = defaultRepeatDays
         self.volume = max(0, min(1, volume))
         self.isWakeUpAlarm = isWakeUpAlarm

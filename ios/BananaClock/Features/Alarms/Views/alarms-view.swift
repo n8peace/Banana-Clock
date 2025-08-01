@@ -84,7 +84,7 @@ struct AlarmsView: View {
             }
         }
         .sheet(isPresented: $showingAddAlarm) {
-            AlarmDetailView(alarm: nil) { newAlarm in
+            AlarmDetailView(alarm: nil, wakeUpViewModel: viewModel.wakeUpViewModel) { newAlarm in
                 Task {
                     await viewModel.addAlarm(newAlarm)
                 }
@@ -93,6 +93,7 @@ struct AlarmsView: View {
         .sheet(item: $selectedAlarm) { alarm in
             AlarmDetailView(
                 alarm: alarm,
+                wakeUpViewModel: viewModel.wakeUpViewModel,
                 onSave: { updatedAlarm in
                     Task {
                         await viewModel.updateAlarm(updatedAlarm)
@@ -106,7 +107,7 @@ struct AlarmsView: View {
             )
         }
         .sheet(isPresented: $showingWakeUpManagement) {
-            WakeUpManagementView {
+            WakeUpManagementView(wakeUpViewModel: viewModel.wakeUpViewModel) {
                 Task {
                     await viewModel.loadAlarms()
                 }
@@ -263,87 +264,35 @@ struct AlarmsView: View {
     private var nextAlarmView: some View {
         switch viewModel.nextAlarmState {
         case .nextAlarm(let alarm):
-            // Next alarm within 12 hours - use existing UI
-            if let currentAlarm = viewModel.wakeUpViewModel.wakeUpSchedules.first(where: { $0.id == alarm.id }) {
-                AlarmRow(
-                    alarm: currentAlarm,
-                    isEnabled: Binding(
-                        get: { 
-                            let enabled = currentAlarm.isEnabled
-                            return enabled
-                        },
-                        set: { newValue in
-                            Task {
-                                await viewModel.toggleAlarm(currentAlarm, isEnabled: newValue)
-                            }
+            // Next alarm - show with toggle using ID-based lookup to avoid stale references
+            WakeUpAlarmView(
+                alarmId: alarm.id,
+                wakeUpViewModel: viewModel.wakeUpViewModel,
+                onToggle: { alarm, isEnabled in
+                    Task {
+                        await viewModel.toggleAlarm(alarm, isEnabled: isEnabled)
+                    }
+                },
+                onTap: {
+                    showingWakeUpManagement = true
+                }
+            )
+            
+        case .previousAlarm(let alarm):
+            // Previous alarm - show with toggle using ID-based lookup 
+            VStack(spacing: 0) {
+                WakeUpAlarmView(
+                    alarmId: alarm.id,
+                    wakeUpViewModel: viewModel.wakeUpViewModel,
+                    onToggle: { alarm, isEnabled in
+                        Task {
+                            await viewModel.toggleAlarm(alarm, isEnabled: isEnabled)
                         }
-                    ),
+                    },
                     onTap: {
                         showingWakeUpManagement = true
                     }
                 )
-                .listRowBackground(Color.clear)
-                .listRowSeparator(.hidden)
-                .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
-            } else {
-                // Fallback if alarm not found
-                EmptyView()
-            }
-            
-        case .previousAlarm(let alarm):
-            // Previous alarm beyond 12 hours - replace toggle with play button
-            VStack(spacing: 0) {
-                HStack {
-                    VStack(alignment: .leading, spacing: BananaTheme.Spacing.xxs) {
-                        HStack(alignment: .firstTextBaseline, spacing: BananaTheme.Spacing.xs) {
-                            Text(timeString(from: alarm.time))
-                                .font(.largeTitle)
-                                .foregroundColor(.white)
-                                .monospacedDigit()
-                            Text(periodString(from: alarm.time))
-                                .font(.title2)
-                                .foregroundColor(BananaTheme.Colors.textSecondary)
-                        }
-                        
-                        // Today/Tomorrow and AI status inline below time
-                        HStack(spacing: BananaTheme.Spacing.xs) {
-                            Text(todayTomorrowText(for: alarm))
-                                .font(.caption)
-                                .foregroundColor(BananaTheme.Colors.textSecondary)
-                            
-                            if alarm.isAIEnabled {
-                                Text("🍌🧠 Wake Up ON")
-                                    .font(.caption)
-                                    .foregroundColor(BananaTheme.Colors.bananaYellow)
-                            } else {
-                                Text("🍌🧠 Wake Up OFF")
-                                    .font(.caption)
-                                    .foregroundColor(BananaTheme.Colors.textSecondary)
-                            }
-                        }
-                    }
-                    
-                    Spacer()
-                    
-                    VStack(alignment: .trailing, spacing: BananaTheme.Spacing.xxs) {
-                        Button {
-                            // TODO: Play alarm AI message
-                            print("Play alarm AI message")
-                        } label: {
-                            Image(systemName: "play.circle.fill")
-                                .font(.title2)
-                                .foregroundColor(BananaTheme.Colors.bananaYellow)
-                        }
-                    }
-                }
-                .padding(.vertical, BananaTheme.Spacing.sm)
-                .padding(.horizontal, BananaTheme.Spacing.md)
-                .onTapGesture {
-                    showingWakeUpManagement = true
-                }
-                .listRowBackground(Color.clear)
-                .listRowSeparator(.hidden)
-                .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
                 
                 // Tomorrow's alarm subtitle
                 HStack {
@@ -353,7 +302,6 @@ struct AlarmsView: View {
                     
                     Spacer()
                 }
-                .padding(.horizontal, BananaTheme.Spacing.md)
                 .padding(.bottom, BananaTheme.Spacing.sm)
                 .listRowBackground(Color.clear)
                 .listRowSeparator(.hidden)
@@ -388,14 +336,12 @@ struct AlarmsView: View {
                         }
                     }
                 }
-                .padding(.vertical, BananaTheme.Spacing.sm)
-                .padding(.horizontal, BananaTheme.Spacing.md)
                 .onTapGesture {
                     showingWakeUpManagement = true
                 }
                 .listRowBackground(Color.clear)
                 .listRowSeparator(.hidden)
-                .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+                .listRowInsets(EdgeInsets(top: 0, leading: BananaTheme.Spacing.md, bottom: 0, trailing: BananaTheme.Spacing.md))
                 
                 // Tomorrow's alarm subtitle
                 HStack {
@@ -405,7 +351,6 @@ struct AlarmsView: View {
                     
                     Spacer()
                 }
-                .padding(.horizontal, BananaTheme.Spacing.md)
                 .padding(.bottom, BananaTheme.Spacing.sm)
                 .listRowBackground(Color.clear)
                 .listRowSeparator(.hidden)
@@ -430,14 +375,30 @@ struct AlarmsView: View {
     
     private func todayTomorrowText(for alarm: Alarm) -> String {
         let calendar = Calendar.current
-        let now = Date()
-        let alarmDate = alarm.nextFireDate
+        let today = Date()
+        let todayWeekday = calendar.component(.weekday, from: today)
+        let tomorrow = calendar.date(byAdding: .day, value: 1, to: today) ?? today
+        let tomorrowWeekday = calendar.component(.weekday, from: tomorrow)
         
-        if calendar.isDate(alarmDate, inSameDayAs: now) {
+        guard let todayDay = Alarm.Weekday(rawValue: todayWeekday),
+              let tomorrowDay = Alarm.Weekday(rawValue: tomorrowWeekday) else {
+            return "Today" // Fallback
+        }
+        
+        let alarmDays = alarm.wakeUpDays ?? Set(alarm.repeatDays)
+        
+        // Check if this alarm is scheduled for today
+        if alarmDays.contains(todayDay) {
             return "Today"
-        } else {
+        }
+        
+        // Check if this alarm is scheduled for tomorrow
+        if alarmDays.contains(tomorrowDay) {
             return "Tomorrow"
         }
+        
+        // Fallback (should not happen with new logic, but safety)
+        return "Today"
     }
     
     @ToolbarContentBuilder

@@ -37,16 +37,18 @@ struct AlarmDetailView: View {
     let alarm: Alarm?
     let onSave: (Alarm) -> Void
     let onDelete: ((Alarm) -> Void)?
+    let wakeUpViewModel: WakeUpAlarmsViewModel
     
     // Computed property to check if this is a wake-up alarm
     private var isWakeUpAlarm: Bool {
         alarm?.isWakeUpAlarm ?? false
     }
     
-    init(alarm: Alarm?, onSave: @escaping (Alarm) -> Void, onDelete: ((Alarm) -> Void)? = nil) {
+    init(alarm: Alarm?, wakeUpViewModel: WakeUpAlarmsViewModel, onSave: @escaping (Alarm) -> Void, onDelete: ((Alarm) -> Void)? = nil) {
         self.alarm = alarm
         self.onSave = onSave
         self.onDelete = onDelete
+        self.wakeUpViewModel = wakeUpViewModel
         
         // Initialize state
         _time = State(initialValue: alarm?.time ?? Date().addingTimeInterval(3600))
@@ -74,7 +76,7 @@ struct AlarmDetailView: View {
     var body: some View {
         // Redirect wake-up alarms to the new management view
         if isWakeUpAlarm {
-            WakeUpManagementView()
+            WakeUpManagementView(wakeUpViewModel: wakeUpViewModel)
         } else {
             NavigationStack {
                 ZStack {
@@ -192,7 +194,7 @@ struct AlarmDetailView: View {
                 Spacer()
                 Picker("", selection: $snoozeLength) {
                     Text("Off").tag(nil as Int?)
-                    ForEach(1...15, id: \.self) { minutes in
+                    ForEach(Array(1...10) + [15, 30, 45, 60], id: \.self) { minutes in
                         Text("\(minutes) min").tag(minutes as Int?)
                     }
                 }

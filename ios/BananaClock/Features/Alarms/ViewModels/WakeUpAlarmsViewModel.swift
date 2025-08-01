@@ -97,18 +97,29 @@ class WakeUpAlarmsViewModel: ObservableObject {
     }
     
     func updateSchedule(_ schedule: Alarm) async {
+        print("DEBUG: WakeUpAlarmsViewModel.updateSchedule - starting update for alarm \(schedule.id)")
+        print("DEBUG: - isEnabled: \(schedule.isEnabled)")
+        print("DEBUG: - isAIEnabled: \(schedule.isAIEnabled)")
+        print("DEBUG: - time: \(schedule.time)")
+        print("DEBUG: - soundIdentifier: \(schedule.soundIdentifier)")
+        print("DEBUG: - snoozeLength: \(schedule.snoozeLength?.description ?? "nil")")
+        print("DEBUG: - volume: \(schedule.volume)")
+        
         do {
             // Save to CoreData
             try CoreDataManager.shared.updateAlarm(schedule)
+            print("DEBUG: WakeUpAlarmsViewModel.updateSchedule - CoreData update successful")
             
             // Reload
             await loadWakeUpAlarms()
+            print("DEBUG: WakeUpAlarmsViewModel.updateSchedule - reload completed")
             
             // Reschedule with AlarmKit
             await scheduleAlarmKitAlarms()
+            print("DEBUG: WakeUpAlarmsViewModel.updateSchedule - AlarmKit scheduling completed")
         } catch {
             self.error = error
-            print("Failed to update wake-up schedule: \(error)")
+            print("ERROR: WakeUpAlarmsViewModel.updateSchedule - Failed to update wake-up schedule: \(error)")
         }
     }
     
@@ -181,53 +192,49 @@ class WakeUpAlarmsViewModel: ObservableObject {
     
     private func updateNextVisibleAlarm() {
         let now = Date()
+        print("DEBUG: WakeUpAlarmsViewModel.updateNextVisibleAlarm - starting at \(now)")
         
-        // Find all wake-up alarms (including disabled ones)
-        let allAlarms = wakeUpSchedules
+        // Use same logic as updateNextAlarmState for consistency
+        // nextVisibleWakeUpAlarm should align with what's shown on alarm page
         
-        // Find the next alarm
-        let nextAlarm = allAlarms
-            .map { alarm -> (alarm: Alarm, fireDate: Date) in
-                (alarm, alarm.nextFireDate)
-            }
-            .sorted { $0.fireDate < $1.fireDate }
-            .first
-        
-        guard let next = nextAlarm else {
+        // If no wake-up alarms exist
+        if wakeUpSchedules.isEmpty {
+            print("DEBUG: WakeUpAlarmsViewModel.updateNextVisibleAlarm - no wake-up schedules found")
             nextVisibleWakeUpAlarm = nil
             return
         }
         
-        // Check if today's alarm has already fired
-        let calendar = Calendar.current
-        let todaysAlarms = allAlarms.filter { alarm in
-            let alarmDays = alarm.wakeUpDays ?? Set(alarm.repeatDays)
-            let todayWeekday = calendar.component(.weekday, from: now)
-            guard let todayDay = Alarm.Weekday(rawValue: todayWeekday) else { return false }
-            return alarmDays.contains(todayDay)
-        }
+        // Get today's and tomorrow's alarms (consistent with nextAlarmState logic)
+        let todaysAlarm = getTodaysAlarm()
+        let tomorrowsAlarm = getTomorrowsAlarm()
         
-        if let todaysAlarm = todaysAlarms.first {
-            let todayFireDate = calendar.date(bySettingHour: calendar.component(.hour, from: todaysAlarm.time),
-                                            minute: calendar.component(.minute, from: todaysAlarm.time),
-                                            second: 0,
-                                            of: now) ?? now
-            
-            let hoursSinceAlarm = now.timeIntervalSince(todayFireDate) / 3600
-            
-            // If less than 6 hours since today's alarm, don't show next
-            if hoursSinceAlarm >= 0 && hoursSinceAlarm < 6 {
-                nextVisibleWakeUpAlarm = nil
-                return
+        print("DEBUG: WakeUpAlarmsViewModel.updateNextVisibleAlarm - Today's alarm: \(todaysAlarm?.label ?? "none")")
+        print("DEBUG: WakeUpAlarmsViewModel.updateNextVisibleAlarm - Tomorrow's alarm: \(tomorrowsAlarm?.label ?? "none")")
+        
+        // Determine which alarm should be visible for editing (matches display logic)
+        if let todaysAlarm = todaysAlarm {
+            if !hasTodaysAlarmPassed(alarm: todaysAlarm) {
+                // Today's alarm hasn't passed - make it visible for editing
+                print("DEBUG: WakeUpAlarmsViewModel.updateNextVisibleAlarm - Today's alarm is next, setting as visible")
+                nextVisibleWakeUpAlarm = todaysAlarm
+            } else {
+                // Today's alarm has passed - check tomorrow's with 24-hour constraint
+                if let tomorrowsAlarm = tomorrowsAlarm, isAlarmWithin24Hours(tomorrowsAlarm) {
+                    print("DEBUG: WakeUpAlarmsViewModel.updateNextVisibleAlarm - Today's alarm passed, showing tomorrow's for editing (within 24h)")
+                    nextVisibleWakeUpAlarm = tomorrowsAlarm
+                } else {
+                    // No tomorrow alarm or beyond 24h, keep today's visible for editing
+                    print("DEBUG: WakeUpAlarmsViewModel.updateNextVisibleAlarm - Today's alarm passed, no tomorrow alarm within 24h, keeping today's for editing")
+                    nextVisibleWakeUpAlarm = todaysAlarm
+                }
             }
-        }
-        
-        // Check if next alarm is within 18 hours
-        let hoursUntilAlarm = next.fireDate.timeIntervalSince(now) / 3600
-        
-        if hoursUntilAlarm <= 18 {
-            nextVisibleWakeUpAlarm = next.alarm
+        } else if let tomorrowsAlarm = tomorrowsAlarm, isAlarmWithin24Hours(tomorrowsAlarm) {
+            // No today alarm, show tomorrow's if within 24 hours
+            print("DEBUG: WakeUpAlarmsViewModel.updateNextVisibleAlarm - No today alarm, showing tomorrow's (within 24h)")
+            nextVisibleWakeUpAlarm = tomorrowsAlarm
         } else {
+            // No alarms today or tomorrow
+            print("DEBUG: WakeUpAlarmsViewModel.updateNextVisibleAlarm - No alarms today or tomorrow")
             nextVisibleWakeUpAlarm = nil
         }
     }
@@ -244,49 +251,116 @@ class WakeUpAlarmsViewModel: ObservableObject {
             return
         }
         
-        // Find the next wake-up alarm
-        let nextAlarm = wakeUpSchedules
-            .map { alarm -> (alarm: Alarm, fireDate: Date) in
-                let fireDate = alarm.nextFireDate
-                print("DEBUG: Alarm \(alarm.label) at \(alarm.time) -> nextFireDate: \(fireDate)")
-                return (alarm, fireDate)
+        // Get today's and tomorrow's alarms
+        let todaysAlarm = getTodaysAlarm()
+        let tomorrowsAlarm = getTomorrowsAlarm()
+        
+        print("DEBUG: Today's alarm: \(todaysAlarm?.label ?? "none")")
+        print("DEBUG: Tomorrow's alarm: \(tomorrowsAlarm?.label ?? "none")")
+        
+        // Determine next alarm state based on today/tomorrow only
+        if let todaysAlarm = todaysAlarm {
+            if !hasTodaysAlarmPassed(alarm: todaysAlarm) {
+                // Today's alarm hasn't passed - show it as next
+                print("DEBUG: Today's alarm hasn't passed, setting as nextAlarm")
+                nextAlarmState = .nextAlarm(todaysAlarm)
+            } else {
+                // Today's alarm has passed - check tomorrow's alarm with 24-hour constraint
+                if let tomorrowsAlarm = tomorrowsAlarm {
+                    if isAlarmWithin24Hours(tomorrowsAlarm) {
+                        // Show tomorrow's alarm (within 24 hours)
+                        print("DEBUG: Today's alarm has passed, showing tomorrow's alarm as next (within 24h)")
+                        nextAlarmState = .nextAlarm(tomorrowsAlarm)
+                    } else {
+                        // Tomorrow's alarm exists but is more than 24 hours away
+                        print("DEBUG: Today's alarm has passed, tomorrow's alarm beyond 24h - showing No Alarm")
+                        nextAlarmState = .noAlarms
+                    }
+                } else {
+                    // No tomorrow alarm
+                    print("DEBUG: Today's alarm has passed, no tomorrow alarm - showing No Alarm")
+                    nextAlarmState = .noAlarms
+                }
             }
-            .sorted { $0.fireDate < $1.fireDate }
-            .first
-        
-        guard let next = nextAlarm else {
-            print("DEBUG: No next alarm found, setting noAlarms state")
-            nextAlarmState = .noAlarms
-            tomorrowsAlarmText = "No alarm"
-            return
-        }
-        
-        let hoursUntilAlarm = next.fireDate.timeIntervalSince(now) / 3600
-        print("DEBUG: Next alarm: \(next.alarm.label) at \(next.fireDate), hours until: \(hoursUntilAlarm)")
-        
-        // Check if this alarm has already fired today
-        let calendar = Calendar.current
-        let todayFireDate = calendar.date(bySettingHour: calendar.component(.hour, from: next.alarm.time),
-                                        minute: calendar.component(.minute, from: next.alarm.time),
-                                        second: 0,
-                                        of: now) ?? now
-        
-        let hoursSinceTodayAlarm = now.timeIntervalSince(todayFireDate) / 3600
-        print("DEBUG: Hours since today's alarm: \(hoursSinceTodayAlarm)")
-        
-        // Determine state based on whether alarm has fired today
-        if hoursSinceTodayAlarm >= 0 && hoursSinceTodayAlarm < 6 {
-            // Alarm fired today within last 6 hours - show as previous
-            print("DEBUG: Alarm fired today, setting previousAlarm state")
-            nextAlarmState = .previousAlarm(next.alarm)
+        } else if let tomorrowsAlarm = tomorrowsAlarm {
+            // No today alarm, check tomorrow's alarm with 24-hour constraint
+            if isAlarmWithin24Hours(tomorrowsAlarm) {
+                print("DEBUG: No today alarm, showing tomorrow's alarm as next (within 24h)")
+                nextAlarmState = .nextAlarm(tomorrowsAlarm)
+            } else {
+                print("DEBUG: No today alarm, tomorrow's alarm beyond 24h - showing No Alarm")
+                nextAlarmState = .noAlarms
+            }
         } else {
-            // Alarm hasn't fired today or fired more than 6 hours ago - show as next
-            print("DEBUG: Alarm hasn't fired today or fired long ago, setting nextAlarm state")
-            nextAlarmState = .nextAlarm(next.alarm)
+            // No alarms today or tomorrow
+            print("DEBUG: No alarms today or tomorrow")
+            nextAlarmState = .noAlarms
         }
         
         // Update tomorrow's alarm text
         updateTomorrowsAlarmText()
+    }
+    
+    // MARK: - Helper Methods for Today/Tomorrow Logic
+    
+    private func getTodaysAlarm() -> Alarm? {
+        let calendar = Calendar.current
+        let today = Date()
+        let todayWeekday = calendar.component(.weekday, from: today)
+        guard let todayDay = Alarm.Weekday(rawValue: todayWeekday) else { return nil }
+        
+        return wakeUpSchedules.first { alarm in
+            let alarmDays = alarm.wakeUpDays ?? Set(alarm.repeatDays)
+            return alarmDays.contains(todayDay)
+        }
+    }
+    
+    private func getTomorrowsAlarm() -> Alarm? {
+        let calendar = Calendar.current
+        let tomorrow = calendar.date(byAdding: .day, value: 1, to: Date()) ?? Date()
+        let tomorrowWeekday = calendar.component(.weekday, from: tomorrow)
+        guard let tomorrowDay = Alarm.Weekday(rawValue: tomorrowWeekday) else { return nil }
+        
+        return wakeUpSchedules.first { alarm in
+            let alarmDays = alarm.wakeUpDays ?? Set(alarm.repeatDays)
+            return alarmDays.contains(tomorrowDay)
+        }
+    }
+    
+    private func hasTodaysAlarmPassed(alarm: Alarm) -> Bool {
+        let calendar = Calendar.current
+        let now = Date()
+        
+        let todayAlarmTime = calendar.date(
+            bySettingHour: calendar.component(.hour, from: alarm.time),
+            minute: calendar.component(.minute, from: alarm.time),
+            second: 0,
+            of: now
+        ) ?? now
+        
+        return now > todayAlarmTime
+    }
+    
+    private func isAlarmWithin24Hours(_ alarm: Alarm) -> Bool {
+        let calendar = Calendar.current
+        let now = Date()
+        let tomorrow = calendar.date(byAdding: .day, value: 1, to: now) ?? now
+        
+        // Create tomorrow's alarm time
+        let tomorrowAlarmTime = calendar.date(
+            bySettingHour: calendar.component(.hour, from: alarm.time),
+            minute: calendar.component(.minute, from: alarm.time),
+            second: 0,
+            of: tomorrow
+        ) ?? tomorrow
+        
+        // Calculate hours until alarm
+        let hoursUntilAlarm = tomorrowAlarmTime.timeIntervalSince(now) / 3600
+        
+        print("DEBUG: isAlarmWithin24Hours - Hours until tomorrow's alarm: \(hoursUntilAlarm)")
+        
+        // Return true if alarm is within 24 hours (23:59:59)
+        return hoursUntilAlarm < 24.0
     }
     
     private func updateTomorrowsAlarmText() {
@@ -334,7 +408,7 @@ class WakeUpAlarmsViewModel: ObservableObject {
 // MARK: - Next Alarm State
 
 enum NextAlarmState {
-    case nextAlarm(Alarm) // Within 12 hours
-    case previousAlarm(Alarm) // Beyond 12 hours
-    case noAlarms // No wake-up alarm configured
+    case nextAlarm(Alarm) // Today's upcoming alarm or tomorrow's alarm
+    case previousAlarm(Alarm) // Legacy case - not used in current logic
+    case noAlarms // No wake-up alarm configured for today or tomorrow
 }
