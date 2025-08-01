@@ -72,34 +72,26 @@ enum AppEnvironment {
         return Bundle.main.object(forInfoDictionaryKey: "REVENUECAT_API_KEY") as? String ?? ""
     }
     
-    static var openAIAPIKey: String {
-        print("🔍 Loading OpenAI API key from secure storage...")
-        
-        // Try secure key manager first
-        if let key = SecureKeyManager.shared.retrieveAPIKey(service: .openAI) {
-            print("✅ Found OpenAI key in secure storage")
-            return key
-        }
-        
-        // Fallback to environment variable (for CI/CD)
-        if let key = ProcessInfo.processInfo.environment["OPENAI_API_KEY"] {
-            print("✅ Found OpenAI key in environment variable")
-            return key
-        }
-        
-        print("❌ No valid OpenAI key found, returning empty string")
-        return ""
-    }
+    // OpenAI API key no longer needed in iOS app
+    // All OpenAI calls go through Supabase proxy
     
     // MARK: - Feature Flags
     static let enableCrashReporting = !isDebug
     static let enableAnalytics = !isDebug
     static let enableTestFlightBanner = isDebug
     
+    // MARK: - Development Bypass
+    #if DEBUG
+    static let bypassPaywallInDevelopment = true // Set to false to test paywall in dev
+    #else
+    static let bypassPaywallInDevelopment = false
+    #endif
+    
     // MARK: - API Endpoints
     static let generateContentEndpoint = "\(supabaseURL)/functions/v1/generate-banana-content"
     static let aiTimeConverterEndpoint = "\(supabaseURL)/functions/v1/ai-time-converter"
     static let subscriptionStatusEndpoint = "\(supabaseURL)/functions/v1/subscription-status"
+    static let openAIProxyEndpoint = "\(supabaseURL)/functions/v1/openai-proxy"
     
     // MARK: - Storage Keys
     enum StorageKey {

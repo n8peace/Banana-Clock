@@ -20,20 +20,28 @@ struct BananaClockApp: App {
     @StateObject private var alarmKitService = AlarmKitService.shared
     // @Environment(\.scenePhase) private var scenePhase  // Temporarily disabled
     
+    // MARK: - Development Bypass
+    private var shouldBypassPaywall: Bool {
+        #if DEBUG
+        return AppEnvironment.bypassPaywallInDevelopment
+        #else
+        return false
+        #endif
+    }
+    
     var body: some Scene {
         WindowGroup {
             Group {
-                if purchaseService.isSubscribed {
+                if shouldBypassPaywall || purchaseService.isSubscribed {
+                    // Full app access for subscribers or development bypass
                     MainTabView()
                         .environment(\.managedObjectContext, coreDataManager.viewContext)
                         .environmentObject(coreDataManager)
                         .environmentObject(appState)
                 } else {
-                    // Show main interface in demo mode if RevenueCat isn't configured
-                    MainTabView()
-                        .environment(\.managedObjectContext, coreDataManager.viewContext)
-                        .environmentObject(coreDataManager)
-                        .environmentObject(appState)
+                    // Hard paywall - no app access without subscription
+                    PaywallView()
+                        .environmentObject(purchaseService)
                 }
             }
             .preferredColorScheme(.dark)

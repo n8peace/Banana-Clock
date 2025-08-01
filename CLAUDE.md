@@ -142,10 +142,10 @@ Banana-Clock/
    - For production: Keys are stored in Supabase secrets
 
 2. **API Key Management**:
-   - **Development**: Keys stored in iOS Keychain via SecureKeyManager
-   - **Production**: OpenAI API calls proxied through Supabase Edge Functions
+   - **All environments**: OpenAI API calls proxied through Supabase Edge Functions
+   - iOS app never stores OpenAI keys locally (security best practice)
    - Never commit API keys to source control
-   - Use `AppEnvironment.openAIAPIKey` to retrieve keys in iOS
+   - Use `OpenAIService.shared` for all AI interactions in iOS
 
 3. **Code Style**:
    - Follow iOS development rules in `.cursor/rules/ios-developent-cursor-rules.mdc`
@@ -207,11 +207,12 @@ Banana-Clock/
 5. Offline: Use cached general audio content
 
 ### OpenAI Integration (via Proxy)
-- **Development**: Keys stored in iOS Keychain, accessed via `SecureKeyManager`
-- **Production**: All OpenAI calls go through `/functions/v1/openai-proxy`
+- **All environments**: All OpenAI calls go through `/functions/v1/openai-proxy`
+- iOS app uses `OpenAIService.shared` for all AI interactions
 - Proxy validates user authentication and subscription status
 - OpenAI API key stored as Supabase secret (`OPENAI_API_KEY`)
 - Usage tracked per user for monitoring
+- No API keys stored locally in iOS app (enhanced security)
 
 ### RevenueCat Subscription
 - Monthly: $4.99/month (3-day free trial)
@@ -235,9 +236,10 @@ Banana-Clock/
 8. **Voice Configuration**: Voice personalities configured in ElevenLabs prompts
 9. **Error Monitoring**: Check Supabase logs for debugging
 10. **Subscription Expiry**: Alarms must still function even if subscription expires during active alarm
-11. **API Keys Setup**:
-    - Development: `SecureKeyManager.shared.storeAPIKey("key", service: .openAI)`
-    - Production: `supabase secrets set OPENAI_API_KEY=sk-...`
+11. **OpenAI API Setup**:
+    - Store key in Supabase: `supabase secrets set OPENAI_API_KEY=sk-...`
+    - Deploy proxy function: `supabase functions deploy openai-proxy`
+    - iOS usage: `OpenAIService.shared.generateText(prompt: "Hello")`
 
 ## Known TODOs
 

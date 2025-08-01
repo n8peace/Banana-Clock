@@ -122,7 +122,28 @@ struct DevelopmentSetupView: View {
                             Text(SecureKeyManager.shared.hasAPIKey(service: .revenueCat) ? "✅ Configured" : "❌ Not Set")
                         }
                         .font(.caption)
+                        
+                        HStack {
+                            Text("Paywall Bypass:")
+                            Text(AppEnvironment.bypassPaywallInDevelopment ? "✅ Enabled" : "❌ Disabled")
+                        }
+                        .font(.caption)
                     }
+                }
+                
+                VStack(spacing: 10) {
+                    Text("💰 RevenueCat Testing")
+                        .font(.headline)
+                    
+                    Text("Toggle paywall bypass in environment-config.swift")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                    
+                    Text("Set bypassPaywallInDevelopment = false to test paywall")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
                 }
                 .padding()
                 .background(Color.gray.opacity(0.1))

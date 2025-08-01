@@ -129,6 +129,13 @@ class SupabaseService: ObservableObject {
         }
     }
     
+    // MARK: - Public Session Access
+    
+    func getCurrentSession() async throws -> Supabase.Session? {
+        guard let client = client else { throw SupabaseError.notConfigured }
+        return try await client.auth.session
+    }
+    
     // MARK: - User Preferences Sync
     
     func syncUserPreferences() async throws -> UserPreferences? {

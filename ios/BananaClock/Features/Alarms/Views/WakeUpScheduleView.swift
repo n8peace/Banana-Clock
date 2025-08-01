@@ -9,14 +9,15 @@ import SwiftUI
 
 struct WakeUpScheduleView: View {
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var viewModel = WakeUpAlarmsViewModel()
+    @ObservedObject var viewModel: WakeUpAlarmsViewModel // Shared instance, not created locally
     @State private var showingScheduleEditor = false
     @State private var selectedSchedule: Alarm?
     
     // Callback to notify parent of changes
     let onChangesMade: (() -> Void)?
     
-    init(onChangesMade: (() -> Void)? = nil) {
+    init(wakeUpViewModel: WakeUpAlarmsViewModel, onChangesMade: (() -> Void)? = nil) {
+        self.viewModel = wakeUpViewModel
         self.onChangesMade = onChangesMade
     }
     
@@ -256,7 +257,7 @@ struct WakeUpScheduleRow: View {
 }
 
 #Preview {
-    WakeUpScheduleView {
+    WakeUpScheduleView(wakeUpViewModel: WakeUpAlarmsViewModel()) {
         // Preview callback
     }
 } 

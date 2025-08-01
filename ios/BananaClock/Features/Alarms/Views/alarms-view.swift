@@ -7,10 +7,44 @@ struct AlarmsView: View {
     @State private var showingWakeUpManagement = false
     @State private var showingAlarmKitTest = false
     @State private var isEditing = false
+    @State private var glowAnimation = false
     
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
+            
+            // Enhanced Sunrise Glow - Inspired by Apple Health
+            LinearGradient(
+                colors: [
+                    Color(red: 1.0, green: 0.9, blue: 0.3).opacity(0.60),   // Soft banana yellow
+                    Color(red: 1.0, green: 0.6, blue: 0.1).opacity(0.50),   // Tangerine orange
+                    Color(red: 1.0, green: 0.4, blue: 0.3).opacity(0.40),   // Warm coral red
+                    Color(red: 0.8, green: 0.4, blue: 0.8).opacity(0.30),   // Soft lavender for depth
+                    Color.clear
+                ],
+                startPoint: .topLeading,
+                endPoint: UnitPoint(x: 0.5, y: 0.3)
+            )
+            .blur(radius: 40)
+            .ignoresSafeArea()
+            .blendMode(.screen)
+            .opacity(glowAnimation ? 1.0 : 0.85)
+            .animation(.easeInOut(duration: 3).repeatForever(autoreverses: true), value: glowAnimation)
+            
+            // Radial gradient behind time display
+            RadialGradient(
+                colors: [
+                    Color(red: 1.0, green: 0.9, blue: 0.3).opacity(0.35),
+                    Color.clear
+                ],
+                center: .top,
+                startRadius: 20,
+                endRadius: 200
+            )
+            .frame(height: 300)
+            .frame(maxHeight: .infinity, alignment: .top)
+            .blur(radius: 20)
+            .blendMode(.screen)
             
             VStack(spacing: 0) {
                 // Page title - positioned at top of screen
@@ -35,6 +69,7 @@ struct AlarmsView: View {
                 }
                 .navigationTitle("⏰ Alarms")
                 .navigationBarTitleDisplayMode(.inline)
+                .background(Color.clear)
                 .toolbar {
                     toolbarContent
                 }
@@ -126,6 +161,9 @@ struct AlarmsView: View {
 
         .task {
             await viewModel.loadAlarms()
+        }
+        .onAppear {
+            glowAnimation = true
         }
     }
     

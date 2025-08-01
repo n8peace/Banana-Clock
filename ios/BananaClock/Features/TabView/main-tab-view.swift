@@ -61,8 +61,7 @@ struct MainTabView: View {
                 NavigationStack {
                     contentView(for: tab)
                         .navigationBarTitleDisplayMode(.inline)
-                        .toolbarBackground(BananaTheme.Colors.backgroundPrimary, for: .navigationBar)
-                        .toolbarBackground(.visible, for: .navigationBar)
+                        .toolbarBackground(.hidden, for: .navigationBar)
                         .toolbarColorScheme(.dark, for: .navigationBar)
                 }
                 .tabItem {
@@ -115,8 +114,8 @@ struct MainTabView: View {
     
     private func setupNavigationBarAppearance() {
         let appearance = UINavigationBarAppearance()
-        appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = UIColor(BananaTheme.Colors.backgroundPrimary)
+        appearance.configureWithTransparentBackground()
+        appearance.backgroundColor = .clear
         
         // Title appearance
         appearance.titleTextAttributes = [

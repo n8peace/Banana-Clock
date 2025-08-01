@@ -12,7 +12,7 @@ enum APIService: String, CaseIterable {
     case revenueCat = "revenue_cat"
     case supabaseAnon = "supabase_anon"
     case supabaseService = "supabase_service"
-    case openAI = "openai"
+    // openAI removed - now handled via Supabase proxy
     
     var keychainKey: String {
         return "banana_clock_api_key_\(rawValue)"
@@ -23,7 +23,6 @@ enum APIService: String, CaseIterable {
         case .revenueCat: return "RevenueCat"
         case .supabaseAnon: return "Supabase (Anon)"
         case .supabaseService: return "Supabase (Service)"
-        case .openAI: return "OpenAI"
         }
     }
 }
@@ -139,8 +138,6 @@ class SecureKeyManager: ObservableObject {
             envKey = "SUPABASE_ANON_KEY"
         case .supabaseService:
             envKey = "SUPABASE_SERVICE_KEY"
-        case .openAI:
-            envKey = "OPENAI_API_KEY"
         }
         
         return ProcessInfo.processInfo.environment[envKey]
@@ -155,10 +152,6 @@ class SecureKeyManager: ObservableObject {
         case .supabaseAnon, .supabaseService:
             guard key.hasPrefix("eyJ") else {
                 throw KeyManagerError.invalidKeyFormat("Supabase key should be a JWT token")
-            }
-        case .openAI:
-            guard key.hasPrefix("sk-") else {
-                throw KeyManagerError.invalidKeyFormat("OpenAI key should start with 'sk-'")
             }
         }
     }
@@ -182,16 +175,7 @@ class SecureKeyManager: ObservableObject {
         }
     }
     
-    /// Quick setup method for OpenAI API key during development
-    func storeOpenAIKey(_ key: String) {
-        do {
-            try storeAPIKey(key, service: .openAI)
-            print("🎉 Successfully stored OpenAI API key in keychain!")
-            print("🔍 You can verify with: SecureKeyManager.shared.hasAPIKey(service: .openAI)")
-        } catch {
-            print("❌ Failed to store OpenAI key: \(error)")
-        }
-    }
+    // OpenAI key management removed - now handled via Supabase proxy
     
     /// Debug method to check all key statuses
     func checkAllKeyStatuses() {

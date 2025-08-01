@@ -11,10 +11,44 @@ import AudioToolbox
 
 struct StopwatchView: View {
     @StateObject private var viewModel = StopwatchViewModel()
+    @State private var glowAnimation = false
     
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
+            
+            // Enhanced Sunrise Glow - Inspired by Apple Health
+            LinearGradient(
+                colors: [
+                    Color(red: 1.0, green: 0.9, blue: 0.3).opacity(0.60),   // Soft banana yellow (was 0.45)
+                    Color(red: 1.0, green: 0.6, blue: 0.1).opacity(0.50),   // Tangerine orange (was 0.35)
+                    Color(red: 1.0, green: 0.4, blue: 0.3).opacity(0.40),   // Warm coral red (was 0.25)
+                    Color(red: 0.8, green: 0.4, blue: 0.8).opacity(0.30),   // Soft lavender for depth (was 0.15)
+                    Color.clear
+                ],
+                startPoint: .topLeading,
+                endPoint: UnitPoint(x: 0.5, y: 0.3)
+            )
+            .blur(radius: 40)
+            .ignoresSafeArea()
+            .blendMode(.screen)
+            .opacity(glowAnimation ? 1.0 : 0.85)
+            .animation(.easeInOut(duration: 3).repeatForever(autoreverses: true), value: glowAnimation)
+            
+            // Radial gradient behind time display
+            RadialGradient(
+                colors: [
+                    Color(red: 1.0, green: 0.9, blue: 0.3).opacity(0.35),   // (was 0.2)
+                    Color.clear
+                ],
+                center: .top,
+                startRadius: 20,
+                endRadius: 200
+            )
+            .frame(height: 300)
+            .frame(maxHeight: .infinity, alignment: .top)
+            .blur(radius: 20)
+            .blendMode(.screen)
             
             VStack(spacing: 0) {
                 NavigationStack {
@@ -40,6 +74,9 @@ struct StopwatchView: View {
                 .navigationTitle("⏱️ Stopwatch")
                 .navigationBarTitleDisplayMode(.inline)
             }
+        }
+        .onAppear {
+            glowAnimation = true
         }
     }
     
