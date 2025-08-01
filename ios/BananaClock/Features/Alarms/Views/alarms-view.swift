@@ -374,12 +374,11 @@ struct AlarmsView: View {
                         }
                     }
                 }
+                .padding(.vertical, BananaTheme.Spacing.sm)
+                .padding(.horizontal, BananaTheme.Spacing.md)
                 .onTapGesture {
                     showingWakeUpManagement = true
                 }
-                .listRowBackground(Color.clear)
-                .listRowSeparator(.hidden)
-                .listRowInsets(EdgeInsets(top: 0, leading: BananaTheme.Spacing.md, bottom: 0, trailing: BananaTheme.Spacing.md))
                 
                 // Tomorrow's alarm subtitle
                 HStack {
@@ -389,11 +388,12 @@ struct AlarmsView: View {
                     
                     Spacer()
                 }
+                .padding(.horizontal, BananaTheme.Spacing.md)
                 .padding(.bottom, BananaTheme.Spacing.sm)
-                .listRowBackground(Color.clear)
-                .listRowSeparator(.hidden)
-                .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
             }
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
         }
     }
     
