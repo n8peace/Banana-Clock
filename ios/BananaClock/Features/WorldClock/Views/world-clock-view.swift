@@ -17,9 +17,46 @@ struct WorldClockView: View {
     @State private var showConfetti = false
     @State private var showGoldenGlow = false
     @State private var showingCalendar = false
+    @State private var glowAnimation = false
     
     var body: some View {
         ZStack {
+            // Base black background (foundation layer)
+            Color.black.ignoresSafeArea()
+            
+            // Enhanced Sunrise Glow - Inspired by Apple Health
+            LinearGradient(
+                colors: [
+                    Color(red: 1.0, green: 0.9, blue: 0.3).opacity(0.60),   // Soft banana yellow
+                    Color(red: 1.0, green: 0.6, blue: 0.1).opacity(0.50),   // Tangerine orange
+                    Color(red: 1.0, green: 0.4, blue: 0.3).opacity(0.40),   // Warm coral red
+                    Color(red: 0.8, green: 0.4, blue: 0.8).opacity(0.30),   // Soft lavender for depth
+                    Color.clear
+                ],
+                startPoint: .topLeading,
+                endPoint: UnitPoint(x: 0.5, y: 0.3)
+            )
+            .blur(radius: 40)
+            .ignoresSafeArea()
+            .blendMode(.screen)
+            .opacity(glowAnimation ? 1.0 : 0.70)
+            .animation(.easeInOut(duration: 4), value: glowAnimation)
+            
+            // Radial gradient behind time display
+            RadialGradient(
+                colors: [
+                    Color(red: 1.0, green: 0.9, blue: 0.3).opacity(0.35),
+                    Color.clear
+                ],
+                center: .top,
+                startRadius: 20,
+                endRadius: 200
+            )
+            .frame(height: 300)
+            .frame(maxHeight: .infinity, alignment: .top)
+            .blur(radius: 20)
+            .blendMode(.screen)
+            
             VStack(spacing: 0) {
                 // Fixed user time section at top
                 if let currentClock = viewModel.currentTimezoneClock {
@@ -27,7 +64,7 @@ struct WorldClockView: View {
                         // User's time - sticky at top
                         WorldClockRow(clock: currentClock, viewModel: viewModel)
                     }
-                    .background(.ultraThinMaterial.opacity(0.5))
+                    .background(.ultraThinMaterial.opacity(0.1))
                 }
                 
                 NavigationStack {
@@ -107,7 +144,6 @@ struct WorldClockView: View {
                     // Full screen tap to dismiss
                     Color.clear
                         .contentShape(Rectangle())
-                        .ignoresSafeArea()
                         .onTapGesture {
                             withAnimation(.easeInOut(duration: 0.3)) {
                                 showingCalendar = false
@@ -118,14 +154,14 @@ struct WorldClockView: View {
                     VStack {
                         Spacer()
                         
-                        NativeCalendarView(selectedDate: $viewModel.selectedDate)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .background(
-                                RoundedRectangle(cornerRadius: 16)
-                                    .fill(Color.backgroundSecondary.opacity(0.95))
-                            )
-                            .padding(.horizontal, BSpacing.md)
-                            .padding(.bottom, 200) // Position above converter
+                            NativeCalendarView(selectedDate: $viewModel.selectedDate)
+        .frame(maxWidth: UIScreen.main.bounds.width - 2 * BSpacing.md)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color.backgroundSecondary.opacity(0.95))
+        )
+        .padding(.horizontal, BSpacing.md)
+        .padding(.bottom, 200) // Position above converter
                     }
                 }
                 .transition(.asymmetric(
@@ -150,6 +186,9 @@ struct WorldClockView: View {
                 // Clear selection when exiting edit mode
                 viewModel.deselectAll()
             }
+        }
+        .onAppear {
+            glowAnimation = true
         }
     }
     
@@ -349,7 +388,7 @@ struct WorldClockView: View {
             
             // Transparent spacer to create blank space at bottom
             Color.clear
-                .frame(height: viewModel.clocks.count >= 2 ? 160 : 60)
+                .frame(height: viewModel.clocks.count >= 2 ? 200 : 60)
                 .listRowBackground(Color.clear)
                 .listRowSeparator(.hidden)
                 .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
