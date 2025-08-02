@@ -18,6 +18,7 @@ struct BananaClockApp: App {
     @StateObject private var purchaseService = PurchaseService.shared
     @StateObject private var secureKeyManager = SecureKeyManager.shared
     @StateObject private var alarmKitService = AlarmKitService.shared
+    @StateObject private var liveActivityService = LiveActivityService.shared
     // @Environment(\.scenePhase) private var scenePhase  // Temporarily disabled
     
     // MARK: - Development Bypass
@@ -38,6 +39,7 @@ struct BananaClockApp: App {
                         .environment(\.managedObjectContext, coreDataManager.viewContext)
                         .environmentObject(coreDataManager)
                         .environmentObject(appState)
+                        .environmentObject(liveActivityService)
                 } else {
                     // Hard paywall - no app access without subscription
                     PaywallView()

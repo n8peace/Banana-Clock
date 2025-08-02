@@ -10,8 +10,9 @@ import CoreData
 
 struct MainTabView: View {
     @EnvironmentObject var appState: AppState
+    @State private var glowAnimation = false
     
-    private var selectedTab: Binding<Tab> {
+    private var selectedTab: Binding<MainTabView.Tab> {
         Binding(
             get: { appState.selectedTab },
             set: { newTab in
@@ -56,29 +57,70 @@ struct MainTabView: View {
     }
     
     var body: some View {
-        TabView(selection: selectedTab) {
-            ForEach(Tab.allCases, id: \.self) { tab in
+        ZStack {
+            // Base black background (foundation layer)
+            Color.black.ignoresSafeArea()
+            
+            // Enhanced Sunrise Glow - Inspired by Apple Health
+            LinearGradient(
+                colors: [
+                    Color(red: 1.0, green: 0.9, blue: 0.3).opacity(0.60),   // Soft banana yellow
+                    Color(red: 1.0, green: 0.6, blue: 0.1).opacity(0.50),   // Tangerine orange
+                    Color(red: 1.0, green: 0.4, blue: 0.3).opacity(0.40),   // Warm coral red
+                    Color(red: 0.8, green: 0.4, blue: 0.8).opacity(0.30),   // Soft lavender for depth
+                    Color.clear
+                ],
+                startPoint: .topLeading,
+                endPoint: UnitPoint(x: 0.5, y: 0.3)
+            )
+            .blur(radius: 40)
+            .ignoresSafeArea()
+            .blendMode(.screen)
+            .opacity(glowAnimation ? 1.0 : 0.85)
+            .animation(.easeInOut(duration: 3).repeatForever(autoreverses: true), value: glowAnimation)
+            
+            // Radial gradient behind time display
+            RadialGradient(
+                colors: [
+                    Color(red: 1.0, green: 0.9, blue: 0.3).opacity(0.35),
+                    Color.clear
+                ],
+                center: .top,
+                startRadius: 20,
+                endRadius: 200
+            )
+            .frame(height: 300)
+            .frame(maxHeight: .infinity, alignment: .top)
+            .blur(radius: 20)
+            .blendMode(.screen)
+            
+            TabView(selection: selectedTab) {
+            ForEach(MainTabView.Tab.allCases, id: \.self) { tab in
                 NavigationStack {
                     contentView(for: tab)
                         .navigationBarTitleDisplayMode(.inline)
                         .toolbarBackground(.hidden, for: .navigationBar)
                         .toolbarColorScheme(.dark, for: .navigationBar)
                 }
+                .background(Color.clear)
                 .tabItem {
                     Label(tab.title, systemImage: tab.icon)
                 }
                 .tag(tab)
             }
         }
+        }
+        .background(Color.clear)
         .accentColor(BananaTheme.Colors.bananaYellow)
         .onAppear {
             setupTabBarAppearance()
             setupNavigationBarAppearance()
+            glowAnimation = true
         }
     }
     
     @ViewBuilder
-    private func contentView(for tab: Tab) -> some View {
+    private func contentView(for tab: MainTabView.Tab) -> some View {
         switch tab {
         case .worldClock:
             WorldClockView()
@@ -93,8 +135,8 @@ struct MainTabView: View {
     
     private func setupTabBarAppearance() {
         let appearance = UITabBarAppearance()
-        appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = UIColor.black
+        appearance.configureWithTransparentBackground()
+        appearance.backgroundColor = UIColor.clear
         
         // Normal state
         appearance.stackedLayoutAppearance.normal.iconColor = UIColor.systemGray

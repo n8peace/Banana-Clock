@@ -168,7 +168,7 @@ class CoreDataManager: ObservableObject {
     
     // MARK: - Timer Operations
     
-    func createTimer(_ timer: Timer) throws -> CDTimer {
+    func createTimer(_ timer: BananaTimer) throws -> CDTimer {
         let cdTimer = CDTimer(context: viewContext)
         cdTimer.id = timer.id
         cdTimer.label = timer.label
@@ -176,15 +176,19 @@ class CoreDataManager: ObservableObject {
         cdTimer.remainingTime = timer.remainingTime
         cdTimer.state = timer.state.rawValue
         cdTimer.soundIdentifier = timer.soundIdentifier
-        cdTimer.createdAt = timer.createdAt
-        cdTimer.isPreset = timer.isPreset
-        cdTimer.presetOrder = Int16(timer.presetOrder)
+        cdTimer.startedAt = timer.startedAt
+        cdTimer.pausedAt = timer.pausedAt
+        // Use lastUsedAt as createdAt for Core Data compatibility
+        cdTimer.createdAt = timer.lastUsedAt
+        // Set default values for removed properties
+        cdTimer.isPreset = false
+        cdTimer.presetOrder = 0
         
         save()
         return cdTimer
     }
     
-    func fetchTimers() throws -> [Timer] {
+    func fetchTimers() throws -> [BananaTimer] {
         let request = CDTimer.fetchRequest()
         request.sortDescriptors = [NSSortDescriptor(key: "createdAt", ascending: false)]
         
@@ -197,19 +201,16 @@ class CoreDataManager: ObservableObject {
                   let createdAt = cdTimer.createdAt,
                   let timerState = Timer.TimerState(rawValue: state) else { return nil }
             
-            return Timer(
+            return BananaTimer(
                 id: id,
                 label: label,
                 duration: cdTimer.duration,
                 remainingTime: cdTimer.remainingTime,
                 state: timerState,
-                soundIdentifier: soundIdentifier,
-                createdAt: createdAt,
                 startedAt: cdTimer.startedAt,
                 pausedAt: cdTimer.pausedAt,
-                finishedAt: cdTimer.finishedAt,
-                isPreset: cdTimer.isPreset,
-                presetOrder: Int(cdTimer.presetOrder)
+                lastUsedAt: createdAt, // Map createdAt to lastUsedAt
+                soundIdentifier: soundIdentifier
             )
         }
     }

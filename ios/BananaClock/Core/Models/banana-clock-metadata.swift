@@ -70,7 +70,18 @@ extension BananaClockMetadata: Codable {
     }
 }
 
-// MARK: - Hashable Conformance
+// MARK: - Equatable & Hashable Conformance
+
+extension BananaClockMetadata: Equatable {
+    static func == (lhs: BananaClockMetadata, rhs: BananaClockMetadata) -> Bool {
+        return lhs.alarmType == rhs.alarmType &&
+               lhs.musicSelection == rhs.musicSelection &&
+               lhs.voicePreference == rhs.voicePreference &&
+               lhs.customMessage == rhs.customMessage &&
+               lhs.isSubscriberOnly == rhs.isSubscriberOnly &&
+               lhs.createdAt == rhs.createdAt
+    }
+}
 
 extension BananaClockMetadata: Hashable {
     func hash(into hasher: inout Hasher) {

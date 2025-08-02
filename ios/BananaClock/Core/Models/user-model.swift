@@ -118,55 +118,80 @@ struct UserPreferences: Identifiable, Codable {
     }
 }
 
-// MARK: - Timer Model (moved from TimersView)
-struct Timer: Identifiable, Codable {
+// MARK: - Timer Model (Enhanced BananaTimer)
+struct BananaTimer: Identifiable, Codable {
     let id: UUID
-    var label: String
-    var duration: TimeInterval
+    let label: String
+    let duration: TimeInterval
     var remainingTime: TimeInterval
-    var state: TimerState
-    var soundIdentifier: String
-    let createdAt: Date
+    var state: Timer.TimerState
     var startedAt: Date?
     var pausedAt: Date?
-    var finishedAt: Date?
-    var isPreset: Bool
-    var presetOrder: Int
-    
-    enum TimerState: String, Codable {
-        case ready, running, paused, finished
-    }
-    
-    var progress: Double {
-        guard duration > 0 else { return 0 }
-        return (duration - remainingTime) / duration
-    }
+    var lastUsedAt: Date
+    var soundIdentifier: String
     
     init(
         id: UUID = UUID(),
         label: String,
         duration: TimeInterval,
         remainingTime: TimeInterval? = nil,
-        state: TimerState = .ready,
-        soundIdentifier: String = "timer_complete",
-        createdAt: Date = Date(),
+        state: Timer.TimerState = .ready,
         startedAt: Date? = nil,
         pausedAt: Date? = nil,
-        finishedAt: Date? = nil,
-        isPreset: Bool = false,
-        presetOrder: Int = 0
+        lastUsedAt: Date = Date(),
+        soundIdentifier: String = "timer_complete"
     ) {
         self.id = id
         self.label = label
         self.duration = duration
         self.remainingTime = remainingTime ?? duration
         self.state = state
-        self.soundIdentifier = soundIdentifier
-        self.createdAt = createdAt
         self.startedAt = startedAt
         self.pausedAt = pausedAt
-        self.finishedAt = finishedAt
-        self.isPreset = isPreset
-        self.presetOrder = presetOrder
+        self.lastUsedAt = lastUsedAt
+        self.soundIdentifier = soundIdentifier
+    }
+    
+    var progress: Double {
+        guard duration > 0 else { return 0 }
+        return max(0, min(1, (duration - remainingTime) / duration))
+    }
+    
+    var formattedRemainingTime: String {
+        let totalSeconds = Int(remainingTime)
+        let hours = totalSeconds / 3600
+        let minutes = (totalSeconds % 3600) / 60
+        let seconds = totalSeconds % 60
+        
+        if hours > 0 {
+            return String(format: "%d:%02d:%02d", hours, minutes, seconds)
+        } else {
+            return String(format: "%d:%02d", minutes, seconds)
+        }
+    }
+    
+    var formattedDuration: String {
+        let totalSeconds = Int(duration)
+        let hours = totalSeconds / 3600
+        let minutes = (totalSeconds % 3600) / 60
+        let seconds = totalSeconds % 60
+        
+        if hours > 0 {
+            return String(format: "%d:%02d:%02d", hours, minutes, seconds)
+        } else {
+            return String(format: "%d:%02d", minutes, seconds)
+        }
+    }
+    
+    var endTime: Date? {
+        guard state == .running, remainingTime > 0 else { return nil }
+        return Date().addingTimeInterval(remainingTime)
+    }
+}
+
+// MARK: - Timer State and Legacy Timer Support
+extension Timer {
+    enum TimerState: String, Codable {
+        case ready, running, paused, finished
     }
 }

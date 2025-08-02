@@ -44,7 +44,7 @@ struct HeadlinesPickerView: View {
             }
             .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
-            .background(Color.backgroundPrimary)
+            .background(Color.clear)
             .navigationTitle("News Categories")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
