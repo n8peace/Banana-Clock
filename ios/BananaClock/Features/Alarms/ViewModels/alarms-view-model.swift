@@ -82,10 +82,8 @@ class AlarmsViewModel: ObservableObject {
                 await wakeUpViewModel.loadWakeUpAlarms()
             }
             
-            // Sync with AlarmKit
-            for alarm in alarms where alarm.isEnabled {
-                try await alarmService.scheduleAlarm(alarm)
-            }
+            // Note: Removed blanket alarm rescheduling to prevent cross-contamination
+            // Individual alarms are scheduled when specifically modified
             
             // Trigger AI content generation for enabled AI alarms
             // let aiAlarms = alarms.filter { $0.isAIEnabled && $0.isEnabled }

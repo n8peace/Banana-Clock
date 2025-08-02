@@ -33,8 +33,8 @@ struct StopwatchView: View {
             .blur(radius: 40)
             .ignoresSafeArea()
             .blendMode(.screen)
-            .opacity(glowAnimation ? 1.0 : 0.85)
-            .animation(.easeInOut(duration: 3).repeatForever(autoreverses: true), value: glowAnimation)
+            .opacity(glowAnimation ? 1.0 : 0.70)
+            .animation(.easeInOut(duration: 4), value: glowAnimation)
             
             // Radial gradient behind time display
             RadialGradient(

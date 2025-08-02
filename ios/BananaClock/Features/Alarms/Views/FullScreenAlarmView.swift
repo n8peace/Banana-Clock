@@ -17,6 +17,7 @@ struct FullScreenAlarmView: View {
     let musicSelection: String?
     let voicePreference: String?
     let wakeUpContent: String?
+    let alarmSound: String?  // NEW: Added alarm sound identifier
     
     @StateObject private var audioService = AudioService.shared
     @StateObject private var liveActivityService = LiveActivityService.shared
@@ -306,6 +307,11 @@ struct FullScreenAlarmView: View {
     
     private func startAIWakeUpAudio(musicSelection: String, voicePreference: String) async {
         do {
+            // Store alarm sound preference for the enhanced mixer
+            if let alarmSound = alarmSound {
+                UserDefaults.standard.set(alarmSound, forKey: "selectedAlarmSound")
+            }
+            
             // For now, use placeholder URLs - in production these would come from Supabase
             let musicURL = Bundle.main.url(forResource: musicSelection, withExtension: "aac") ??
                           Bundle.main.url(forResource: "ai_music_upbeat", withExtension: "aac")!
@@ -327,7 +333,8 @@ struct FullScreenAlarmView: View {
     
     private func startRegularAlarmAudio() async {
         await MainActor.run {
-            audioService.playSound("alarm_times_up", volume: 0.8)
+            let soundIdentifier = alarmSound ?? "alarm_times_up"
+            audioService.playSound(soundIdentifier, volume: 0.8)
         }
     }
     
@@ -494,6 +501,7 @@ struct SnoozeOptionsSheet: View {
         alarmTitle: "AI Wake-Up",
         musicSelection: "ai_music_upbeat",
         voicePreference: "voice1",
-        wakeUpContent: "Good morning! It's a beautiful day to accomplish your goals. The weather is perfect and you have exciting opportunities ahead of you today."
+        wakeUpContent: "Good morning! It's a beautiful day to accomplish your goals. The weather is perfect and you have exciting opportunities ahead of you today.",
+        alarmSound: "alarm_times_up"
     )
 }

@@ -326,6 +326,7 @@ class AlarmKitService: ObservableObject {
                 default: return nil
                 }
             }
+            // Create weekly recurrence
             recurrence = .weekly(localeWeekdays)
         }
         

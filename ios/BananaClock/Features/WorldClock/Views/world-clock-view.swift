@@ -138,37 +138,25 @@ struct WorldClockView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
             .background(Color.clear)
             
-            // Calendar overlay with dismiss background
-            if viewModel.clocks.count >= 2 && !isEditing && showingCalendar {
-                ZStack {
-                    // Full screen tap to dismiss
-                    Color.clear
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            withAnimation(.easeInOut(duration: 0.3)) {
+                        // Calendar sheet will be presented via .sheet modifier
+        }
+        .sheet(isPresented: $showingCalendar) {
+            NavigationStack {
+                NativeCalendarView(selectedDate: $viewModel.selectedDate)
+                    .navigationTitle("Select Date")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbarBackground(.hidden, for: .navigationBar)
+                    .toolbarColorScheme(.dark, for: .navigationBar)
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            Button("Done") {
                                 showingCalendar = false
                             }
                         }
-                    
-                    // Calendar positioned at bottom - no tap gestures
-                    VStack {
-                        Spacer()
-                        
-                            NativeCalendarView(selectedDate: $viewModel.selectedDate)
-        .frame(maxWidth: UIScreen.main.bounds.width - 2 * BSpacing.md)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color.backgroundSecondary.opacity(0.95))
-        )
-        .padding(.horizontal, BSpacing.md)
-        .padding(.bottom, 200) // Position above converter
                     }
-                }
-                .transition(.asymmetric(
-                    insertion: .opacity,
-                    removal: .opacity
-                ))
             }
+            .presentationDetents([.medium])
+            .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $showingAddCity) {
             CityPickerView { city in
@@ -2230,11 +2218,15 @@ class WorldClockViewModel: ObservableObject {
 struct NativeCalendarView: UIViewRepresentable {
     @Binding var selectedDate: Date
     
+    // Track visible date components separately from selection
+    @State private var visibleDateComponents: DateComponents?
+    
     func makeUIView(context: Context) -> UICalendarView {
         let calendarView = UICalendarView()
         calendarView.calendar = Calendar.current
         calendarView.availableDateRange = DateInterval(start: Date.distantPast, end: Date.distantFuture)
         calendarView.selectionBehavior = UICalendarSelectionSingleDate(delegate: context.coordinator)
+        calendarView.delegate = context.coordinator
         calendarView.fontDesign = .rounded
         calendarView.tintColor = UIColor(BananaTheme.Colors.bananaYellow)
         
@@ -2249,7 +2241,14 @@ struct NativeCalendarView: UIViewRepresentable {
         // Update selection if needed
         if let selection = uiView.selectionBehavior as? UICalendarSelectionSingleDate {
             let components = Calendar.current.dateComponents([.year, .month, .day], from: selectedDate)
-            selection.setSelected(components, animated: true)
+            if selection.selectedDate != components {
+                selection.setSelected(components, animated: true)
+            }
+        }
+        
+        // Restore visible date if we have one saved
+        if let visibleDate = visibleDateComponents {
+            uiView.setVisibleDateComponents(visibleDate, animated: false)
         }
     }
     
@@ -2257,7 +2256,7 @@ struct NativeCalendarView: UIViewRepresentable {
         Coordinator(self)
     }
     
-    class Coordinator: NSObject, UICalendarSelectionSingleDateDelegate {
+    class Coordinator: NSObject, UICalendarSelectionSingleDateDelegate, UICalendarViewDelegate {
         var parent: NativeCalendarView
         
         init(_ parent: NativeCalendarView) {
@@ -2273,6 +2272,11 @@ struct NativeCalendarView: UIViewRepresentable {
         
         func dateSelection(_ selection: UICalendarSelectionSingleDate, didDeselectDate dateComponents: DateComponents?) {
             // Handle deselection if needed
+        }
+        
+        // Track visible date changes
+        func calendarView(_ calendarView: UICalendarView, didChangeVisibleDateComponentsFrom previousDateComponents: DateComponents) {
+            parent.visibleDateComponents = calendarView.visibleDateComponents
         }
     }
 }

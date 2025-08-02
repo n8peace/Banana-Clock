@@ -74,6 +74,11 @@ Banana-Clock/
 │   │   ├── Core/        # Models, services, utilities
 │   │   ├── Features/    # Feature modules (Alarms, Timers, etc.)
 │   │   └── Design/      # UI components, theme
+│   ├── BananaClockWidgets/ # Widget Extension for Live Activities
+│   │   ├── TimerLiveActivity.swift    # Timer Live Activity
+│   │   ├── StopwatchLiveActivity.swift # Stopwatch Live Activity
+│   │   ├── AlarmLiveActivity.swift    # Alarm Live Activity
+│   │   └── WidgetModels.swift         # Shared models
 │   └── BananaClock.xcodeproj/
 ├── supabase/            # Backend infrastructure
 │   ├── functions/       # Edge functions for AI content
@@ -86,15 +91,17 @@ Banana-Clock/
 **Pattern**: MVVM with SwiftUI and @Observable
 - **Navigation**: NavigationStack with persistent "Banana Clock" title
 - **State Management**: Swift Concurrency (async/await)
-- **Core Services**: AlarmKit, AudioService, SupabaseService, RevenueCat
+- **Core Services**: AlarmKit, AudioService, AIWakeUpAudioMixer, LiveActivityService, SupabaseService, RevenueCat
 - **Design**: Dark mode only with banana yellow (#FDE043) accent
 - **Monetization**: Hard paywall with subscription-only access
 
 **Key Technologies**:
 - AlarmKit (iOS 17+) for system alarm integration
+- ActivityKit (iOS 16+) for Live Activities and Dynamic Island
 - Supabase Swift SDK for backend
 - RevenueCat for subscriptions
-- AVFoundation for audio playback
+- AVFoundation for audio playback and mixing
+- App Intents for interactive notification controls
 
 ### Backend Architecture
 
@@ -202,7 +209,12 @@ Banana-Clock/
 ### AI Wake-Up Flow
 1. User sets alarm with AI wake-up enabled
 2. 2 AM: Generate content for next day
-3. Alarm time: Play background music + AI voice (audio mixer implementation needed)
+3. Alarm time: Play background music + AI voice via AIWakeUpAudioMixer
+   - 10s music fade-in to 60% volume
+   - AI voice starts at 15s at 100% volume with music at 60%
+   - After voice ends: 20s music crescendo to 120%
+   - Transition to alarm sound at 120% volume
+   - 5 minute auto-stop maximum
 4. Monitor playback, fallback if needed
 5. Offline: Use cached general audio content
 
@@ -213,6 +225,15 @@ Banana-Clock/
 - OpenAI API key stored as Supabase secret (`OPENAI_API_KEY`)
 - Usage tracked per user for monitoring
 - No API keys stored locally in iOS app (enhanced security)
+
+### Live Activities & Push Notifications
+- **Timer Live Activities**: Persistent notifications with countdown and controls
+- **Stopwatch Live Activities**: Real-time tracking with start/stop/lap controls
+- **Alarm Live Activities**: Full-screen alarm takeover with AI wake-up integration
+- **Dynamic Island Support**: Compact and expanded states for all activities
+- **Widget Extension**: BananaClockWidgets target with proper app group configuration
+- **App Intents**: Interactive controls for timer/stopwatch operations
+- **LiveActivityService**: Centralized management for all Live Activity types
 
 ### RevenueCat Subscription
 - Monthly: $4.99/month (3-day free trial)
@@ -243,7 +264,8 @@ Banana-Clock/
 
 ## Known TODOs
 
-- Audio mixer implementation for AI wake-up experience
-- Local notification setup for alarms
-- Subscription expiration handling during active alarms
-- Push notification infrastructure
+- Complete alarm integration with AlarmKit for iOS 26+
+- Implement local notification fallback for non-AlarmKit devices  
+- Polish UI/UX for Dynamic Island animations and transitions
+- Add AI wake-up content caching and offline fallback
+- Implement subscription expiration handling during active alarms

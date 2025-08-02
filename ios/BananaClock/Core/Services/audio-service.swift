@@ -19,11 +19,20 @@ class AudioService: ObservableObject {
     private var aiVoicePlayer: AVAudioPlayerNode?
     private var audioPlayers: [UUID: AVAudioPlayer] = [:]
     
+    // NEW: AI Wake-Up Audio Mixer for enhanced experience
+    private var aiWakeUpMixer: AIWakeUpAudioMixer?
+    private var useEnhancedMixer = true  // Feature flag for gradual rollout
+    
     @Published var isPlayingAIWakeUp = false
     @Published var currentAudioProgress: Double = 0
     
     private init() {
         setupAudioSession()
+        
+        // Initialize the enhanced mixer if enabled
+        if useEnhancedMixer {
+            aiWakeUpMixer = AIWakeUpAudioMixer()
+        }
     }
     
     // MARK: - Audio Session Setup
@@ -56,6 +65,40 @@ class AudioService: ObservableObject {
         aiAudioURL: URL,
         volume: Float = 0.7
     ) async throws {
+        // NEW: Use enhanced mixer if available
+        if useEnhancedMixer, let mixer = aiWakeUpMixer {
+            print("🎵 Using enhanced AI wake-up mixer")
+            
+            isPlayingAIWakeUp = true
+            
+            do {
+                // Get alarm sound identifier from user preferences (default to times_up)
+                let alarmSound = UserDefaults.standard.string(forKey: "selectedAlarmSound") ?? "alarm_times_up"
+                
+                try await mixer.startWakeUpSequence(
+                    musicURL: musicURL,
+                    voiceURL: aiAudioURL,
+                    alarmSoundIdentifier: alarmSound,
+                    userVolume: volume
+                )
+                
+                // Monitor mixer state
+                Task { @MainActor in
+                    for await phase in mixer.$currentPhase.values {
+                        if phase == .completed || phase == .idle {
+                            self.isPlayingAIWakeUp = false
+                        }
+                    }
+                }
+                
+                return
+            } catch {
+                print("❌ Enhanced mixer failed, falling back to legacy: \(error)")
+                // Fall through to legacy implementation
+            }
+        }
+        
+        // LEGACY: Original implementation for fallback
         isPlayingAIWakeUp = true
         
         do {
@@ -156,6 +199,15 @@ class AudioService: ObservableObject {
     func stopAIWakeUp() async {
         guard isPlayingAIWakeUp else { return }
         
+        // NEW: Stop enhanced mixer if in use
+        if let mixer = aiWakeUpMixer, mixer.isPlaying {
+            await mixer.stopAllAudio()
+            isPlayingAIWakeUp = false
+            MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
+            return
+        }
+        
+        // LEGACY: Original stop implementation
         // Fade out music
         // if let musicMixer = audioEngine.mainMixerNode.upstream?.upstream as? AVAudioMixerNode {
         //     await fadeVolume(mixer: musicMixer, from: musicMixer.volume, to: 0, duration: 2.0)

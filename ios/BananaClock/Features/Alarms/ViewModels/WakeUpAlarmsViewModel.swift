@@ -114,8 +114,8 @@ class WakeUpAlarmsViewModel: ObservableObject {
             await loadWakeUpAlarms()
             print("DEBUG: WakeUpAlarmsViewModel.updateSchedule - reload completed")
             
-            // Reschedule with AlarmKit
-            await scheduleAlarmKitAlarms()
+            // Reschedule only this specific alarm with AlarmKit
+            await scheduleSpecificAlarm(schedule)
             print("DEBUG: WakeUpAlarmsViewModel.updateSchedule - AlarmKit scheduling completed")
         } catch {
             self.error = error
@@ -131,8 +131,8 @@ class WakeUpAlarmsViewModel: ObservableObject {
             // Reload
             await loadWakeUpAlarms()
             
-            // Reschedule with AlarmKit
-            await scheduleAlarmKitAlarms()
+            // Cancel the deleted alarm from AlarmKit
+            try? AlarmKitService.shared.cancelAlarm(id: schedule.id)
         } catch {
             self.error = error
             print("Failed to delete wake-up schedule: \(error)")
@@ -399,9 +399,53 @@ class WakeUpAlarmsViewModel: ObservableObject {
     }
     
     private func scheduleAlarmKitAlarms() async {
-        // This will be implemented when AlarmKit service is integrated
-        // For now, just log
-        print("Would schedule \(wakeUpSchedules.count) wake-up alarms with AlarmKit")
+        print("DEBUG: WakeUpAlarmsViewModel.scheduleAlarmKitAlarms - starting")
+        
+        // First cancel any existing alarms
+        for alarm in wakeUpSchedules {
+            do {
+                try AlarmKitService.shared.cancelAlarm(id: alarm.id)
+            } catch {
+                print("Warning: Failed to cancel existing alarm: \(error)")
+                // Continue with scheduling - don't throw here
+            }
+        }
+        
+        // Then schedule enabled alarms
+        for alarm in wakeUpSchedules where alarm.isEnabled {
+            do {
+                try await AlarmKitService.shared.scheduleAlarm(alarm)
+                print("✅ Scheduled wake-up alarm: \(alarm.id)")
+            } catch {
+                print("❌ Failed to schedule wake-up alarm \(alarm.id): \(error)")
+            }
+        }
+        
+        print("DEBUG: WakeUpAlarmsViewModel.scheduleAlarmKitAlarms - completed")
+    }
+    
+    private func scheduleSpecificAlarm(_ alarm: Alarm) async {
+        print("DEBUG: WakeUpAlarmsViewModel.scheduleSpecificAlarm - scheduling alarm \(alarm.id)")
+        
+        // Cancel existing alarm first
+        do {
+            try AlarmKitService.shared.cancelAlarm(id: alarm.id)
+        } catch {
+            print("Warning: Failed to cancel existing alarm: \(error)")
+            // Continue with scheduling - don't throw here
+        }
+        
+        // Schedule if enabled
+        if alarm.isEnabled {
+            do {
+                try await AlarmKitService.shared.scheduleAlarm(alarm)
+                print("✅ Scheduled specific wake-up alarm: \(alarm.id)")
+            } catch {
+                print("❌ Failed to schedule specific wake-up alarm \(alarm.id): \(error)")
+            }
+        }
+        
+        print("DEBUG: WakeUpAlarmsViewModel.scheduleSpecificAlarm - completed")
     }
 }
 
