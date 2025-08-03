@@ -68,7 +68,7 @@ This document tracks bugs organized by page/feature for the Banana Clock iOS app
 ### Settings
 | Bug ID | Description | Status | Priority | Assigned | Notes |
 |--------|-------------|--------|----------|----------|-------|
-| SETTINGS-001 | Multiple settings pages include a yellow bolded title, all of these should be white and not bold | Open | Medium | Unassigned | UI consistency issue affecting multiple settings screens |
+| SETTINGS-001 | Multiple settings pages include a yellow bolded title, all of these should be white and not bold | Fixed | Medium | Unassigned | UI consistency issue affecting multiple settings screens |
 
 ### Timers Feature
 | Bug ID | Description | Status | Priority | Assigned | Notes |
