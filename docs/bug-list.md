@@ -28,12 +28,12 @@ This document tracks bugs organized by page/feature for the Banana Clock iOS app
 ### Alarms Feature
 | Bug ID | Description | Status | Priority | Assigned | Notes |
 |--------|-------------|--------|----------|----------|-------|
-| ALARM-001 | Deleting alarms doesn't work until navigating to different page - alarms stay visible | Open | High | Unassigned | Possible state management issue, alarms appear deleted but remain in UI |
+| ALARM-001 | Deleting alarms doesn't work until navigating to different page - alarms stay visible | Fixed | High | Unassigned | Possible state management issue, alarms appear deleted but remain in UI |
 
 ### Wake Up AI Settings
 | Bug ID | Description | Status | Priority | Assigned | Notes |
 |--------|-------------|--------|----------|----------|-------|
-| | | | | | |
+| WAKEUP-001 | In AI wake up edit schedule, the scheduled days should show when editing that schedule (right now it doesn't show those already selected) | Open | Medium | Unassigned | Schedule edit view not displaying currently selected days |
 
 ### Alarm Management
 | Bug ID | Description | Status | Priority | Assigned | Notes |
@@ -68,7 +68,7 @@ This document tracks bugs organized by page/feature for the Banana Clock iOS app
 ### Settings
 | Bug ID | Description | Status | Priority | Assigned | Notes |
 |--------|-------------|--------|----------|----------|-------|
-| | | | | | |
+| SETTINGS-001 | Multiple settings pages include a yellow bolded title, all of these should be white and not bold | Open | Medium | Unassigned | UI consistency issue affecting multiple settings screens |
 
 ### Timers Feature
 | Bug ID | Description | Status | Priority | Assigned | Notes |
@@ -78,7 +78,7 @@ This document tracks bugs organized by page/feature for the Banana Clock iOS app
 | TIMER-004 | Timer buttons not clickable - rows work correctly, but buttons are unresponsive | Fixed | High | Unassigned | .allowsHitTesting(showSelection) blocks buttons in normal mode |
 | TIMER-003 | Unable to select timers when clicking edit to delete | Fixed | High | Unassigned | Edit mode selection not working |
 | TIMER-005 | Cannot swipe to delete timers | Fixed | Medium | Unassigned | Missing swipe-to-delete functionality that exists in Alarms |
-| TIMER-006 | Large black boxes cover some timers when editing in bulk | Open | Medium | Unassigned | UI rendering issue during bulk edit mode |
+| TIMER-006 | Large black boxes cover some timers when editing in bulk | Fixed | Medium | Unassigned | UI rendering issue during bulk edit mode |
 
 ### Stopwatch Feature
 | Bug ID | Description | Status | Priority | Assigned | Notes |
@@ -90,8 +90,8 @@ This document tracks bugs organized by page/feature for the Banana Clock iOS app
 |--------|-------------|--------|----------|----------|-------|
 | WC-001 | Edit mode shows negative red box by options instead of consistent mass delete/edit UI pattern | Fixed | Medium | Unassigned | Inconsistent with other edit pages |
 | WC-002 | No deselect option when selecting timezones to delete in edit mode | Fixed | Medium | Unassigned | Missing deselect functionality |
-| WC-003 | User timezone moves awkwardly when no timezones are added | Open | Low | Unassigned | Layout/positioning issue with empty state |
-| WC-004 | Cannot reorder timezones by clicking and dragging | Open | Medium | Unassigned | Missing drag-to-reorder functionality for timezone list |
+| WC-003 | User timezone moves awkwardly when no timezones are added | Fixed | Low | Unassigned | Layout/positioning issue with empty state |
+| WC-004 | Cannot reorder timezones by clicking and dragging | Fixed | Medium | Unassigned | Missing drag-to-reorder functionality for timezone list |
 
 ### Premium/Paywall
 | Bug ID | Description | Status | Priority | Assigned | Notes |
