@@ -28,11 +28,17 @@ struct AlarmKitTestView: View {
     @State private var elapsedTime: TimeInterval = 0
     @State private var phaseTimer: Foundation.Timer?
     @StateObject private var audioService = AudioService.shared
+    
+    // Content Generation Test States
+    @State private var isTestingContentGeneration = false
+    @State private var contentGenerationStatus = ""
+    @State private var contentGenerationLogs: [String] = []
 
     
     var body: some View {
         NavigationView {
-            VStack(spacing: 20) {
+            ScrollView {
+                VStack(spacing: 20) {
                 // Authorization Status
                 VStack(alignment: .leading, spacing: 8) {
                     Text("AlarmKit Status")
@@ -250,9 +256,13 @@ struct AlarmKitTestView: View {
                 .background(Color.backgroundSecondary)
                 .cornerRadius(12)
                 
+                // Content Generation Test Section
+                contentGenerationTestSection
+                
                 Spacer()
+                }
+                .padding()
             }
-            .padding()
             .background(Color.backgroundPrimary)
             .navigationTitle("AlarmKit Test")
             .navigationBarTitleDisplayMode(.inline)
@@ -477,7 +487,360 @@ struct AlarmKitTestView: View {
         let tenths = Int((time.truncatingRemainder(dividingBy: 1)) * 10)
         return String(format: "%d:%02d.%d", minutes, seconds, tenths)
     }
+    
+    // MARK: - Content Generation Test Section
+    
+    private var contentGenerationTestSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Image(systemName: "cpu")
+                    .foregroundColor(.bananaYellow)
+                Text("Content Generation Test")
+                    .font(.headline)
+                    .foregroundColor(.white)
+            }
+            
+            // Status
+            if !contentGenerationStatus.isEmpty {
+                HStack {
+                    Circle()
+                        .fill(isTestingContentGeneration ? .orange : .green)
+                        .frame(width: 8, height: 8)
+                    Text(contentGenerationStatus)
+                        .font(.caption)
+                        .foregroundColor(.white)
+                }
+            }
+            
+            // Test Buttons
+            VStack(spacing: 12) {
+                Button(action: testContentGeneration) {
+                    HStack {
+                        if isTestingContentGeneration {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                                .progressViewStyle(CircularProgressViewStyle(tint: .black))
+                        }
+                        Image(systemName: "play.circle")
+                        Text(isTestingContentGeneration ? "Testing..." : "Test Full Flow")
+                    }
+                    .fontWeight(.semibold)
+                    .foregroundColor(.black)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(Color.bananaYellow)
+                    .cornerRadius(10)
+                }
+                .disabled(isTestingContentGeneration)
+                
+                HStack(spacing: 12) {
+                    Button(action: testWeatherFetch) {
+                        HStack {
+                            Image(systemName: "cloud.sun")
+                            Text("Test Weather")
+                        }
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.black)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 8)
+                        .background(Color.bananaYellow.opacity(0.8))
+                        .cornerRadius(8)
+                    }
+                    .disabled(isTestingContentGeneration)
+                    
+                    Button(action: testSupabaseCall) {
+                        HStack {
+                            Image(systemName: "server.rack")
+                            Text("Test API")
+                        }
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.black)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 8)
+                        .background(Color.bananaYellow.opacity(0.8))
+                        .cornerRadius(8)
+                    }
+                    .disabled(isTestingContentGeneration)
+                    
+                    Button(action: clearLogs) {
+                        HStack {
+                            Image(systemName: "trash")
+                            Text("Clear")
+                        }
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 8)
+                        .background(Color.red.opacity(0.7))
+                        .cornerRadius(8)
+                    }
+                }
+            }
+            
+            // Logs Display
+            if !contentGenerationLogs.isEmpty {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 4) {
+                        ForEach(Array(contentGenerationLogs.enumerated()), id: \.offset) { index, log in
+                            Text(log)
+                                .font(.system(size: 10, design: .monospaced))
+                                .foregroundColor(logColor(for: log))
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                    }
+                    .padding(8)
+                }
+                .frame(maxHeight: 150)
+                .background(Color.black.opacity(0.5))
+                .cornerRadius(8)
+            }
+        }
+        .padding()
+        .background(Color.backgroundSecondary)
+        .cornerRadius(12)
+    }
+    
+    private func logColor(for log: String) -> Color {
+        if log.contains("✅") {
+            return .green
+        } else if log.contains("❌") {
+            return .red
+        } else if log.contains("⚠️") {
+            return .orange
+        } else if log.contains("🔄") {
+            return .blue
+        } else {
+            return .white
+        }
+    }
+    
+    // MARK: - Content Generation Test Methods
+    
+    private func addLog(_ message: String) {
+        let timestamp = DateFormatter.timeFormatter.string(from: Date())
+        let logEntry = "[\(timestamp)] \(message)"
+        contentGenerationLogs.append(logEntry)
+        
+        // Keep only last 20 logs
+        if contentGenerationLogs.count > 20 {
+            contentGenerationLogs.removeFirst()
+        }
+    }
+    
+    private func testContentGeneration() {
+        Task {
+            await MainActor.run {
+                isTestingContentGeneration = true
+                contentGenerationStatus = "Running full content generation test..."
+                contentGenerationLogs.removeAll()
+                addLog("🔄 Starting end-to-end content generation test")
+            }
+            
+            do {
+                // Step 1: Check authentication
+                guard let session = try await SupabaseService.shared.getCurrentSession() else {
+                    await MainActor.run {
+                        addLog("❌ No user session - authentication required")
+                        contentGenerationStatus = "Authentication failed"
+                        isTestingContentGeneration = false
+                    }
+                    return
+                }
+                
+                await MainActor.run {
+                    addLog("✅ User authenticated: \(session.user.email ?? "Unknown")")
+                }
+                
+                // Step 2: Test weather fetching
+                await MainActor.run {
+                    addLog("🔄 Fetching fresh weather data...")
+                }
+                
+                let weatherData = await fetchFreshWeatherData()
+                
+                await MainActor.run {
+                    if let weather = weatherData {
+                        addLog("✅ Weather data obtained: \(weather["condition"] ?? "Unknown")")
+                        addLog("   Temperature: \(weather["temperature"] ?? "N/A")°F")
+                        addLog("   Description: \(weather["description"] ?? "N/A")")
+                    } else {
+                        addLog("⚠️ No weather data available (this is normal if location not granted)")
+                    }
+                }
+                
+                // Step 3: Test content generation API call
+                await MainActor.run {
+                    addLog("🔄 Calling generate-banana-content API...")
+                }
+                
+                try await callGenerateBananaContent(
+                    userId: session.user.id,
+                    weatherData: weatherData
+                )
+                
+                await MainActor.run {
+                    addLog("✅ API call successful - content generation completed")
+                }
+                
+                // Step 4: Check for generated content
+                await MainActor.run {
+                    addLog("🔄 Checking for generated content in cache...")
+                }
+                
+                let contentStatus = ContentCacheManager.shared.getLatestContentStatus(for: session.user.id)
+                
+                await MainActor.run {
+                    addLog("📊 Content status - Today: \(contentStatus.hasToday), Tomorrow: \(contentStatus.hasTomorrow)")
+                    addLog("📦 Cache contains \(ContentCacheManager.shared.contentReadyCount) ready content blocks")
+                    
+                    contentGenerationStatus = "✅ Full test completed successfully"
+                    isTestingContentGeneration = false
+                    addLog("🎉 End-to-end test completed successfully!")
+                }
+                
+            } catch {
+                await MainActor.run {
+                    addLog("❌ Test failed: \(error.localizedDescription)")
+                    contentGenerationStatus = "Test failed: \(error.localizedDescription)"
+                    isTestingContentGeneration = false
+                }
+            }
+        }
+    }
+    
+    private func testWeatherFetch() {
+        Task {
+            await MainActor.run {
+                addLog("🔄 Testing weather fetch only...")
+            }
+            
+            let weatherData = await fetchFreshWeatherData()
+            
+            await MainActor.run {
+                if let weather = weatherData {
+                    addLog("✅ Weather fetch successful:")
+                    addLog("   Condition: \(weather["condition"] ?? "Unknown")")
+                    addLog("   Temperature: \(weather["temperature"] ?? "N/A")°F")
+                    addLog("   Humidity: \(weather["humidity"] ?? "N/A")%")
+                    addLog("   Wind Speed: \(weather["wind_speed"] ?? "N/A") mph")
+                } else {
+                    addLog("⚠️ Weather fetch returned no data")
+                    addLog("   Check location permissions in Settings")
+                }
+            }
+        }
+    }
+    
+    private func testSupabaseCall() {
+        Task {
+            await MainActor.run {
+                addLog("🔄 Testing Supabase API call only...")
+            }
+            
+            do {
+                guard let session = try await SupabaseService.shared.getCurrentSession() else {
+                    await MainActor.run {
+                        addLog("❌ No user session for API test")
+                    }
+                    return
+                }
+                
+                await MainActor.run {
+                    addLog("✅ Session valid, calling API...")
+                }
+                
+                try await callGenerateBananaContent(
+                    userId: session.user.id,
+                    weatherData: nil
+                )
+                
+                await MainActor.run {
+                    addLog("✅ Supabase API call successful")
+                    addLog("   Content generation triggered without weather")
+                }
+                
+            } catch {
+                await MainActor.run {
+                    addLog("❌ Supabase API call failed: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+    
+    private func clearLogs() {
+        contentGenerationLogs.removeAll()
+        contentGenerationStatus = ""
+    }
+    
+    // MARK: - Helper Methods for Content Generation
+    
+    private func fetchFreshWeatherData() async -> [String: Any]? {
+        let authStatus = await WeatherService.shared.authorizationStatus
+        guard authStatus == .authorizedWhenInUse || authStatus == .authorizedAlways else {
+            print("⚠️ Weather permission not granted, generating content without weather")
+            return nil
+        }
+        
+        do {
+            // Request fresh location detection
+            await WeatherService.shared.requestLocationAndDetect()
+            
+            // Wait for location detection to complete
+            var attempts = 0
+            var isRequestingLocation = await WeatherService.shared.isRequestingLocation
+            while isRequestingLocation && attempts < 10 {
+                try await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+                attempts += 1
+                isRequestingLocation = await WeatherService.shared.isRequestingLocation
+            }
+            
+            guard let location = await WeatherService.shared.currentLocation else {
+                print("⚠️ No location available, generating content without weather")
+                return nil
+            }
+            
+            // Get weather data
+            let weather: WeatherKitData = try await WeatherService.shared.getCurrentWeather(for: location)
+            
+            // Format for Supabase Edge Function
+            let weatherData: [String: Any] = [
+                "temperature": weather.temperature,
+                "condition": weather.condition,
+                "humidity": weather.humidity,
+                "wind_speed": weather.windSpeed,
+                "description": weather.description,
+                "timestamp": Date().timeIntervalSince1970
+            ]
+            
+            print("✅ Fresh weather data obtained: \(weather.condition), \(weather.temperature)°F")
+            return weatherData
+            
+        } catch {
+            print("❌ Failed to fetch weather data: \(error)")
+            return nil
+        }
+    }
+    
+    private func callGenerateBananaContent(userId: UUID, weatherData: [String: Any]?) async throws {
+        _ = try await SupabaseService.shared.triggerContentGeneration(
+            userId: userId,
+            weatherData: weatherData
+        )
+    }
 
+}
+
+// MARK: - DateFormatter Extension
+
+extension DateFormatter {
+    static let timeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm:ss"
+        return formatter
+    }()
 }
 
 // MARK: - Preview
