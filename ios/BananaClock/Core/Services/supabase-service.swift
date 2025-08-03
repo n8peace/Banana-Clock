@@ -93,7 +93,7 @@ class SupabaseService: ObservableObject {
         let user = signUpResponse.user
         
         // Step 2: Sign in immediately to establish auth session
-        let signInResponse = try await client.auth.signIn(
+        let _ = try await client.auth.signIn(
             email: email,
             password: password
         )
@@ -269,7 +269,7 @@ class SupabaseService: ObservableObject {
     }
     
     private func createUserPreferences(userId: UUID) async throws {
-        guard let client = client else { throw SupabaseError.notConfigured }
+        guard client != nil else { throw SupabaseError.notConfigured }
         
         print("🔍 createUserPreferences: Creating initial preferences for user \(userId.uuidString)")
         
@@ -347,7 +347,157 @@ class SupabaseService: ObservableObject {
         }
     }
     
-    // MARK: - AI Content Generation
+    // MARK: - AI Content Generation (Mobile-Initiated)
+    
+    /// Trigger mobile-initiated content generation with weather data
+    func triggerContentGeneration(userId: UUID, weatherData: [String: Any]?) async throws -> ContentGenerationResponse {
+        guard let client = client else { throw SupabaseError.notConfigured }
+        guard isAuthenticated else { throw SupabaseError.notAuthenticated }
+        
+        print("🔄 Triggering mobile-initiated content generation")
+        print("  - User ID: \(userId)")
+        print("  - Weather data included: \(weatherData != nil)")
+        
+        // Create encodable request
+        let requestBody = ContentGenerationRequest(
+            userId: userId.uuidString,
+            weatherData: weatherData
+        )
+        
+        let result: ContentGenerationResponse = try await client.functions.invoke(
+            "generate-banana-content",
+            options: FunctionInvokeOptions(body: requestBody)
+        )
+        
+        print("✅ Content generation response received")
+        print("  - Success: \(result.success)")
+        print("  - Message: \(result.message ?? "No message")")
+        
+        return result
+    }
+    
+    /// Fetch content block by ID
+    func fetchContentBlock(id: UUID) async throws -> AIContentBlock? {
+        guard let client = client else { throw SupabaseError.notConfigured }
+        guard isAuthenticated else { throw SupabaseError.notAuthenticated }
+        
+        let response: [AIContentBlockResponse] = try await client
+            .from("content_blocks")
+            .select()
+            .eq("id", value: id.uuidString)
+            .single()
+            .execute()
+            .value
+        
+        guard let contentResponse = response.first else {
+            return nil
+        }
+        
+        return try convertToAIContentBlock(contentResponse)
+    }
+    
+    /// Fetch content blocks for a user and date
+    func fetchContentBlocks(userId: UUID, date: Date, contentType: String = "banana") async throws -> [AIContentBlock] {
+        guard let client = client else { throw SupabaseError.notConfigured }
+        guard isAuthenticated else { throw SupabaseError.notAuthenticated }
+        
+        let dateFormatter = ISO8601DateFormatter()
+        dateFormatter.formatOptions = [.withFullDate, .withDashSeparatorInDate]
+        let dateString = dateFormatter.string(from: date)
+        
+        print("🔍 Fetching content blocks for user \(userId), date \(dateString)")
+        
+        let response: [AIContentBlockResponse] = try await client
+            .from("content_blocks")
+            .select()
+            .eq("user_id", value: userId.uuidString)
+            .eq("date", value: dateString)
+            .eq("content_type", value: contentType)
+            .order("created_at", ascending: false)
+            .execute()
+            .value
+        
+        print("✅ Found \(response.count) content blocks")
+        
+        return try response.compactMap { try convertToAIContentBlock($0) }
+    }
+    
+    /// Update shared weather cache
+    func updateWeatherCache(zipCode: String, weatherData: [String: Any], userId: UUID) async throws {
+        guard let client = client else { throw SupabaseError.notConfigured }
+        guard isAuthenticated else { throw SupabaseError.notAuthenticated }
+        
+        print("🔄 Updating shared weather cache for zip \(zipCode)")
+        
+        // Convert weather data to JSON string for RPC call
+        let weatherJSON = try JSONSerialization.data(withJSONObject: weatherData)
+        let weatherString = String(data: weatherJSON, encoding: .utf8) ?? "{}"
+        
+        _ = try await client.rpc(
+            "upsert_weather_data",
+            params: [
+                "p_zip": zipCode,
+                "p_weather": weatherString,
+                "p_user_id": userId.uuidString
+            ]
+        ).execute()
+        
+        print("✅ Weather cache updated successfully")
+    }
+    
+    /// Get weather from shared cache
+    func getWeatherFromCache(zipCode: String) async throws -> [String: Any]? {
+        guard let client = client else { throw SupabaseError.notConfigured }
+        
+        let response: [WeatherCacheResponse] = try await client
+            .from("user_weather_data")
+            .select("weather_data, updated_at")
+            .eq("location_zip", value: zipCode)
+            .single()
+            .execute()
+            .value
+        
+        guard let weatherResponse = response.first else {
+            print("⚠️ No cached weather found for zip \(zipCode)")
+            return nil
+        }
+        
+        // Check if data is fresh (within 5 minutes)
+        let updatedAt = ISO8601DateFormatter().date(from: weatherResponse.updatedAt) ?? Date.distantPast
+        let cacheAge = Date().timeIntervalSince(updatedAt)
+        
+        if cacheAge > 300 { // 5 minutes
+            print("⚠️ Cached weather data is stale (\(Int(cacheAge/60)) minutes old)")
+            return nil
+        }
+        
+        print("✅ Using fresh cached weather data")
+        return weatherResponse.weatherData
+    }
+    
+    // Helper method to convert response to model
+    private func convertToAIContentBlock(_ response: AIContentBlockResponse) throws -> AIContentBlock {
+        return AIContentBlock(
+            id: response.id,
+            userId: UUID(uuidString: response.userId) ?? UUID(),
+            contentType: response.contentType,
+            date: response.date,
+            script: response.script,
+            audioUrl: response.audioUrl,
+            status: response.status,
+            voice: response.voice ?? "voice_1",
+            expirationDate: response.expirationDate ?? "",
+            languageCode: response.language,
+            contentPriority: response.contentPriority,
+            createdAt: response.createdAt ?? "",
+            updatedAt: response.updatedAt,
+            scriptGeneratedAt: response.scriptGeneratedAt,
+            audioGeneratedAt: response.audioGeneratedAt,
+            parameters: nil, // TODO: Convert [String: Any] to ContentParameters
+            content: response.content,
+            metadata: nil // TODO: Add metadata conversion if needed
+        )
+    }
     
     // func triggerAIContentGeneration(for alarm: Alarm, date: Date = Date().addingTimeInterval(86400)) async throws {
     //     guard let client = client else { throw SupabaseError.notConfigured }
@@ -690,6 +840,216 @@ struct UpdateUserPreferencesRequest: Codable {
         case headlinesCategories = "headlines_categories"
         case sportsCategories = "sports_categories"
         case lastSyncAt = "last_sync_at"
+    }
+}
+
+// MARK: - Content Generation Models
+
+struct ContentGenerationRequest: Encodable {
+    let userId: String
+    let weatherData: [String: Any]?
+    
+    private enum CodingKeys: String, CodingKey {
+        case userId = "user_id"
+        case weatherData = "weather_data"
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(userId, forKey: .userId)
+        
+        // Handle weatherData as raw JSON
+        if let weatherData = weatherData {
+            // Convert to JSON data and then encode as raw value
+            let jsonData = try JSONSerialization.data(withJSONObject: weatherData)
+            let jsonString = String(data: jsonData, encoding: .utf8) ?? "{}"
+            try container.encode(jsonString, forKey: .weatherData)
+        }
+    }
+}
+
+struct ContentGenerationResponse: Codable {
+    let success: Bool
+    let message: String?
+    let userId: String?
+    let weatherProvided: Bool?
+    
+    private enum CodingKeys: String, CodingKey {
+        case success
+        case message
+        case userId = "user_id"
+        case weatherProvided = "weather_provided"
+    }
+}
+
+struct AIContentBlockResponse: Decodable {
+    let id: UUID
+    let userId: String
+    let contentType: String
+    let date: String
+    let script: String?
+    let scriptGeneratedAt: String?
+    let audioUrl: String?
+    let audioGeneratedAt: String?
+    let status: String
+    let voice: String?
+    let language: String?
+    let contentPriority: Int?
+    let expirationDate: String?
+    let createdAt: String?
+    let updatedAt: String?
+    let parameters: [String: Any]?
+    let content: String?
+    let durationSeconds: Int?
+    let audioDuration: Int?
+    
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case userId = "user_id"
+        case contentType = "content_type"
+        case date
+        case script
+        case scriptGeneratedAt = "script_generated_at"
+        case audioUrl = "audio_url"
+        case audioGeneratedAt = "audio_generated_at"
+        case status
+        case voice
+        case language = "language_code"
+        case contentPriority = "content_priority"
+        case expirationDate = "expiration_date"
+        case createdAt = "created_at"
+        case updatedAt = "updated_at"
+        case parameters
+        case content
+        case durationSeconds = "duration_seconds"
+        case audioDuration = "audio_duration"
+    }
+    
+    // Custom decoder for parameters field
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        id = try container.decode(UUID.self, forKey: .id)
+        userId = try container.decode(String.self, forKey: .userId)
+        contentType = try container.decode(String.self, forKey: .contentType)
+        date = try container.decode(String.self, forKey: .date)
+        script = try container.decodeIfPresent(String.self, forKey: .script)
+        scriptGeneratedAt = try container.decodeIfPresent(String.self, forKey: .scriptGeneratedAt)
+        audioUrl = try container.decodeIfPresent(String.self, forKey: .audioUrl)
+        audioGeneratedAt = try container.decodeIfPresent(String.self, forKey: .audioGeneratedAt)
+        status = try container.decode(String.self, forKey: .status)
+        voice = try container.decodeIfPresent(String.self, forKey: .voice)
+        language = try container.decodeIfPresent(String.self, forKey: .language)
+        contentPriority = try container.decodeIfPresent(Int.self, forKey: .contentPriority)
+        expirationDate = try container.decodeIfPresent(String.self, forKey: .expirationDate)
+        createdAt = try container.decodeIfPresent(String.self, forKey: .createdAt)
+        updatedAt = try container.decodeIfPresent(String.self, forKey: .updatedAt)
+        content = try container.decodeIfPresent(String.self, forKey: .content)
+        durationSeconds = try container.decodeIfPresent(Int.self, forKey: .durationSeconds)
+        audioDuration = try container.decodeIfPresent(Int.self, forKey: .audioDuration)
+        
+        // Handle parameters as generic dictionary from JSONB
+        if container.contains(.parameters) {
+            // Try to decode as a nested container first (if it's a JSON object)
+            if let nestedContainer = try? container.nestedContainer(keyedBy: GenericCodingKeys.self, forKey: .parameters) {
+                parameters = try nestedContainer.decode([String: Any].self)
+            } else {
+                // Fallback to nil if parameters field is not present or is null
+                parameters = nil
+            }
+        } else {
+            parameters = nil
+        }
+    }
+}
+
+// Helper for decoding [String: Any]
+private struct GenericCodingKeys: CodingKey {
+    var stringValue: String
+    var intValue: Int?
+
+    init?(stringValue: String) {
+        self.stringValue = stringValue
+    }
+
+    init?(intValue: Int) {
+        self.intValue = intValue
+        self.stringValue = String(intValue)
+    }
+}
+
+extension KeyedDecodingContainer where Key == GenericCodingKeys {
+    func decode(_ type: [String: Any].Type) throws -> [String: Any] {
+        var dictionary: [String: Any] = [:]
+        
+        for key in allKeys {
+            if let boolValue = try? decode(Bool.self, forKey: key) {
+                dictionary[key.stringValue] = boolValue
+            } else if let intValue = try? decode(Int.self, forKey: key) {
+                dictionary[key.stringValue] = intValue
+            } else if let doubleValue = try? decode(Double.self, forKey: key) {
+                dictionary[key.stringValue] = doubleValue
+            } else if let stringValue = try? decode(String.self, forKey: key) {
+                dictionary[key.stringValue] = stringValue
+            } else {
+                // Handle nested objects by attempting to decode them recursively
+                if let nestedContainer = try? nestedContainer(keyedBy: GenericCodingKeys.self, forKey: key) {
+                    dictionary[key.stringValue] = try nestedContainer.decode([String: Any].self)
+                } else if let nestedArray = try? decode([Any].self, forKey: key) {
+                    dictionary[key.stringValue] = nestedArray
+                }
+            }
+        }
+        
+        return dictionary
+    }
+    
+    func decode(_ type: [Any].Type, forKey key: Key) throws -> [Any] {
+        var container = try nestedUnkeyedContainer(forKey: key)
+        var array: [Any] = []
+        
+        while !container.isAtEnd {
+            if let boolValue = try? container.decode(Bool.self) {
+                array.append(boolValue)
+            } else if let intValue = try? container.decode(Int.self) {
+                array.append(intValue)
+            } else if let doubleValue = try? container.decode(Double.self) {
+                array.append(doubleValue)
+            } else if let stringValue = try? container.decode(String.self) {
+                array.append(stringValue)
+            }
+        }
+        
+        return array
+    }
+}
+
+struct WeatherCacheResponse: Decodable {
+    let weatherData: [String: Any]
+    let updatedAt: String
+    
+    private enum CodingKeys: String, CodingKey {
+        case weatherData = "weather_data"
+        case updatedAt = "updated_at"
+    }
+    
+    // Custom decoder for weather_data JSONB field
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        updatedAt = try container.decode(String.self, forKey: .updatedAt)
+        
+        // Handle weather_data as generic dictionary from JSONB
+        if container.contains(.weatherData) {
+            // Try to decode as a nested container first (if it's a JSON object)
+            if let nestedContainer = try? container.nestedContainer(keyedBy: GenericCodingKeys.self, forKey: .weatherData) {
+                weatherData = try nestedContainer.decode([String: Any].self)
+            } else {
+                // Fallback to empty dictionary if weather_data is not present or is null
+                weatherData = [:]
+            }
+        } else {
+            weatherData = [:]
+        }
     }
 }
 
