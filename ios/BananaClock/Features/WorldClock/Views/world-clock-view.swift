@@ -65,13 +65,15 @@ struct WorldClockView: View {
                         WorldClockRow(clock: currentClock, viewModel: viewModel)
                     }
                     .background(.ultraThinMaterial.opacity(0.1))
+                    .padding(.bottom, viewModel.otherClocks.isEmpty ? BSpacing.lg : 0)
                 }
                 
                 NavigationStack {
                     // Scrollable content for other timezones
                     if viewModel.otherClocks.isEmpty {
                         emptyStateView()
-                            .frame(maxWidth: .infinity, minHeight: 400)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                            .padding(.top, BSpacing.xl)
                     } else {
                         clocksList
                     }
@@ -345,7 +347,11 @@ struct WorldClockView: View {
     }
     
     private var clocksList: some View {
-        List {
+        let deleteAction: ((IndexSet) -> Void)? = isEditing ? nil : { indexSet in
+            viewModel.deleteClocks(at: indexSet)
+        }
+        
+        return List {
             ForEach(viewModel.otherClocks) { clock in
                 WorldClockRow(
                     clock: clock, 
@@ -370,8 +376,9 @@ struct WorldClockView: View {
                 .listRowSeparator(.hidden)
                 .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
             }
-            .onDelete { indexSet in
-                viewModel.deleteClocks(at: indexSet)
+            .onDelete(perform: deleteAction)
+            .onMove { source, destination in
+                viewModel.moveClocks(from: source, to: destination)
             }
             
             // Transparent spacer to create blank space at bottom
@@ -384,6 +391,7 @@ struct WorldClockView: View {
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
         .scrollIndicators(.hidden)
+        .environment(\.editMode, .constant(isEditing ? .active : .inactive))
     }
     
     @ToolbarContentBuilder

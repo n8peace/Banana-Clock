@@ -118,7 +118,7 @@ class AITimezoneService: ObservableObject {
         let dateString = dateFormatter.string(from: selectedDate)
         
         let userPrompt = """
-        You are a timezone meeting scheduler.
+        You are an executive assistant and expert timezone scheduler. You and your boss work in the reference timezone.
 
         Given these timezones:
         \(timezoneList)
@@ -126,12 +126,12 @@ class AITimezoneService: ObservableObject {
         Reference timezone: \(userCity) (\(userTimezone))  
         Date: \(dateString)
 
-        Find the most inclusive possible time block that includes the maximum number of cities within acceptable hours:
-        - Business hours: 8 AM – 6 PM local time
+        Find the most inclusive possible time block that includes the maximum number of cities within acceptable hours. Your boss is trying to schedule time with all of these cities as best as possible.
+        - Business hours: 8 AM – 6 PM
         - Also acceptable: early (6–8 AM) and evening (6–10 PM)
         - A city is considered excluded only if the meeting falls **entirely within its overnight hours (10 PM – 6 AM)**
 
-        The block must be at least 30 minutes long but should strive to be as long as possible. In this priority order, **prefer most inclusive, longest, and earliest** block. Only choose shorter or less inclusive blocks if no better option exists.
+        The block must be at least 30 minutes long but should strive to be as long as possible. In this priority order, **prefer most inclusive and longest** block. Only choose shorter or less inclusive blocks if no better option exists.
 
         Use the reference timezone (\(userCity)) for all output times.
 
@@ -141,7 +141,7 @@ class AITimezoneService: ObservableObject {
 
         Do not explain your reasoning. Just give the result.
 
-        Before finalizing your answer, double-check the local time for each city. If a city is within 6 AM to 10 PM local time, it is not excluded.
+        Before finalizing your answer, double-check the local time for each city. If a city is even partially within 6 AM to 10 PM local time, it is not excluded.
         """
         
         let systemPrompt = "You are a helpful timezone meeting scheduler. Be concise and practical."

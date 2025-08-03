@@ -44,7 +44,7 @@ Copy each artifact file to its corresponding location in the project.
    - Add `https://github.com/RevenueCat/purchases-ios.git`
 
 2. **Update Build Settings**:
-   - iOS Deployment Target: 17.0
+   - iOS Deployment Target: 26.0
    - Swift Language Version: 5.9
 
 3. **Add Capabilities**:
@@ -100,6 +100,6 @@ git push origin develop
 - Prepare App Store assets
 
 ### Important Notes:
-- AlarmKit features require iOS 17+ and physical device
+- AlarmKit features require iOS 26+ and physical device
 - AI wake-up features require Banana Plus subscription
 - Ensure Supabase Edge Functions are deployed

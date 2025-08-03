@@ -24,8 +24,18 @@ struct WakeUpScheduleEditor: View {
         self.onSave = onSave
         self.onDelete = onDelete
         
-        // Initialize state
-        _time = State(initialValue: schedule?.time ?? Date().addingTimeInterval(3600))
+        // Initialize state with explicit conditional logic and debug
+        let defaultTime: Date
+        if let existingSchedule = schedule {
+            print("DEBUG: WakeUpScheduleEditor - Editing existing schedule, using time: \(existingSchedule.time)")
+            defaultTime = existingSchedule.time
+        } else {
+            let sevenAM = Self.defaultWakeUpTime()
+            print("DEBUG: WakeUpScheduleEditor - Creating new schedule, using default 7:00 AM: \(sevenAM)")
+            defaultTime = sevenAM
+        }
+        
+        _time = State(initialValue: defaultTime)
         _selectedDays = State(initialValue: schedule?.wakeUpDays ?? Set())
     }
     
@@ -168,6 +178,29 @@ struct WakeUpScheduleEditor: View {
         
         onSave(newSchedule)
         dismiss()
+    }
+    
+    private static func defaultWakeUpTime() -> Date {
+        let calendar = Calendar.current
+        let now = Date()
+        
+        // Create 7:00 AM today
+        var components = calendar.dateComponents([.year, .month, .day], from: now)
+        components.hour = 7
+        components.minute = 0
+        components.second = 0
+        
+        guard let sevenAMToday = calendar.date(from: components) else {
+            // Fallback to current time if date creation fails
+            return now
+        }
+        
+        // If it's already past 7 AM today, use 7 AM tomorrow
+        if now > sevenAMToday {
+            return calendar.date(byAdding: .day, value: 1, to: sevenAMToday) ?? sevenAMToday
+        }
+        
+        return sevenAMToday
     }
 }
 

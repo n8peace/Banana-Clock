@@ -62,6 +62,124 @@ npm run db:reset        # Reset database
 npm run functions:deploy # Deploy all functions
 ```
 
+## iOS 26 AlarmKit API Reference
+
+### Overview
+AlarmKit is a new framework in iOS 26+ that provides native alarm and timer functionality with system-level integration. It replaces the previous unofficial alarm APIs with a proper framework that supports:
+- Prominent alarms that override Focus and Silent modes
+- Custom alarm sounds and haptics
+- Live Activities integration for countdown timers
+- App Intents for custom alarm actions
+- System UI with customizable presentation
+
+### Key Concepts
+
+1. **Authorization Required**: Apps must request authorization via `AlarmManager.requestAuthorization()`
+2. **Info.plist Key**: Must include `NSAlarmKitUsageDescription` with usage description
+3. **Widget Extension Required**: For countdown presentations, a widget extension is mandatory
+4. **Sound API**: Custom sounds are now supported through the configuration (previously only `.default`)
+
+### Core Components
+
+#### AlarmManager
+The singleton instance for all alarm operations:
+```swift
+AlarmManager.shared
+```
+
+Key methods:
+- `requestAuthorization()` - Request permission to schedule alarms
+- `schedule(id:configuration:)` - Schedule a new alarm
+- `cancel(id:)` - Cancel an existing alarm
+- `pause(id:)` - Pause a countdown alarm
+- `resume(id:)` - Resume a paused alarm
+- `stop(id:)` - Stop an alerting alarm
+- `countdown(id:)` - Trigger countdown/snooze for alerting alarm
+
+Properties:
+- `authorizationState` - Current authorization status
+- `alarms` - Array of current alarms
+- `alarmUpdates` - AsyncSequence for alarm state changes
+- `authorizationUpdates` - AsyncSequence for auth state changes
+
+#### AlarmConfiguration
+Configuration object for scheduling alarms:
+```swift
+AlarmManager.AlarmConfiguration<Metadata>(
+    countdownDuration: Alarm.CountdownDuration?,
+    schedule: Alarm.Schedule?,
+    attributes: AlarmAttributes<Metadata>,
+    stopIntent: AppIntent?,
+    secondaryIntent: AppIntent?,
+    sound: AlarmSound  // Custom sounds supported in iOS 26+
+)
+```
+
+#### Alarm.Schedule
+Defines when an alarm should fire:
+- `.relative(Alarm.Schedule.Relative)` - Time-based schedule
+  - `time: Alarm.Schedule.Relative.Time(hour: Int, minute: Int)`
+  - `repeats: Recurrence` (.never or .weekly([Locale.Weekday]))
+
+#### Alarm.CountdownDuration
+For timer-style alarms:
+```swift
+Alarm.CountdownDuration(
+    preAlert: TimeInterval?,  // Countdown duration before alert
+    postAlert: TimeInterval?   // Snooze/repeat duration after alert
+)
+```
+
+#### AlarmPresentation
+Defines UI for different alarm states:
+```swift
+AlarmPresentation(
+    alert: Alert,           // Required: When alarm is alerting
+    countdown: Countdown?,  // Optional: During countdown
+    paused: Paused?        // Optional: When paused
+)
+```
+
+Each state includes:
+- Title text
+- Button configurations (stop, snooze, pause, resume)
+- Secondary button behavior (.countdown or .custom)
+
+#### AlarmAttributes
+Wraps presentation with metadata and styling:
+```swift
+AlarmAttributes<Metadata>(
+    presentation: AlarmPresentation,
+    metadata: Metadata?,  // Custom data conforming to AlarmMetadata
+    tintColor: Color     // App branding color
+)
+```
+
+### Custom Sounds (iOS 26+)
+
+The `sound` parameter in `AlarmConfiguration` now supports custom alarm sounds. While the exact API isn't detailed in the documentation, it appears to support:
+- Custom sound files from app bundle
+- Sound configuration (volume, haptics, etc.)
+- Fallback to `.default` if custom sound fails
+
+Note: The current implementation uses `.default` as a placeholder until the custom sound API is fully documented.
+
+### Live Activities Integration
+
+For alarms with countdown presentations, you must:
+1. Add a Widget Extension target
+2. Implement ActivityConfiguration for AlarmAttributes
+3. Handle AlarmPresentationState updates
+4. Support Dynamic Island and Lock Screen presentations
+
+### Migration from iOS 17-25
+
+Key changes in iOS 26:
+1. Custom sound API replaces previous sound limitations
+2. Enhanced Live Activities support
+3. Improved authorization flow
+4. Better state management with AsyncSequence
+
 ## Architecture Overview
 
 ### Repository Structure
@@ -119,13 +237,22 @@ Banana-Clock/
 - `logs`: System logging
 
 **Content Generation Pipeline**:
-1. Daily generation at 2 AM local time
-2. Generate personalized script with GPT-4o
-3. Synthesize audio with ElevenLabs
-4. Store in Supabase Storage (72-hour retention)
-5. Fallback to standard alarm if generation fails
-6. Retry mechanism for API failures
-7. Rate limiting implemented for external APIs
+1. Weather data fetched at 2 AM local time
+2. Content generation triggered 60-90 minutes before alarm time
+3. **Load distribution**: User-specific offset (0-30 min) based on user_id hash prevents API overload
+4. Generate personalized script with GPT-4o
+5. Synthesize audio with ElevenLabs
+6. Store in Supabase Storage (72-hour retention)
+7. iOS app fetches audio 30 minutes before alarm
+8. Fallback to standard alarm if generation fails
+9. Retry mechanism for API failures
+10. Rate limiting implemented for external APIs
+
+**Generation Timing Strategy**:
+- For 7 AM alarms: Generation occurs between 5:30-6:00 AM
+- Each user gets consistent offset: `(hashtext(user_id) % 31) minutes`
+- Prevents thundering herd problem when many alarms fire at same time
+- Distributes API load evenly across 30-minute window
 
 ### CI/CD Pipeline
 

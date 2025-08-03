@@ -117,10 +117,10 @@ This checklist covers essential items to review before deploying Banana Clock to
 ## 📱 Device & OS Compatibility
 
 ### iOS Version Support
-- [ ] Test on iOS 17.0 (minimum supported)
-- [ ] Test on iOS 18.x (latest)
-- [ ] Test on iOS 26 beta (user's version)
-- [ ] Verify all iOS 17+ features work
+- [ ] Test on iOS 26.0 (minimum supported)
+- [ ] Test on iOS 26.x (latest)
+- [ ] Verify all iOS 26+ features work
+- [ ] Verify AlarmKit custom sounds work properly
 
 ### Device Testing
 - [ ] iPhone SE (smallest screen)

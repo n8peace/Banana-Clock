@@ -219,46 +219,56 @@ struct TimersView: View {
                 .toolbar {
                     toolbarContent
                 }
-            
-            // Bottom floating action bar for selection mode - positioned absolutely
+        }
+        .overlay(alignment: .bottom) {
+            // Bottom floating action bar for selection mode - properly positioned
             if isEditing && !viewModel.selectableTimers.isEmpty {
-                VStack {
-                    Spacer()
+                HStack(spacing: 16) {
+                    Button {
+                        if viewModel.selectedTimersCount == viewModel.selectableTimers.count {
+                            viewModel.deselectAll()
+                        } else {
+                            viewModel.selectAll()
+                        }
+                    } label: {
+                        Text(viewModel.selectedTimersCount == viewModel.selectableTimers.count ? "Deselect All" : "Select All")
+                            .font(.body.weight(.medium))
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(BananaTheme.Colors.backgroundSecondary)
+                            .cornerRadius(BananaTheme.Layout.cornerRadius)
+                    }
                     
-                    HStack(spacing: 16) {
+                    if viewModel.selectedTimersCount > 0 {
                         Button {
-                            if viewModel.selectedTimersCount == viewModel.selectableTimers.count {
-                                viewModel.deselectAll()
-                            } else {
-                                viewModel.selectAll()
-                            }
+                            viewModel.deleteSelectedTimers()
                         } label: {
-                            Text(viewModel.selectedTimersCount == viewModel.selectableTimers.count ? "Deselect All" : "Select All")
+                            Text("Delete Selected (\(viewModel.selectedTimersCount))")
                                 .font(.body.weight(.medium))
                                 .foregroundColor(.white)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 12)
-                                .background(BananaTheme.Colors.backgroundSecondary)
+                                .background(BananaTheme.Colors.error)
                                 .cornerRadius(BananaTheme.Layout.cornerRadius)
                         }
-                        
-                        if viewModel.selectedTimersCount > 0 {
-                            Button {
-                                viewModel.deleteSelectedTimers()
-                            } label: {
-                                Text("Delete Selected (\(viewModel.selectedTimersCount))")
-                                    .font(.body.weight(.medium))
-                                    .foregroundColor(.white)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 12)
-                                    .background(BananaTheme.Colors.error)
-                                    .cornerRadius(BananaTheme.Layout.cornerRadius)
-                            }
-                        }
                     }
-                    .padding(.horizontal, BSpacing.md)
-                    .padding(.bottom, BSpacing.md)
                 }
+                .padding(.horizontal, BSpacing.md)
+                .padding(.bottom, BSpacing.md)
+                .background(
+                    // Add subtle backdrop to ensure visibility
+                    LinearGradient(
+                        colors: [
+                            BananaTheme.Colors.backgroundPrimary.opacity(0),
+                            BananaTheme.Colors.backgroundPrimary.opacity(0.8),
+                            BananaTheme.Colors.backgroundPrimary
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .frame(height: 120)
+                )
             }
         }
         .sheet(isPresented: $showingAddTimer) {

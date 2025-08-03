@@ -203,13 +203,16 @@ class AlarmsViewModel: ObservableObject {
             // Cancel in AlarmKit
             try await alarmService.cancelAlarm(withId: alarm.id)
             
-            // Reload alarms (no need to refresh wake-up alarms since this is only for non-wake-up alarms)
-            await loadAlarms(refreshWakeUpAlarms: false)
+            // Immediately update local array for instant UI feedback
+            alarms.removeAll { $0.id == alarm.id }
             
             HapticManager.shared.notification(.success)
         } catch {
             self.error = error
             print("Failed to delete alarm: \(error)")
+            
+            // Only reload on error to restore consistent state
+            await loadAlarms(refreshWakeUpAlarms: false)
         }
     }
     

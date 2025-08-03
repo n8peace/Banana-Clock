@@ -7,7 +7,7 @@ Native iOS client for Banana Clock - an AI-powered alarm clock app built with Sw
 ### Prerequisites
 
 - Xcode 15+ 
-- iOS 17+ device or simulator
+- iOS 26+ device (physical device required for AlarmKit)
 - Apple Developer account (for AlarmKit)
 - Supabase project (already configured in parent repo)
 - RevenueCat account (for subscriptions)
@@ -67,7 +67,7 @@ BananaClock/
 
 ### Key Technologies
 - **SwiftUI** - Modern declarative UI
-- **AlarmKit** - Native alarm integration (iOS 17+)
+- **AlarmKit** - Native alarm integration (iOS 26+)
 - **Supabase** - Backend and real-time sync
 - **RevenueCat** - Subscription management
 - **Swift Concurrency** - Async/await throughout
@@ -156,7 +156,7 @@ The app uses a custom design system defined in `BananaTheme.swift`:
 ### Common Issues
 
 1. **AlarmKit not available**
-   - Ensure iOS 17+ target
+   - Ensure iOS 26+ target
    - Check entitlements file
    - Verify on physical device
 
