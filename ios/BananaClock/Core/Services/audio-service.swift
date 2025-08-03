@@ -316,6 +316,54 @@ class AudioService: ObservableObject {
         }
     }
     
+    // MARK: - Countdown Sounds (Single Play, No Looping)
+    
+    private var countdownPlayer: AVAudioPlayer?
+    
+    func playCountdownSound(_ soundIdentifier: String, volume: Float = 0.7) {
+        print("🔊 AudioService.playCountdownSound called with identifier: '\(soundIdentifier)'")
+        
+        // Stop any previous countdown sound
+        countdownPlayer?.stop()
+        countdownPlayer = nil
+        
+        // Try multiple file extensions for sound resolution
+        var soundURL: URL?
+        let extensions = ["caf", "mp3", "aac"]
+        
+        for ext in extensions {
+            if let url = Bundle.main.url(forResource: soundIdentifier, withExtension: ext) {
+                soundURL = url
+                break
+            }
+        }
+        
+        guard let soundURL = soundURL else {
+            print("❌ Countdown sound not found: \(soundIdentifier)")
+            return
+        }
+        
+        do {
+            let player = try AVAudioPlayer(contentsOf: soundURL)
+            player.volume = volume
+            player.numberOfLoops = 0 // Play only once
+            player.prepareToPlay()
+            player.play()
+            
+            // Store reference to stop if needed
+            countdownPlayer = player
+            
+            print("✅ Successfully playing countdown sound: \(soundIdentifier)")
+        } catch {
+            print("❌ Failed to play countdown sound \(soundIdentifier): \(error)")
+        }
+    }
+    
+    func stopCountdownSound() {
+        countdownPlayer?.stop()
+        countdownPlayer = nil
+    }
+    
     // MARK: - Helper Methods
     
     private func fadeVolume(

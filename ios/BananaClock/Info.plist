@@ -17,6 +17,10 @@
 	<string>26.0</string>
 	<key>NSAlarmKitUsageDescription</key>
 	<string>Banana Clock creates personalized AI wake-up experiences that work reliably even when your phone is backgrounded or turned off, just like native alarms.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Banana Clock uses your location to provide accurate weather updates and local news in your personalized wake-up content.</string>
+	<key>NSLocationUsageDescription</key>
+	<string>Banana Clock uses your location to provide accurate weather updates and local news in your personalized wake-up content.</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>

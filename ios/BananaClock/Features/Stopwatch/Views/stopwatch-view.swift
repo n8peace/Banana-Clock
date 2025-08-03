@@ -109,14 +109,14 @@ struct StopwatchView: View {
                     .minimumScaleFactor(0.5)
                     .lineLimit(1)
                 
-                // Banana countdown overlay with black background
+                // Banana countdown overlay with transparent background
                 if viewModel.isCountdownMode || (viewModel.countdownEnabled && !viewModel.isRunning && viewModel.elapsedTime == 0) {
                     Text(viewModel.countdownBananas)
                         .font(BananaTheme.Typography.displayLarge)
                         .foregroundColor(BananaTheme.Colors.bananaYellow)
                         .lineLimit(1)
                         .frame(maxWidth: .infinity, alignment: .center)
-                        .background(Color.black)
+                        .background(Color.clear)
                 }
             }
             

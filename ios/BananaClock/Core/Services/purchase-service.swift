@@ -30,8 +30,9 @@ class PurchaseService: NSObject, ObservableObject {
     // MARK: - Configuration
     
     func configure() {
-        guard let apiKey = SecureKeyManager.shared.retrieveAPIKey(service: .revenueCat) else {
-            print("❌ RevenueCat API Key not found in secure storage")
+        let apiKey = AppEnvironment.revenueCatAPIKey
+        guard !apiKey.isEmpty else {
+            print("❌ RevenueCat API Key not found in secure storage or environment")
             print("📱 App will run in demo mode without subscription features")
             return
         }

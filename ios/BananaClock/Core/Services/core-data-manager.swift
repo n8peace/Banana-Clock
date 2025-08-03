@@ -275,6 +275,7 @@ class CoreDataManager: ObservableObject {
         
         // Update AI-specific fields
         cdPreferences.weatherEnabled = preferences.weatherEnabled
+        cdPreferences.locationEnabled = preferences.locationEnabled
         cdPreferences.headlinesCategories = try JSONEncoder().encode(preferences.headlinesCategories)
         cdPreferences.sportsCategories = try JSONEncoder().encode(preferences.sportsCategories)
         cdPreferences.lastSyncAt = preferences.lastSyncAt
@@ -341,6 +342,7 @@ class CoreDataManager: ObservableObject {
         
         // Save AI-specific fields
         cdPreferences.weatherEnabled = preferences.weatherEnabled
+        cdPreferences.locationEnabled = preferences.locationEnabled
         cdPreferences.headlinesCategories = try JSONEncoder().encode(preferences.headlinesCategories)
         cdPreferences.sportsCategories = try JSONEncoder().encode(preferences.sportsCategories)
         cdPreferences.lastSyncAt = preferences.lastSyncAt
@@ -390,6 +392,7 @@ class CoreDataManager: ObservableObject {
             contentPreferences: contentPrefs,
             updatedAt: updatedAt,
             weatherEnabled: cdPreferences.weatherEnabled,
+            locationEnabled: cdPreferences.locationEnabled,
             headlinesCategories: headlinesCategories,
             sportsCategories: sportsCategories,
             lastSyncAt: cdPreferences.lastSyncAt

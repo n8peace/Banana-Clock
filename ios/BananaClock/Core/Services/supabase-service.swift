@@ -28,11 +28,23 @@ class SupabaseService: ObservableObject {
         print("🔑 Key length: \(AppEnvironment.supabaseAnonKey.count)")
         print("🔑 Key starts with: \(String(AppEnvironment.supabaseAnonKey.prefix(20)))...")
         
+        // Enhanced debugging for keychain status
+        print("🔍 Checking SecureKeyManager status...")
+        SecureKeyManager.shared.checkAllKeyStatuses()
+        
         guard !AppEnvironment.supabaseURL.isEmpty,
               !AppEnvironment.supabaseAnonKey.isEmpty else {
             print("⚠️ Supabase credentials not configured")
             print("❌ URL empty: \(AppEnvironment.supabaseURL.isEmpty)")
             print("❌ Key empty: \(AppEnvironment.supabaseAnonKey.isEmpty)")
+            
+            // Show setup instructions
+            print("\n💡 To fix this issue:")
+            print("1. Get your Supabase anon key from https://supabase.com/dashboard/project/\(AppEnvironment.supabaseProjectRef)/settings/api")
+            print("2. In Xcode debug console, run:")
+            print("   try! SecureKeyManager.shared.storeAPIKey(\"your_actual_supabase_anon_key\", service: .supabaseAnon)")
+            print("3. Restart the app")
+            
             return
         }
         
@@ -174,54 +186,138 @@ class SupabaseService: ObservableObject {
     func updateUserPreferences(_ preferences: UserPreferences) async throws {
         guard let client = client,
               let currentUser = currentUser else {
+            print("❌ updateUserPreferences: Not authenticated")
             throw SupabaseError.notAuthenticated
         }
         
+        print("🔍 updateUserPreferences: Starting update for user \(currentUser.id.uuidString)")
+        print("🔍 updateUserPreferences: User email: \(currentUser.email)")
+        
         let updateData = UpdateUserPreferencesRequest(
             timezone: preferences.timezone,
-            locationZip: preferences.locationZip ?? "",
-            name: preferences.name ?? "",
-            city: preferences.city ?? "",
-            state: preferences.state ?? "",
+            locationZip: preferences.locationZip?.isEmpty == false ? preferences.locationZip! : "00000", // Use user's zip or default
+            name: preferences.name, // Allow nil to pass through
+            city: preferences.city, // Allow nil to pass through
+            state: preferences.state, // Allow nil to pass through
             voice: preferences.voice.rawValue,
             weatherEnabled: preferences.weatherEnabled,
+            locationEnabled: preferences.locationEnabled,
             headlinesCategories: preferences.headlinesCategories,
             sportsCategories: preferences.sportsCategories,
             lastSyncAt: ISO8601DateFormatter().string(from: Date())
         )
         
-        try await client
-            .from("user_preferences")
-            .update(updateData)
-            .eq("user_id", value: currentUser.id.uuidString)
-            .execute()
+        print("🔍 updateUserPreferences: Update data:")
+        print("  - timezone: \(updateData.timezone)")
+        print("  - locationZip: '\(updateData.locationZip)' (length: \(updateData.locationZip.count))")
+        print("  - name: \(updateData.name ?? "nil")")
+        print("  - city: \(updateData.city ?? "nil")")
+        print("  - state: \(updateData.state ?? "nil")")
+        print("  - voice: \(updateData.voice)")
+        print("  - weatherEnabled: \(updateData.weatherEnabled)")
+        print("  - locationEnabled: \(updateData.locationEnabled)")
+        print("  - headlinesCategories: \(updateData.headlinesCategories)")
+        print("  - sportsCategories: \(updateData.sportsCategories)")
+        print("  - lastSyncAt: \(updateData.lastSyncAt)")
+        
+        do {
+            let response = try await client
+                .from("user_preferences")
+                .update(updateData)
+                .eq("user_id", value: currentUser.id.uuidString)
+                .execute()
+            
+            print("🔍 updateUserPreferences: Supabase response received")
+            print("🔍 updateUserPreferences: Response status: \(response.status)")
+            print("🔍 updateUserPreferences: Response data: \(String(data: response.data, encoding: .utf8) ?? "nil")")
+            
+            // Check if any rows were actually updated
+            if let responseString = String(data: response.data, encoding: .utf8) {
+                if responseString.isEmpty || responseString == "[]" {
+                    print("⚠️ updateUserPreferences: WARNING - No rows updated! User may not exist in database.")
+                    print("⚠️ updateUserPreferences: Attempting to create initial preferences...")
+                    
+                    // Create initial user preferences since they don't exist
+                    try await createUserPreferences(userId: currentUser.id)
+                    print("✅ updateUserPreferences: Created initial preferences, now retrying update...")
+                    
+                    // Retry the update now that preferences exist
+                    let retryResponse = try await client
+                        .from("user_preferences")
+                        .update(updateData)
+                        .eq("user_id", value: currentUser.id.uuidString)
+                        .execute()
+                    
+                    print("🔍 updateUserPreferences: Retry response: \(String(data: retryResponse.data, encoding: .utf8) ?? "nil")")
+                    
+                    if let retryString = String(data: retryResponse.data, encoding: .utf8), 
+                       (retryString.isEmpty || retryString == "[]") {
+                        print("❌ updateUserPreferences: Retry also failed - this shouldn't happen")
+                        throw SupabaseError.invalidResponse
+                    }
+                }
+            }
+            
+            print("✅ updateUserPreferences: Update completed successfully")
+        } catch {
+            print("❌ updateUserPreferences: Update failed with error: \(error)")
+            if let error = error as? SupabaseError {
+                print("❌ updateUserPreferences: SupabaseError details: \(error.localizedDescription)")
+            }
+            throw error
+        }
     }
     
     private func createUserPreferences(userId: UUID) async throws {
         guard let client = client else { throw SupabaseError.notConfigured }
         
+        print("🔍 createUserPreferences: Creating initial preferences for user \(userId.uuidString)")
+        
         let preferences = CreateUserPreferencesRequest(
             userId: userId.uuidString,
             timezone: TimeZone.current.identifier,
-            locationZip: "",
+            locationZip: "90210",  // Default zip code to satisfy NOT NULL constraint
+            name: nil,  // NULL instead of empty string to satisfy constraint
+            city: nil,  // NULL instead of empty string to satisfy constraint
+            state: nil, // NULL instead of empty string to satisfy constraint
             voice: AIVoiceOption.voice1.rawValue,
             weatherEnabled: false,
+            locationEnabled: false,
             headlinesCategories: ["business", "technology"],
             sportsCategories: ["football", "basketball"],
             lastSyncAt: ISO8601DateFormatter().string(from: Date())
         )
         
+        print("🔍 createUserPreferences: Initial preferences data:")
+        print("  - userId: \(preferences.userId)")
+        print("  - timezone: \(preferences.timezone)")
+        print("  - locationZip: \(preferences.locationZip)")
+        print("  - name: \(preferences.name ?? "nil")")
+        print("  - city: \(preferences.city ?? "nil")")
+        print("  - state: \(preferences.state ?? "nil")")
+        print("  - voice: \(preferences.voice)")
+        
         // Use service role to bypass RLS for initial user setup
         // This avoids the auth.uid() timing issue
+        print("🔍 createUserPreferences: Using service role for initial creation")
         let serviceClient = SupabaseClient(
             supabaseURL: URL(string: AppEnvironment.supabaseURL)!,
             supabaseKey: AppEnvironment.supabaseServiceKey
         )
         
-        try await serviceClient
-            .from("user_preferences")
-            .insert(preferences)
-            .execute()
+        do {
+            let response = try await serviceClient
+                .from("user_preferences")
+                .insert(preferences)
+                .execute()
+            
+            print("🔍 createUserPreferences: Insert response status: \(response.status)")
+            print("🔍 createUserPreferences: Insert response data: \(String(data: response.data, encoding: .utf8) ?? "nil")")
+            print("✅ createUserPreferences: Initial preferences created successfully")
+        } catch {
+            print("❌ createUserPreferences: Failed to create initial preferences: \(error)")
+            throw error
+        }
     }
     
     private func createUserPreferencesWithRetry(userId: UUID) async throws {
@@ -543,8 +639,12 @@ struct CreateUserPreferencesRequest: Codable {
     let userId: String
     let timezone: String
     let locationZip: String
+    let name: String?
+    let city: String?
+    let state: String?
     let voice: String
     let weatherEnabled: Bool
+    let locationEnabled: Bool
     let headlinesCategories: [String]
     let sportsCategories: [String]
     let lastSyncAt: String
@@ -553,8 +653,12 @@ struct CreateUserPreferencesRequest: Codable {
         case userId = "user_id"
         case timezone
         case locationZip = "location_zip"
+        case name
+        case city
+        case state
         case voice
         case weatherEnabled = "weather_enabled"
+        case locationEnabled = "location_enabled"
         case headlinesCategories = "headlines_categories"
         case sportsCategories = "sports_categories"
         case lastSyncAt = "last_sync_at"
@@ -564,11 +668,12 @@ struct CreateUserPreferencesRequest: Codable {
 struct UpdateUserPreferencesRequest: Codable {
     let timezone: String
     let locationZip: String
-    let name: String
-    let city: String
-    let state: String
+    let name: String?
+    let city: String?
+    let state: String?
     let voice: String
     let weatherEnabled: Bool
+    let locationEnabled: Bool
     let headlinesCategories: [String]
     let sportsCategories: [String]
     let lastSyncAt: String
@@ -581,6 +686,7 @@ struct UpdateUserPreferencesRequest: Codable {
         case state
         case voice
         case weatherEnabled = "weather_enabled"
+        case locationEnabled = "location_enabled"
         case headlinesCategories = "headlines_categories"
         case sportsCategories = "sports_categories"
         case lastSyncAt = "last_sync_at"

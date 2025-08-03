@@ -64,6 +64,7 @@ struct UserPreferences: Identifiable, Codable {
     
     // AI Wake-Up Preferences (iOS Integration)
     var weatherEnabled: Bool
+    var locationEnabled: Bool
     var headlinesCategories: [String]
     var sportsCategories: [String]
     var lastSyncAt: Date?
@@ -81,6 +82,7 @@ struct UserPreferences: Identifiable, Codable {
         contentPreferences: ContentPreferences = ContentPreferences(),
         updatedAt: Date = Date(),
         weatherEnabled: Bool = false,
+        locationEnabled: Bool = false,
         headlinesCategories: [String] = ["business", "technology"],
         sportsCategories: [String] = ["football", "basketball"],
         lastSyncAt: Date? = nil
@@ -97,6 +99,7 @@ struct UserPreferences: Identifiable, Codable {
         self.contentPreferences = contentPreferences
         self.updatedAt = updatedAt
         self.weatherEnabled = weatherEnabled
+        self.locationEnabled = locationEnabled
         self.headlinesCategories = headlinesCategories
         self.sportsCategories = sportsCategories
         self.lastSyncAt = lastSyncAt

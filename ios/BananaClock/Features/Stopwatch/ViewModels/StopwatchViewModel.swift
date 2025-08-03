@@ -45,16 +45,13 @@ class StopwatchViewModel: ObservableObject {
     
     var displayTime: String {
         if isCountdownMode {
-            // Show active countdown
-            let minutes = Int(countdownTime) / 60
-            let seconds = Int(countdownTime) % 60
-            let hundredths = Int((countdownTime.truncatingRemainder(dividingBy: 1)) * 100)
-            return String(format: "-%02d:%02d.%02d", minutes, seconds, hundredths)
+            // During countdown: show nothing (empty string) - only bananas visible
+            return ""
         } else if countdownEnabled && !isRunning && elapsedTime == 0 {
-            // Show countdown ready state only when no time has elapsed
-            return "-00:03.00"
+            // Before countdown starts: show nothing (empty string) - only bananas visible
+            return ""
         } else {
-            // Show normal stopwatch time
+            // Show normal stopwatch time when running or has elapsed time
             let minutes = Int(elapsedTime) / 60
             let seconds = Int(elapsedTime) % 60
             let hundredths = Int((elapsedTime.truncatingRemainder(dividingBy: 1)) * 100)
@@ -164,7 +161,7 @@ class StopwatchViewModel: ObservableObject {
     func startCountdown() {
         isCountdownMode = true
         countdownTime = 3 // Reset to 3 seconds
-        lastCountdownSecond = 3
+        lastCountdownSecond = 4 // Start at 4 so first tick triggers 3-second beep
         
         timer = Foundation.Timer.scheduledTimer(withTimeInterval: 0.01, repeats: true) { _ in
             DispatchQueue.main.async {
@@ -236,10 +233,10 @@ class StopwatchViewModel: ObservableObject {
             )
         }
         
-        // Play lap sound
+        // Play lap sound (single play, no looping)
         Task {
             await MainActor.run {
-                AudioService.shared.playSound("stopwatch_countdown_tick", volume: 0.6)
+                AudioService.shared.playCountdownSound("stopwatch_countdown_tick", volume: 0.6)
             }
         }
         
@@ -310,20 +307,20 @@ class StopwatchViewModel: ObservableObject {
     }
     
     private func playCountdownBeep() {
-        // Play countdown tick sound using AudioService
+        // Play countdown tick sound using AudioService (single play, no looping)
         Task {
             await MainActor.run {
-                AudioService.shared.playSound("stopwatch_countdown_tick", volume: 0.6)
+                AudioService.shared.playCountdownSound("stopwatch_countdown_tick", volume: 0.6)
             }
         }
         HapticManager.shared.impact(.light)
     }
     
     private func playGoSound() {
-        // Play countdown start sound using AudioService
+        // Play countdown start sound using AudioService (single play, no looping)
         Task {
             await MainActor.run {
-                AudioService.shared.playSound("stopwatch_countdown_start", volume: 0.8)
+                AudioService.shared.playCountdownSound("stopwatch_countdown_start", volume: 0.8)
             }
         }
         HapticManager.shared.impact(.medium)

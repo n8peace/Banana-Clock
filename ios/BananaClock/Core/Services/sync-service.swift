@@ -91,16 +91,37 @@ class SyncService: ObservableObject {
     
     private func syncUserPreferences(since date: Date = .distantPast) async throws {
         print("🔄 Syncing user preferences...")
+        print("🔍 syncUserPreferences: Last sync date: \(date)")
+        print("🔍 syncUserPreferences: Supabase authenticated: \(supabaseService.isAuthenticated)")
+        print("🔍 syncUserPreferences: Current user: \(supabaseService.currentUser?.email ?? "nil")")
         
         // Get user preferences from Core Data
         let preferences = try coreDataManager.fetchUserPreferences() as UserPreferences?
         
+        if let preferences = preferences {
+            print("🔍 syncUserPreferences: Found preferences in Core Data:")
+            print("  - ID: \(preferences.id)")
+            print("  - updatedAt: \(preferences.updatedAt)")
+            print("  - timezone: \(preferences.timezone)")
+            print("  - locationZip: \(preferences.locationZip ?? "nil")")
+            print("  - name: \(preferences.name ?? "nil")")
+            print("  - city: \(preferences.city ?? "nil")")
+            print("  - state: \(preferences.state ?? "nil")")
+            print("  - voice: \(preferences.voice)")
+            print("  - weatherEnabled: \(preferences.weatherEnabled)")
+            print("  - Need sync check: updatedAt (\(preferences.updatedAt)) > since (\(date)) = \(preferences.updatedAt > date)")
+        } else {
+            print("🔍 syncUserPreferences: No preferences found in Core Data")
+        }
+        
         // Only sync if preferences exist and were updated since last sync
         guard let preferences = preferences,
               preferences.updatedAt > date else {
-            print("⏭️ User preferences up to date")
+            print("⏭️ User preferences up to date (or don't exist)")
             return
         }
+        
+        print("🔍 syncUserPreferences: Proceeding with Supabase update...")
         
         // Update in Supabase directly with UserPreferences
         try await supabaseService.updateUserPreferences(preferences)

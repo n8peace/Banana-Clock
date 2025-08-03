@@ -243,16 +243,25 @@ Banana-Clock/
 4. Generate personalized script with GPT-4o
 5. Synthesize audio with ElevenLabs
 6. Store in Supabase Storage (72-hour retention)
-7. iOS app fetches audio 30 minutes before alarm
-8. Fallback to standard alarm if generation fails
-9. Retry mechanism for API failures
-10. Rate limiting implemented for external APIs
+7. **Silent push notification** sent 30 minutes before alarm to wake iOS app
+8. iOS app prefetches and caches audio content in background
+9. **AlarmKit fires alarm** → Plays cached AI audio or falls back gracefully
+10. **Multi-layer fallback**: Cached content → Generic audio → Standard alarm sound
+11. Retry mechanism for API failures and rate limiting
 
 **Generation Timing Strategy**:
 - For 7 AM alarms: Generation occurs between 5:30-6:00 AM
 - Each user gets consistent offset: `(hashtext(user_id) % 31) minutes`
 - Prevents thundering herd problem when many alarms fire at same time
 - Distributes API load evenly across 30-minute window
+
+**iOS App Reliability Strategy**:
+- **Silent push notifications** wake app 30 minutes before alarm (even when closed/backgrounded)
+- **Background execution time** (~30 seconds) sufficient for content prefetch
+- **AlarmKit integration** ensures alarm fires regardless of app state
+- **Works across all states**: App active, backgrounded, closed, phone locked
+- **Does NOT work**: When phone is completely powered off (no solution possible)
+- **Recovery**: If phone turns on 15+ minutes before alarm, full prefetch available
 
 ### CI/CD Pipeline
 
@@ -264,6 +273,125 @@ Banana-Clock/
 - Push to `develop` triggers automatic deployment
 - Manual deployment via `./deploy.sh` script
 - iOS builds via GitHub Actions on push to `develop`
+
+## AI Wake-Up Development Methodology
+
+### Pre-Implementation Checklist
+- [ ] **Environment Setup**: Verify Xcode 15+, iOS 26+ deployment target
+- [ ] **Dependencies**: Confirm all packages compile without warnings
+- [ ] **API Keys**: Validate all Supabase and external service credentials
+- [ ] **Code Review**: Senior developer review of architecture before implementation
+- [ ] **Testing Strategy**: Define unit test cases and integration test scenarios
+- [ ] **Performance Baselines**: Establish current app performance metrics
+- [ ] **Rollback Plan**: Document how to disable AI features if issues arise
+
+### Implementation Standards
+- **Error-First Development**: Write error handling before happy path
+- **Interface Segregation**: Create protocols for all services to enable testing
+- **Dependency Injection**: Use constructor injection for all dependencies
+- **Immutable Models**: All data models should be immutable structs
+- **Async/Await**: Use modern concurrency patterns throughout
+- **Resource Management**: Explicit cleanup in deinit methods
+- **Documentation**: Comprehensive code documentation with examples
+
+### Build & Quality Gates
+```bash
+# Required before each commit
+xcodebuild clean build -scheme BananaClock -configuration Debug
+xcodebuild test -scheme BananaClock -destination 'platform=iOS,name=iPhone 15 Pro'
+swiftlint --strict --path ios/BananaClock/
+```
+
+### Code Structure Requirements
+```
+BananaClock/Core/AIWakeUp/
+├── Models/                          # ✅ COMPLETED (Phase 1)
+│   ├── ContentBlock.swift           # → AIContentBlock (renamed for conflict resolution)
+│   ├── ContentError.swift           # Comprehensive error types with recovery actions
+│   └── ContentMetrics.swift         # Analytics models with performance SLAs
+├── Services/                        # 🚧 NEXT (Phase 2)
+│   ├── ContentPrefetchService.swift # Protocol + implementation
+│   ├── ContentCacheService.swift    # Thread-safe caching
+│   └── AudioDownloadService.swift   # Network layer
+├── Protocols/                       # 🚧 NEXT (Phase 2)
+│   ├── ContentFetching.swift        # Service abstractions
+│   └── AudioCaching.swift           # Cache abstractions
+└── Tests/                           # ✅ COMPLETED (Phase 1)
+    ├── ContentBlockTests.swift      # AIContentBlock model tests (100% coverage)
+    ├── ContentErrorTests.swift      # Error handling tests
+    ├── ContentMetricsTests.swift    # Metrics and performance tests
+    ├── ContentPrefetchTests.swift   # 🚧 NEXT - Unit tests
+    ├── CacheServiceTests.swift      # 🚧 NEXT - Cache tests
+    └── IntegrationTests.swift       # 🚧 NEXT - End-to-end tests
+```
+
+### Error Handling Requirements ✅ IMPLEMENTED
+```swift
+// ✅ COMPLETED: All errors are strongly typed with recovery strategies
+enum ContentFetchError: LocalizedError, Sendable {
+    case networkUnavailable
+    case authenticationFailed
+    case invalidResponse(Data)
+    case contentNotFound
+    case contentNotReady
+    case downloadTimeout
+    case invalidURL(String)
+    case storageError(underlying: Error)
+    case subscriptionRequired
+    case userNotFound
+    case rateLimitExceeded(retryAfter: TimeInterval?)
+    case serverError(statusCode: Int, message: String?)
+    case decodingError(underlying: Error)
+    
+    // ✅ Implemented: User-friendly messages
+    var errorDescription: String? { /* comprehensive descriptions */ }
+    
+    // ✅ Implemented: Actionable recovery steps  
+    var recoverySuggestion: String? { /* specific recovery actions */ }
+    
+    // ✅ Implemented: Recovery action strategies
+    var recoveryAction: ErrorRecoveryAction { /* automatic handling */ }
+}
+```
+
+### Performance Requirements
+- **Audio Download**: Must complete within 30 seconds
+- **Cache Retrieval**: Must return within 500ms
+- **Memory Usage**: Audio files must not exceed 10MB in memory
+- **Background Time**: Must complete prefetch within iOS background limit
+- **Network Efficiency**: Use HTTP/2, compression, and conditional requests
+
+### Testing Requirements
+```swift
+// Example test structure
+class ContentPrefetchServiceTests: XCTestCase {
+    var mockNetworkService: MockNetworkService!
+    var mockCacheService: MockCacheService!
+    var sut: ContentPrefetchService!
+    
+    override func setUp() {
+        super.setUp()
+        mockNetworkService = MockNetworkService()
+        mockCacheService = MockCacheService()
+        sut = ContentPrefetchService(
+            networkService: mockNetworkService,
+            cacheService: mockCacheService
+        )
+    }
+    
+    func testPrefetchSuccess() async throws {
+        // Test happy path
+    }
+    
+    func testPrefetchNetworkFailure() async throws {
+        // Test network error handling
+    }
+    
+    func testPrefetchTimeout() async throws {
+        // Test timeout scenarios
+    }
+}
+```
 
 ## Development Guidelines
 
@@ -391,8 +519,190 @@ Banana-Clock/
 
 ## Known TODOs
 
+### AlarmKit Integration (iOS 26+)
 - Complete alarm integration with AlarmKit for iOS 26+
+- Implement custom sound API for iOS 26+
+- Add alarm firing delegate/handler to connect with AI audio
+
+### Widget & Notifications
 - Implement local notification fallback for non-AlarmKit devices  
 - Polish UI/UX for Dynamic Island animations and transitions
-- Add AI wake-up content caching and offline fallback
-- Implement subscription expiration handling during active alarms
+- Connect Live Activities to actual timer/alarm services
+
+### AI Wake-Up Voice Integration (Phased Implementation)
+
+#### Phase 1: Foundation & Models (Week 1) ✅ COMPLETED
+**Tasks:**
+- [x] Create `AIWakeUp` module structure with proper folder organization
+- [x] Implement `AIContentBlock` model with comprehensive validation (renamed to avoid conflicts)
+- [x] Add `ContentError` enum with all error cases and recovery suggestions
+- [x] Create `ContentMetrics` model for analytics tracking
+- [x] Write unit tests for all models (100% coverage required)
+
+**Verification:** ✅ PASSED
+```bash
+# All verification steps completed successfully
+✅ xcodebuild build -scheme BananaClock (compilation successful)
+✅ Unit tests: ContentBlockTests, ContentErrorTests, ContentMetricsTests (100% coverage)
+✅ Build verification with zero compilation errors
+✅ Naming conflicts resolved (AIContentBlock, AIAppState)
+```
+
+#### Phase 2: Network & Caching Services (Week 2)
+**Tasks:**
+- [ ] Extend SupabaseService with content fetching methods
+- [ ] Implement `AudioDownloadService` with timeout and retry logic
+- [ ] Create `ContentCacheService` with thread-safe operations
+- [ ] Add comprehensive error handling for all network operations
+- [ ] Implement analytics tracking for all service operations
+- [ ] Write integration tests for Supabase connectivity
+
+**Verification:**
+```bash
+# Network tests must pass on real device with various network conditions
+xcodebuild test -scheme BananaClock -only-testing:BananaClockTests/SupabaseServiceTests
+xcodebuild test -scheme BananaClock -only-testing:BananaClockTests/AudioDownloadServiceTests
+xcodebuild test -scheme BananaClock -only-testing:BananaClockTests/ContentCacheServiceTests
+```
+
+#### Phase 3: Silent Push & Prefetch Logic (Week 3)
+**Tasks:**
+- [ ] Implement silent push notification handling in AppDelegate
+- [ ] Create `ContentPrefetchService` with background execution support
+- [ ] Add push token registration and management
+- [ ] Implement prefetch scheduling with proper timer management
+- [ ] Add background task handling for iOS background execution limits
+- [ ] Create debug UI for testing push notifications
+
+**Verification:**
+```bash
+# Test on physical device with app in various states
+xcodebuild test -scheme BananaClock -only-testing:BananaClockTests/ContentPrefetchServiceTests
+# Manual testing required for background states
+```
+
+#### Phase 4: AlarmKit Integration (Week 4)
+**Tasks:**
+- [ ] Connect AlarmKit alarm firing to content cache lookup
+- [ ] Implement multi-layer fallback strategy with proper error handling
+- [ ] Add immediate fetch fallback for missing cached content
+- [ ] Integrate with existing `AIWakeUpAudioMixer`
+- [ ] Add content cache cleanup and management
+- [ ] Implement analytics for alarm success/failure rates
+
+**Verification:**
+```bash
+# End-to-end integration tests
+xcodebuild test -scheme BananaClock -only-testing:BananaClockTests/AlarmKitIntegrationTests
+# Performance tests for sub-500ms cache retrieval
+xcodebuild test -scheme BananaClock -only-testing:BananaClockTests/PerformanceTests
+```
+
+#### Phase 5: Backend Scheduling (Parallel to iOS work)
+**Tasks:**
+- [ ] Create scheduled weather fetching at 2 AM daily
+- [ ] Implement alarm-based content generation with load distribution
+- [ ] Add randomized offset strategy: `(hashtext(user_id) % 31) minutes`
+- [ ] Add silent push notification system (30 min before alarms)
+- [ ] Create monitoring and alerting for failed generations
+- [ ] Add rate limiting and retry logic for external APIs
+
+**Verification:**
+```sql
+-- Test queries for verification
+SELECT COUNT(*) FROM content_blocks WHERE created_at > NOW() - INTERVAL '1 day';
+SELECT AVG(generation_time) FROM content_generation_metrics;
+```
+
+### Code Quality & Testing Requirements
+- **Unit Tests**: 90%+ coverage for all new services and models
+- **Integration Tests**: End-to-end AI wake-up flow testing
+- **Error Handling**: Comprehensive error cases with user-friendly messages
+- **Performance**: Sub-2s audio prefetch, <500ms cache retrieval
+- **Memory Management**: Proper cleanup of audio files and timers
+- **Thread Safety**: All services must be thread-safe with proper `@MainActor` usage
+- **Logging**: Structured logging for debugging and monitoring
+- **Build Verification**: Clean compilation with zero warnings
+- **Static Analysis**: SwiftLint compliance and memory leak detection
+
+### Security & Privacy
+- **API Key Protection**: Never expose keys in logs or error messages
+- **Audio Storage**: Secure local storage with proper cleanup
+- **Push Token Management**: Secure handling of device tokens
+- **Data Validation**: Input sanitization for all external data
+- **Subscription Verification**: Server-side verification before content generation
+
+### Monitoring & Analytics
+- **Content Generation Success Rate**: Track failures and retry attempts
+- **Audio Download Performance**: Monitor download times and failures
+- **Cache Hit Rate**: Measure prefetch effectiveness
+- **Fallback Usage**: Track when and why fallbacks are used
+- **User Experience Metrics**: Alarm reliability and audio quality feedback
+
+## Quality Assurance Checklist
+
+### Pre-Merge Requirements
+- [ ] **Build Verification**: Clean compilation with zero warnings on Debug and Release
+- [ ] **Unit Tests**: All tests pass with 90%+ code coverage
+- [ ] **Integration Tests**: End-to-end scenarios tested on physical device
+- [ ] **Performance Tests**: Audio download <30s, cache retrieval <500ms
+- [ ] **Memory Tests**: No memory leaks detected via Instruments
+- [ ] **Static Analysis**: SwiftLint passes with zero violations
+- [ ] **Thread Safety**: All concurrent code properly uses `@MainActor` or thread-safe patterns
+- [ ] **Error Handling**: All error paths tested and provide user-friendly messages
+
+### Device Testing Matrix
+- [ ] **iPhone SE (3rd gen)**: Minimum screen size testing
+- [ ] **iPhone 15 Pro**: Standard device testing
+- [ ] **iPhone 15 Pro Max**: Large screen testing
+- [ ] **iOS 26.0**: Minimum supported version
+- [ ] **iOS 26.x**: Latest version compatibility
+
+### App State Testing
+- [ ] **App Active**: Full functionality verification
+- [ ] **App Backgrounded**: Silent push notification handling
+- [ ] **App Terminated**: Cold start from push notification
+- [ ] **Low Memory**: Graceful degradation and cleanup
+- [ ] **No Network**: Offline fallback behavior
+- [ ] **Poor Network**: Timeout and retry behavior
+
+### Edge Case Testing
+- [ ] **Empty Cache**: Immediate fetch fallback works
+- [ ] **Corrupted Audio**: Fallback to generic audio
+- [ ] **Expired Content**: Proper cleanup and regeneration
+- [ ] **Multiple Alarms**: Concurrent handling without conflicts
+- [ ] **Subscription Expired**: Graceful fallback to standard alarms
+- [ ] **API Rate Limits**: Proper backoff and retry logic
+
+## Rollback & Safety Strategy
+
+### Feature Flags
+```swift
+struct FeatureFlags {
+    static let aiWakeUpEnabled = true  // Can be disabled remotely
+    static let silentPushEnabled = true
+    static let contentPrefetchEnabled = true
+}
+```
+
+### Monitoring & Alerts
+- **Success Rate < 95%**: Automatic rollback trigger
+- **Download Failures > 10%**: Alert engineering team
+- **Cache Misses > 20%**: Investigate prefetch timing
+- **Memory Usage > 50MB**: Memory leak investigation
+
+### Emergency Rollback Procedure
+1. **Immediate**: Set `FeatureFlags.aiWakeUpEnabled = false`
+2. **Backend**: Disable content generation cron jobs
+3. **Push**: Stop silent push notifications
+4. **Cache**: Clear all cached content to free memory
+5. **Fallback**: All AI alarms revert to standard alarm behavior
+
+### Deployment Strategy
+1. **Phase 1**: Deploy to internal TestFlight (50 users)
+2. **Phase 2**: Deploy to external beta (500 users)  
+3. **Phase 3**: Gradual rollout (10% → 50% → 100%)
+4. **Monitoring**: Real-time dashboards for all metrics
+5. **Rollback**: Automatic rollback if success rate drops below threshold
+
+This ensures production-ready, enterprise-grade implementation with comprehensive safety nets.

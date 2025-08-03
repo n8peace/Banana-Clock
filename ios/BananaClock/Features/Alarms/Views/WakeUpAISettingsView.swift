@@ -15,9 +15,12 @@ struct WakeUpAISettingsView: View {
     @State private var headlinesCategories: Set<HeadlinesCategory>
     @State private var sportsCategories: Set<SportsCategory>
     @State private var preferredName: String
+    @State private var locationEnabled: Bool
     @State private var showingMusicPicker = false
     @State private var showingHeadlinesPicker = false
     @State private var showingSportsPicker = false
+    
+    @StateObject private var weatherService = WeatherService.shared
     
     let preferences: UserPreferences?
     let onSave: (UserPreferences) -> Void
@@ -29,10 +32,13 @@ struct WakeUpAISettingsView: View {
         // Initialize state from preferences
         _voice = State(initialValue: preferences?.voice ?? .voice1)
         _music = State(initialValue: preferences?.music ?? .chillVibes)
-        _weatherEnabled = State(initialValue: preferences?.weatherEnabled ?? false)
+        // Weather toggle represents both weather and location preferences
+        _weatherEnabled = State(initialValue: (preferences?.weatherEnabled ?? false) || (preferences?.locationEnabled ?? false))
         _headlinesCategories = State(initialValue: Set(preferences?.headlinesCategories.compactMap { HeadlinesCategory(rawValue: $0) } ?? [.business, .technology]))
         _sportsCategories = State(initialValue: Set(preferences?.sportsCategories.compactMap { SportsCategory(rawValue: $0) } ?? [.football, .basketball]))
         _preferredName = State(initialValue: preferences?.name ?? "")
+        // Location follows weather state
+        _locationEnabled = State(initialValue: (preferences?.weatherEnabled ?? false) || (preferences?.locationEnabled ?? false))
     }
     
     var body: some View {
@@ -80,12 +86,20 @@ struct WakeUpAISettingsView: View {
                                 .foregroundColor(.white)
                         }
                         
-                        // Weather
-                        Toggle("Weather Update", isOn: $weatherEnabled)
+                        // Weather (includes location)
+                        Toggle("Weather", isOn: $weatherEnabled)
                             .toggleStyle(SwitchToggleStyle(tint: .bananaYellow))
                             .onChange(of: weatherEnabled) { _, newValue in
+                                // Weather toggle drives both weather and location
+                                locationEnabled = newValue
+                                
                                 if newValue {
-                                    requestLocationPermission()
+                                    Task {
+                                        await requestLocationPermission()
+                                    }
+                                } else {
+                                    // Clear location data when disabled
+                                    weatherService.clearDetectedLocation()
                                 }
                             }
                         
@@ -146,6 +160,7 @@ struct WakeUpAISettingsView: View {
                     .foregroundColor(.bananaYellow)
                 }
             }
+
         }
     }
     
@@ -175,25 +190,34 @@ struct WakeUpAISettingsView: View {
         }
     }
     
-    private func requestLocationPermission() {
-        // TODO: Implement location permission request
-        print("Location permission requested for weather")
+    private func requestLocationPermission() async {
+        await weatherService.requestLocationAndDetect()
     }
     
     private func saveSettings() {
+        // Weather toggle drives both location and weather backend fields
+        let finalLocationEnabled = weatherEnabled
+        let finalWeatherEnabled = weatherEnabled
+        
+        // Use detected location if weather is enabled, otherwise clear
+        let locationZip = finalLocationEnabled ? weatherService.detectedZipCode : nil
+        let locationCity = finalLocationEnabled ? weatherService.detectedCity : nil  
+        let locationState = finalLocationEnabled ? weatherService.detectedState : nil
+        
         let updatedPreferences = UserPreferences(
             id: preferences?.id ?? UUID(),
             timezone: preferences?.timezone ?? TimeZone.current.identifier,
-            locationZip: preferences?.locationZip,
+            locationZip: locationZip,
             name: preferredName.isEmpty ? nil : preferredName,
-            city: preferences?.city,
-            state: preferences?.state,
+            city: locationCity,
+            state: locationState,
             voice: voice,
             music: music,
             wakeUpTime: preferences?.wakeUpTime,
             contentPreferences: preferences?.contentPreferences ?? UserPreferences.ContentPreferences(),
             updatedAt: Date(),
-            weatherEnabled: weatherEnabled,
+            weatherEnabled: finalWeatherEnabled,
+            locationEnabled: finalLocationEnabled,
             headlinesCategories: headlinesCategories.map { $0.rawValue },
             sportsCategories: sportsCategories.map { $0.rawValue },
             lastSyncAt: preferences?.lastSyncAt

@@ -104,7 +104,29 @@ class SecureKeyManager: ObservableObject {
     }
     
     func hasAPIKey(service: APIService) -> Bool {
-        return retrieveAPIKey(service: service) != nil
+        // Check keychain first
+        if retrieveFromKeychain(service: service) != nil {
+            return true
+        }
+        
+        // Check environment variables
+        if retrieveFromEnvironment(service: service) != nil {
+            return true
+        }
+        
+        // Check if the app environment has fallback keys (development only)
+        #if DEBUG
+        switch service {
+        case .supabaseAnon:
+            return !AppEnvironment.supabaseAnonKey.isEmpty
+        case .revenueCat:
+            return !AppEnvironment.revenueCatAPIKey.isEmpty
+        case .supabaseService:
+            return !AppEnvironment.supabaseServiceKey.isEmpty
+        }
+        #else
+        return false
+        #endif
     }
     
     // MARK: - Private Methods

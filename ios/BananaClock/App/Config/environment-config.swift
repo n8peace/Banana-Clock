@@ -36,8 +36,14 @@ enum AppEnvironment {
             return key
         }
         
+        // TEMPORARY: Development fallback key (REMOVE BEFORE COMMIT)
+        #if DEBUG
+        print("🔄 Using temporary development key")
+        return "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwcWlhcm5raHphYmdneGlsdGNpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1MzA0OTMsImV4cCI6MjA2ODEwNjQ5M30.JB36Fx6KSXWMKiiX8MmCx8pEpBn5sKKt3xVQCdxqssY"
+        #else
         print("❌ No valid key found, returning empty string")
         return ""
+        #endif
     }
     
     static var supabaseServiceKey: String {
@@ -55,8 +61,14 @@ enum AppEnvironment {
             return key
         }
         
+        // TEMPORARY: Development fallback key (REMOVE BEFORE COMMIT)
+        #if DEBUG
+        print("🔄 Using temporary development service key")
+        return "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwcWlhcm5raHphYmdneGlsdGNpIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MjUzMDQ5MywiZXhwIjoyMDY4MTA2NDkzfQ.7wrYhMv0LyMMTSR-hN3Ltg15YmppOs75zbrETlrz4J0"
+        #else
         print("❌ No valid service key found, returning empty string")
         return ""
+        #endif
     }
     
     static var revenueCatAPIKey: String {
@@ -68,8 +80,14 @@ enum AppEnvironment {
         if let key = ProcessInfo.processInfo.environment["REVENUECAT_API_KEY"] {
             return key
         }
+        
+        // TEMPORARY: Development fallback key (REMOVE BEFORE COMMIT)
+        #if DEBUG
+        return "appl_YGEFzvwuYvHFfzXQAJlQsdzMjyW"
+        #else
         // Finally fallback to Info.plist
         return Bundle.main.object(forInfoDictionaryKey: "REVENUECAT_API_KEY") as? String ?? ""
+        #endif
     }
     
     // OpenAI API key no longer needed in iOS app
