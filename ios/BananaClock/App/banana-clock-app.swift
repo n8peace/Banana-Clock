@@ -19,6 +19,7 @@ struct BananaClockApp: App {
     @StateObject private var secureKeyManager = SecureKeyManager.shared
     @StateObject private var alarmKitService = AlarmKitService.shared
     @StateObject private var liveActivityService = LiveActivityService.shared
+    @StateObject private var supabaseService = SupabaseService.shared
     // @Environment(\.scenePhase) private var scenePhase  // Temporarily disabled
     
     // MARK: - Development Bypass
@@ -35,9 +36,9 @@ struct BananaClockApp: App {
             Group {
                 #if DEBUG
                 // Debug mode: Check authentication first if force login is enabled
-                if AppEnvironment.forceLoginOnLaunch && !SupabaseService.shared.isAuthenticated {
+                if AppEnvironment.forceLoginOnLaunch && !supabaseService.isAuthenticated {
                     DebugLoginView()
-                        .environmentObject(SupabaseService.shared)
+                        .environmentObject(supabaseService)
                 } else if shouldBypassPaywall || purchaseService.isSubscribed {
                     // Full app access for subscribers or development bypass
                     MainTabView()
@@ -67,7 +68,7 @@ struct BananaClockApp: App {
             .preferredColorScheme(.dark)
             .environmentObject(secureKeyManager)
             .environmentObject(alarmKitService)
-            .environmentObject(SupabaseService.shared)
+            .environmentObject(supabaseService)
             .onAppear {
                 configureApp()
             }
@@ -94,7 +95,7 @@ struct BananaClockApp: App {
         
         // Configure Supabase (for AI features only)
         print("🔧 About to configure Supabase...")
-        SupabaseService.shared.configure()
+        supabaseService.configure()
         print("🔧 Supabase configuration completed")
         
         // Configure RevenueCat
@@ -128,12 +129,17 @@ struct BananaClockApp: App {
         
         // Clear authentication if force login is enabled
         if AppEnvironment.forceLoginOnLaunch {
-            await SupabaseService.shared.clearDebugSession()
+            await supabaseService.clearDebugSession()
         }
         
         // Clear subscription if force subscription is enabled
         if AppEnvironment.forceSubscriptionFlow {
-            await purchaseService.clearDebugSubscription()
+            // Only clear if RevenueCat is configured
+            if !AppEnvironment.revenueCatAPIKey.isEmpty {
+                await purchaseService.clearDebugSubscription()
+            } else {
+                print("⚠️ Skipping subscription clearing - RevenueCat not configured")
+            }
         }
         
         print("✅ Debug environment cleared - ready for testing")

@@ -32,19 +32,14 @@ class SupabaseService: ObservableObject {
         print("🔍 Checking SecureKeyManager status...")
         SecureKeyManager.shared.checkAllKeyStatuses()
         
-        guard !AppEnvironment.supabaseURL.isEmpty,
-              !AppEnvironment.supabaseAnonKey.isEmpty else {
-            print("⚠️ Supabase credentials not configured")
-            print("❌ URL empty: \(AppEnvironment.supabaseURL.isEmpty)")
-            print("❌ Key empty: \(AppEnvironment.supabaseAnonKey.isEmpty)")
-            
-            // Show setup instructions
-            print("\n💡 To fix this issue:")
-            print("1. Get your Supabase anon key from https://supabase.com/dashboard/project/\(AppEnvironment.supabaseProjectRef)/settings/api")
-            print("2. In Xcode debug console, run:")
-            print("   try! SecureKeyManager.shared.storeAPIKey(\"your_actual_supabase_anon_key\", service: .supabaseAnon)")
-            print("3. Restart the app")
-            
+        guard !AppEnvironment.supabaseURL.isEmpty else {
+            print("⚠️ Supabase URL not configured")
+            return
+        }
+        
+        guard !AppEnvironment.supabaseAnonKey.isEmpty else {
+            print("⚠️ Supabase credentials not configured - running in limited mode")
+            print("💡 Use the 'Setup API Keys' button in the debug login screen")
             return
         }
         

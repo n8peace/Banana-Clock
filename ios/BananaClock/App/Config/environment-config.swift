@@ -36,13 +36,18 @@ enum AppEnvironment {
             return key
         }
         
-        // TEMPORARY: Development fallback key (REMOVE BEFORE COMMIT)
+        // Development: Provide helpful setup instructions
         #if DEBUG
-        print("🔄 Using temporary development key")
-        return "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwcWlhcm5raHphYmdneGlsdGNpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1MzA0OTMsImV4cCI6MjA2ODEwNjQ5M30.JB36Fx6KSXWMKiiX8MmCx8pEpBn5sKKt3xVQCdxqssY"
-        #else
-        print("❌ No valid key found, returning empty string")
+        print("❌ No Supabase anon key found in secure storage or environment")
+        print("💡 For development setup, run in Xcode debug console:")
+        print("   try! SecureKeyManager.shared.storeAPIKey(\"your_supabase_anon_key\", service: .supabaseAnon)")
+        print("📖 Get your key from: https://supabase.com/dashboard/project/\(AppEnvironment.supabaseProjectRef)/settings/api")
         return ""
+        #else
+        // Production: Fail safely if no key is available
+        print("❌ CRITICAL: No Supabase anon key found in production build")
+        print("🔧 Configure environment variable: SUPABASE_ANON_KEY")
+        fatalError("Production build missing required Supabase anon key")
         #endif
     }
     
@@ -61,13 +66,18 @@ enum AppEnvironment {
             return key
         }
         
-        // TEMPORARY: Development fallback key (REMOVE BEFORE COMMIT)
+        // Development: Provide helpful setup instructions
         #if DEBUG
-        print("🔄 Using temporary development service key")
-        return "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwcWlhcm5raHphYmdneGlsdGNpIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MjUzMDQ5MywiZXhwIjoyMDY4MTA2NDkzfQ.7wrYhMv0LyMMTSR-hN3Ltg15YmppOs75zbrETlrz4J0"
-        #else
-        print("❌ No valid service key found, returning empty string")
+        print("❌ No Supabase service key found in secure storage or environment")
+        print("💡 For development setup, run in Xcode debug console:")
+        print("   try! SecureKeyManager.shared.storeAPIKey(\"your_supabase_service_key\", service: .supabaseService)")
+        print("📖 Get your key from: https://supabase.com/dashboard/project/\(AppEnvironment.supabaseProjectRef)/settings/api")
         return ""
+        #else
+        // Production: Fail safely if no key is available
+        print("❌ CRITICAL: No Supabase service key found in production build")
+        print("🔧 Configure environment variable: SUPABASE_SERVICE_ROLE_KEY")
+        fatalError("Production build missing required Supabase service key")
         #endif
     }
     
@@ -82,14 +92,24 @@ enum AppEnvironment {
             if let key = ProcessInfo.processInfo.environment["REVENUECAT_SANDBOX_API_KEY"] {
                 return key
             }
-            // TEMPORARY: Development sandbox fallback key (REMOVE BEFORE COMMIT)
-            return "appl_YGEFzvwuYvHFfzXQAJlQsdzMjyW" // Sandbox key
+            // Development: Provide helpful setup instructions
+            print("❌ No RevenueCat sandbox key found in secure storage or environment")
+            print("💡 For development setup, run in Xcode debug console:")
+            print("   try! SecureKeyManager.shared.storeAPIKey(\"your_sandbox_key\", service: .revenueCatSandbox)")
+            print("📖 Get your sandbox key from RevenueCat dashboard")
+            return ""
         } else {
             // Debug but using production keys for specific testing
             if let key = SecureKeyManager.shared.retrieveAPIKey(service: .revenueCat) {
                 return key
             }
-            return ProcessInfo.processInfo.environment["REVENUECAT_API_KEY"] ?? ""
+            if let key = ProcessInfo.processInfo.environment["REVENUECAT_API_KEY"] {
+                return key
+            }
+            print("❌ No RevenueCat production key found in debug mode")
+            print("💡 For development setup, run in Xcode debug console:")
+            print("   try! SecureKeyManager.shared.storeAPIKey(\"your_production_key\", service: .revenueCat)")
+            return ""
         }
         #else
         // Production environment: Use production keys
@@ -101,7 +121,13 @@ enum AppEnvironment {
             return key
         }
         // Finally fallback to Info.plist
-        return Bundle.main.object(forInfoDictionaryKey: "REVENUECAT_API_KEY") as? String ?? ""
+        if let key = Bundle.main.object(forInfoDictionaryKey: "REVENUECAT_API_KEY") as? String, !key.isEmpty {
+            return key
+        }
+        // Production: Fail safely if no key is available
+        print("❌ CRITICAL: No RevenueCat API key found in production build")
+        print("🔧 Configure environment variable: REVENUECAT_API_KEY")
+        fatalError("Production build missing required RevenueCat API key")
         #endif
     }
     

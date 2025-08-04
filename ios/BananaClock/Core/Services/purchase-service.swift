@@ -32,8 +32,8 @@ class PurchaseService: NSObject, ObservableObject {
     func configure() {
         let apiKey = AppEnvironment.revenueCatAPIKey
         guard !apiKey.isEmpty else {
-            print("❌ RevenueCat API Key not found in secure storage or environment")
-            print("📱 App will run in demo mode without subscription features")
+            print("⚠️ RevenueCat API Key not found - running in demo mode")
+            print("💡 Use the 'Setup API Keys' button in the debug login screen")
             return
         }
         

@@ -41,6 +41,64 @@ class SecureKeyManager: ObservableObject {
     
     // MARK: - Key Management
     
+    #if DEBUG
+    /// Convenience method for setting up all development keys at once
+    /// Usage in Xcode debug console:
+    /// SecureKeyManager.shared.setupDevelopmentKeys(
+    ///     supabaseAnon: "your_supabase_anon_key",
+    ///     supabaseService: "your_supabase_service_key", 
+    ///     revenueCatProduction: "your_production_key",
+    ///     revenueCatSandbox: "your_sandbox_key"
+    /// )
+    func setupDevelopmentKeys(
+        supabaseAnon: String? = nil,
+        supabaseService: String? = nil,
+        revenueCatProduction: String? = nil,
+        revenueCatSandbox: String? = nil
+    ) {
+        print("🔧 Setting up development API keys...")
+        
+        if let key = supabaseAnon {
+            do {
+                try storeAPIKey(key, service: .supabaseAnon)
+                print("✅ Supabase anon key stored")
+            } catch {
+                print("❌ Failed to store Supabase anon key: \(error)")
+            }
+        }
+        
+        if let key = supabaseService {
+            do {
+                try storeAPIKey(key, service: .supabaseService)
+                print("✅ Supabase service key stored")
+            } catch {
+                print("❌ Failed to store Supabase service key: \(error)")
+            }
+        }
+        
+        if let key = revenueCatProduction {
+            do {
+                try storeAPIKey(key, service: .revenueCat)
+                print("✅ RevenueCat production key stored")
+            } catch {
+                print("❌ Failed to store RevenueCat production key: \(error)")
+            }
+        }
+        
+        if let key = revenueCatSandbox {
+            do {
+                try storeAPIKey(key, service: .revenueCatSandbox)
+                print("✅ RevenueCat sandbox key stored")
+            } catch {
+                print("❌ Failed to store RevenueCat sandbox key: \(error)")
+            }
+        }
+        
+        print("🎉 Development key setup complete!")
+        checkAllKeyStatuses()
+    }
+    #endif
+    
     func storeAPIKey(_ key: String, service: APIService) throws {
         guard !key.isEmpty else {
             throw KeyManagerError.emptyKey
