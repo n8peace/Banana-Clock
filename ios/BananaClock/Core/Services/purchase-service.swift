@@ -37,7 +37,18 @@ class PurchaseService: NSObject, ObservableObject {
             return
         }
         
-        print("🔑 RevenueCat API Key: \(apiKey)")
+        #if DEBUG
+        if AppEnvironment.useRevenueCatSandbox {
+            print("🧪 RevenueCat SANDBOX Mode Enabled")
+            print("🔑 Using sandbox API key: \(String(apiKey.prefix(10)))...")
+        } else {
+            print("🚀 RevenueCat PRODUCTION Mode in Debug Build")
+            print("🔑 Using production API key: \(String(apiKey.prefix(10)))...")
+        }
+        #else
+        print("🚀 RevenueCat PRODUCTION Mode")
+        print("🔑 Using API key: \(String(apiKey.prefix(10)))...")
+        #endif
         
         // Validate API key format
         if apiKey.isEmpty {
@@ -50,11 +61,19 @@ class PurchaseService: NSObject, ObservableObject {
             print("✅ RevenueCat API Key format looks correct")
         }
         
-        Purchases.configure(
-            with: Configuration.Builder(withAPIKey: apiKey)
-                .with(storeKitVersion: .storeKit2)
-                .build()
-        )
+        // Configure with sandbox mode support
+        let builder = Configuration.Builder(withAPIKey: apiKey)
+            .with(storeKitVersion: .storeKit2)
+        
+        #if DEBUG
+        if AppEnvironment.useRevenueCatSandbox {
+            // Enable sandbox testing features
+            builder.with(usesStoreKit2IfAvailable: true)
+            print("✅ RevenueCat configured for SANDBOX testing")
+        }
+        #endif
+        
+        Purchases.configure(with: builder.build())
         
         // Set up purchase listener
         Purchases.shared.delegate = self
@@ -196,6 +215,27 @@ class PurchaseService: NSObject, ObservableObject {
     func bypassPaywallForTesting() {
         isSubscribed = true
         cacheSubscriptionStatus(true)
+    }
+    
+    func clearDebugSubscription() async {
+        print("🧪 Clearing debug subscription state...")
+        
+        // Clear subscription cache
+        userDefaults.removeObject(forKey: subscriptionStatusKey)
+        userDefaults.removeObject(forKey: lastCheckKey)
+        
+        // Reset subscription state
+        isSubscribed = false
+        
+        // Force RevenueCat to refresh from sandbox/current environment
+        do {
+            let _ = try await Purchases.shared.syncPurchases()
+            print("✅ RevenueCat sync completed")
+        } catch {
+            print("⚠️ RevenueCat sync failed: \(error.localizedDescription)")
+        }
+        
+        print("✅ Debug subscription state cleared")
     }
     #endif
 }

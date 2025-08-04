@@ -10,6 +10,7 @@ import Security
 
 enum APIService: String, CaseIterable {
     case revenueCat = "revenue_cat"
+    case revenueCatSandbox = "revenue_cat_sandbox"
     case supabaseAnon = "supabase_anon"
     case supabaseService = "supabase_service"
     // openAI removed - now handled via Supabase proxy
@@ -21,6 +22,7 @@ enum APIService: String, CaseIterable {
     var displayName: String {
         switch self {
         case .revenueCat: return "RevenueCat"
+        case .revenueCatSandbox: return "RevenueCat (Sandbox)"
         case .supabaseAnon: return "Supabase (Anon)"
         case .supabaseService: return "Supabase (Service)"
         }
@@ -119,7 +121,7 @@ class SecureKeyManager: ObservableObject {
         switch service {
         case .supabaseAnon:
             return !AppEnvironment.supabaseAnonKey.isEmpty
-        case .revenueCat:
+        case .revenueCat, .revenueCatSandbox:
             return !AppEnvironment.revenueCatAPIKey.isEmpty
         case .supabaseService:
             return !AppEnvironment.supabaseServiceKey.isEmpty
@@ -156,6 +158,8 @@ class SecureKeyManager: ObservableObject {
         switch service {
         case .revenueCat:
             envKey = "REVENUECAT_API_KEY"
+        case .revenueCatSandbox:
+            envKey = "REVENUECAT_SANDBOX_API_KEY"
         case .supabaseAnon:
             envKey = "SUPABASE_ANON_KEY"
         case .supabaseService:
@@ -167,7 +171,7 @@ class SecureKeyManager: ObservableObject {
     
     private func validateKeyFormat(_ key: String, for service: APIService) throws {
         switch service {
-        case .revenueCat:
+        case .revenueCat, .revenueCatSandbox:
             guard key.hasPrefix("appl_") else {
                 throw KeyManagerError.invalidKeyFormat("RevenueCat key should start with 'appl_'")
             }

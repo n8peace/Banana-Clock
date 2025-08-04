@@ -16,8 +16,22 @@ struct FullScreenAlarmView: View {
     let alarmTitle: String
     let musicSelection: String?
     let voicePreference: String?
-    let wakeUpContent: String?
     let alarmSound: String?  // NEW: Added alarm sound identifier
+    
+    @State private var wakeUpContent: String?
+    
+    // Initializer to set the initial wake-up content
+    init(alarmID: UUID, alarmType: AlarmType, scheduledTime: Date, alarmTitle: String, 
+         musicSelection: String?, voicePreference: String?, wakeUpContent: String?, alarmSound: String?) {
+        self.alarmID = alarmID
+        self.alarmType = alarmType
+        self.scheduledTime = scheduledTime
+        self.alarmTitle = alarmTitle
+        self.musicSelection = musicSelection
+        self.voicePreference = voicePreference
+        self.alarmSound = alarmSound
+        self._wakeUpContent = State(initialValue: wakeUpContent)
+    }
     
     @StateObject private var audioService = AudioService.shared
     @StateObject private var liveActivityService = LiveActivityService.shared
@@ -312,11 +326,29 @@ struct FullScreenAlarmView: View {
                 UserDefaults.standard.set(alarmSound, forKey: "selectedAlarmSound")
             }
             
-            // For now, use placeholder URLs - in production these would come from Supabase
+            // Get music URL (bundled)
             let musicURL = Bundle.main.url(forResource: musicSelection, withExtension: "aac") ??
                           Bundle.main.url(forResource: "ai_music_upbeat", withExtension: "aac")!
             
-            let voiceURL = Bundle.main.url(forResource: "ai_wakeup_generic_voice1", withExtension: "aac")!
+            // Get AI voice URL with fallback chain - now uses ContentCacheManager
+            let voiceURL = await audioService.getAIAudioURL(
+                for: alarmID,  // Pass alarm ID for personalized content
+                date: scheduledTime,
+                voice: voicePreference
+            ) ?? Bundle.main.url(forResource: "ai_wakeup_generic_voice1", withExtension: "aac")!
+            
+            // Update wake-up content if we have personalized content
+            if let contentBlock = await ContentCacheManager.shared.getContentBlock(
+                for: alarmID, 
+                date: scheduledTime
+            ) {
+                if let script = contentBlock.script, !script.isEmpty {
+                    await MainActor.run {
+                        self.wakeUpContent = script
+                    }
+                    print("✅ Updated wake-up content with personalized script")
+                }
+            }
             
             try await audioService.playAIWakeUpSequence(
                 musicURL: musicURL,
@@ -324,7 +356,7 @@ struct FullScreenAlarmView: View {
                 volume: 0.8
             )
             
-            print("✅ Started AI wake-up audio sequence")
+            print("✅ Started AI wake-up audio sequence with personalized content")
         } catch {
             print("❌ Failed to start AI wake-up audio: \(error)")
             await startRegularAlarmAudio()

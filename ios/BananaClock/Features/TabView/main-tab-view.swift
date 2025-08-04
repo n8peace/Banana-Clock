@@ -162,14 +162,14 @@ struct MainTabView: View {
         
         // Title appearance
         appearance.titleTextAttributes = [
-            .foregroundColor: UIColor(BananaTheme.Colors.bananaYellow),
-            .font: UIFont.systemFont(ofSize: 22, weight: .bold)
+            .foregroundColor: UIColor.white,
+            .font: UIFont.systemFont(ofSize: 17, weight: .regular)
         ]
         
         // Large title appearance
         appearance.largeTitleTextAttributes = [
-            .foregroundColor: UIColor(BananaTheme.Colors.bananaYellow),
-            .font: UIFont.systemFont(ofSize: 34, weight: .bold)
+            .foregroundColor: UIColor.white,
+            .font: UIFont.systemFont(ofSize: 34, weight: .regular)
         ]
         
         // Button appearance

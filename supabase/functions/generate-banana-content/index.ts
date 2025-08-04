@@ -110,7 +110,7 @@ serve(async (req) => {
 
     // Parse request body
     const requestBody = await req.json()
-    const { user_id } = requestBody
+    const { user_id, weather_data } = requestBody
 
     if (!user_id) {
       return new Response(
@@ -144,18 +144,22 @@ serve(async (req) => {
     const response = {
       success: true,
       message: 'Banana content generation started',
-      user_id: user_id
+      user_id: user_id,
+      weather_provided: !!weather_data
     }
 
-    // Start async processing
-    processBananaContent(supabaseClient, user_id).catch(async (error) => {
+    // Start async processing with optional weather data
+    processBananaContent(supabaseClient, user_id, weather_data).catch(async (error) => {
       console.error('Banana content generation failed:', error)
       await safeLogError(supabaseClient, {
         event_type: 'banana_content_generation_failed',
         status: 'error',
         message: `Failed to generate banana content: ${error.message}`,
         user_id: user_id,
-        metadata: { error: error.toString() }
+        metadata: { 
+          error: error.toString(),
+          weather_provided: !!weather_data
+        }
       })
     })
 
@@ -182,15 +186,15 @@ serve(async (req) => {
   }
 })
 
-async function processBananaContent(supabaseClient: any, userId: string): Promise<void> {
+async function processBananaContent(supabaseClient: any, userId: string, weatherData?: any): Promise<void> {
   const utcDateStr = utcDate()
   const expirationDate = new Date(utcDateStr)
   expirationDate.setHours(expirationDate.getHours() + 72)
   const expirationDateStr = expirationDate.toISOString().split('T')[0]
 
   try {
-    // Step 1: Gather all required data
-    const userData = await gatherUserData(supabaseClient, userId, utcDateStr)
+    // Step 1: Gather all required data (including optional weather update)
+    const userData = await gatherUserData(supabaseClient, userId, utcDateStr, weatherData)
     
     // Step 2: Generate script using GPT-4o
     const script = await generateBananaScript(userData)
@@ -247,7 +251,8 @@ async function processBananaContent(supabaseClient: any, userId: string): Promis
       metadata: { 
         content_type: 'banana',
         date: utcDateStr,
-        voice: userData.voice
+        voice: userData.voice,
+        weather_provided: !!weatherData
       }
     })
 
@@ -257,7 +262,7 @@ async function processBananaContent(supabaseClient: any, userId: string): Promis
   }
 }
 
-async function gatherUserData(supabaseClient: any, userId: string, date: string): Promise<UserData> {
+async function gatherUserData(supabaseClient: any, userId: string, date: string, providedWeatherData?: any): Promise<UserData> {
   // Get user preferences
   const { data: userPrefs, error: prefsError } = await supabaseClient
     .from('user_preferences')
@@ -269,34 +274,64 @@ async function gatherUserData(supabaseClient: any, userId: string, date: string)
     throw new Error(`Failed to fetch user preferences: ${prefsError?.message || 'No preferences found'}`)
   }
 
-  // Get weather data using user's zipcode (optional)
   let weather: WeatherData | undefined = undefined
-  const { data: weatherData, error: weatherError } = await supabaseClient
-    .from('user_weather_data')
-    .select('*')
-    .eq('location_key', userPrefs.location_zip)
-    .eq('date', date)
-    .not('expires_at', 'lt', new Date().toISOString())
-    .single()
 
-  if (!weatherError && weatherData) {
-    // Parse weather data from JSONB structure
-    const weatherInfo = weatherData.weather_data
-    const location = weatherInfo.location || {}
-    const current = weatherInfo.current || {}
-    const forecast = weatherInfo.forecast || {}
-    
-    weather = {
-      temperature: current.temperature || forecast.high || weatherInfo.temp,
-      condition: current.condition || weatherInfo.summary,
-      humidity: current.humidity || 0,
-      wind_speed: current.wind_speed || 0,
-      description: `${current.condition || weatherInfo.summary} with a high of ${forecast.high || weatherInfo.temp}°F and low of ${forecast.low || (weatherInfo.temp - 10)}°F`
+  // Step 1: If weather data is provided from iOS, update the shared cache
+  if (providedWeatherData && userPrefs.location_zip) {
+    try {
+      console.log('Updating shared weather cache with provided data for zip:', userPrefs.location_zip)
+      
+      const { data: upsertResult, error: upsertError } = await supabaseClient
+        .rpc('upsert_weather_data', {
+          p_zip: userPrefs.location_zip,
+          p_weather: providedWeatherData,
+          p_user_id: userId
+        })
+
+      if (upsertError) {
+        console.error('Failed to update weather cache:', upsertError)
+        // Continue with provided data even if cache update fails
+      } else {
+        console.log('Successfully updated weather cache:', upsertResult)
+      }
+
+      // Parse the provided weather data for immediate use
+      weather = parseWeatherData(providedWeatherData)
+    } catch (cacheError) {
+      console.error('Error updating weather cache:', cacheError)
+      // Continue with provided data even if cache update fails
+      weather = parseWeatherData(providedWeatherData)
     }
-    
-    // Only include weather if we have valid temperature and condition data
-    if (!weather.temperature || !weather.condition) {
-      weather = undefined
+  }
+
+  // Step 2: If no weather provided or parsing failed, try to get from shared cache
+  if (!weather && userPrefs.location_zip) {
+    try {
+      console.log('Fetching weather from shared cache for zip:', userPrefs.location_zip)
+      
+      const { data: cachedWeatherData, error: weatherError } = await supabaseClient
+        .from('user_weather_data')
+        .select('weather_data, updated_at')
+        .eq('location_zip', userPrefs.location_zip)
+        .single()
+
+      if (!weatherError && cachedWeatherData) {
+        // Check if cache data is fresh (within 5 minutes as per DB function)
+        const cacheAge = new Date().getTime() - new Date(cachedWeatherData.updated_at).getTime()
+        const isFresh = cacheAge < 5 * 60 * 1000 // 5 minutes in milliseconds
+        
+        if (isFresh) {
+          console.log('Using fresh cached weather data')
+          weather = parseWeatherData(cachedWeatherData.weather_data)
+        } else {
+          console.log('Cached weather data is stale, skipping')
+        }
+      } else {
+        console.log('No cached weather data found for zip:', userPrefs.location_zip)
+      }
+    } catch (cacheError) {
+      console.error('Error fetching cached weather:', cacheError)
+      // Continue without weather - graceful fallback
     }
   }
 
@@ -333,6 +368,8 @@ async function gatherUserData(supabaseClient: any, userId: string, date: string)
   // Get day of week and date for the current date
   const dayOfWeek = new Date(date).toLocaleDateString('en-US', { weekday: 'long' })
   
+  console.log('Weather data status for content generation:', weather ? 'available' : 'not available')
+  
   return {
     name: userPrefs.name || 'there',
     city: userPrefs.city || 'your area',
@@ -343,6 +380,38 @@ async function gatherUserData(supabaseClient: any, userId: string, date: string)
     weather: weather,
     headlines: headlines,
     markets: markets
+  }
+}
+
+// Helper function to parse weather data consistently
+function parseWeatherData(weatherInfo: any): WeatherData | undefined {
+  if (!weatherInfo) return undefined
+
+  try {
+    // Handle different weather data structures
+    const location = weatherInfo.location || {}
+    const current = weatherInfo.current || weatherInfo
+    const forecast = weatherInfo.forecast || {}
+    
+    const weather = {
+      temperature: current.temperature || forecast.high || weatherInfo.temp || current.temp,
+      condition: current.condition || weatherInfo.summary || weatherInfo.condition,
+      humidity: current.humidity || weatherInfo.humidity || 0,
+      wind_speed: current.wind_speed || weatherInfo.wind_speed || 0,
+      description: current.description || weatherInfo.description || 
+                  `${current.condition || weatherInfo.summary || weatherInfo.condition} with a high of ${forecast.high || current.temperature || weatherInfo.temp}°F`
+    }
+    
+    // Only return weather if we have valid temperature and condition data
+    if (weather.temperature && weather.condition) {
+      return weather
+    }
+    
+    console.log('Weather data incomplete:', weather)
+    return undefined
+  } catch (error) {
+    console.error('Error parsing weather data:', error)
+    return undefined
   }
 }
 

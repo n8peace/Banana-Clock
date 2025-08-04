@@ -14,7 +14,6 @@ struct WakeUpManagementView: View {
     @EnvironmentObject var appState: AppState
     @ObservedObject var viewModel: WakeUpAlarmsViewModel // Shared instance, not created locally
     @State private var showingAISettings = false
-    @State private var showingScheduleEditor = false
     
     // No local state needed - bind directly to viewModel
     
@@ -45,8 +44,13 @@ struct WakeUpManagementView: View {
                     .listRowSeparator(.hidden)
                     
                     // Edit Schedule Row
-                    Button {
-                        showingScheduleEditor = true
+                    NavigationLink {
+                        WakeUpScheduleView(wakeUpViewModel: viewModel) {
+                            Task {
+                                await viewModel.loadWakeUpAlarms()
+                                onChangesMade?()
+                            }
+                        }
                     } label: {
                         HStack {
                             Spacer()
@@ -188,13 +192,7 @@ struct WakeUpManagementView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
-            .onAppear {
-                // Set navigation title color to white and unbolded
-                UINavigationBar.appearance().titleTextAttributes = [
-                    .foregroundColor: UIColor.white,
-                    .font: UIFont.systemFont(ofSize: 17, weight: .regular)
-                ]
-            }
+
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") {
@@ -222,14 +220,7 @@ struct WakeUpManagementView: View {
                 }
             )
         }
-        .sheet(isPresented: $showingScheduleEditor) {
-            WakeUpScheduleView(wakeUpViewModel: viewModel) {
-                Task {
-                    await viewModel.loadWakeUpAlarms()
-                    onChangesMade?()
-                }
-            }
-        }
+
         .task {
             print("DEBUG: WakeUpManagementView - task started, loading wake up alarms")
             await viewModel.loadWakeUpAlarms()

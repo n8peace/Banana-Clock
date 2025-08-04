@@ -130,13 +130,7 @@ struct WakeUpScheduleSettingsView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
-            .onAppear {
-                // Set navigation title color to white and unbolded
-                UINavigationBar.appearance().titleTextAttributes = [
-                    .foregroundColor: UIColor.white,
-                    .font: UIFont.systemFont(ofSize: 17, weight: .regular)
-                ]
-            }
+
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") {

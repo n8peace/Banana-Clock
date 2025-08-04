@@ -109,6 +109,9 @@ class AlarmKitService: ObservableObject {
         let alarm = try await alarmManager.schedule(id: id, configuration: configuration)
         print("✅ Scheduled AI wake-up alarm: \(alarm.id)")
         
+        // Schedule content generation for AI wake-up alarm
+        await scheduleContentGenerationForAlarm(id: id, alarmTime: time)
+        
         return alarm
     }
     
@@ -253,6 +256,9 @@ class AlarmKitService: ObservableObject {
     func cancelAlarm(id: UUID) throws {
         try alarmManager.cancel(id: id)
         print("🗑️ Cancelled alarm: \(id)")
+        
+        // Cancel content generation for this alarm
+        ContentGenerationService.shared.cancelContentGeneration(for: id)
     }
     
     func stopAlarm(id: UUID) throws {
@@ -426,6 +432,34 @@ class AlarmKitService: ObservableObject {
             countdown: countdownContent,
             paused: pausedContent
         )
+    }
+    
+    // MARK: - Content Generation Integration
+    
+    /// Schedule content generation for an AI-enabled alarm
+    private func scheduleContentGenerationForAlarm(id: UUID, alarmTime: Date) async {
+        do {
+            guard let session = try await SupabaseService.shared.getCurrentSession() else {
+                print("⚠️ No user session available for content generation scheduling")
+                return
+            }
+            
+            print("🔄 Scheduling content generation for alarm \(id)")
+            print("  - Alarm time: \(alarmTime)")
+            print("  - User ID: \(session.user.id)")
+            
+            // Schedule content generation via ContentGenerationService
+            await ContentGenerationService.shared.scheduleContentGeneration(
+                for: id,
+                alarmTime: alarmTime,
+                userId: session.user.id
+            )
+            
+            print("✅ Content generation scheduled for alarm \(id)")
+            
+        } catch {
+            print("❌ Failed to schedule content generation for alarm \(id): \(error)")
+        }
     }
 }
 

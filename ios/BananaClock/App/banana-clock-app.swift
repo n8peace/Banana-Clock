@@ -33,7 +33,12 @@ struct BananaClockApp: App {
     var body: some Scene {
         WindowGroup {
             Group {
-                if shouldBypassPaywall || purchaseService.isSubscribed {
+                #if DEBUG
+                // Debug mode: Check authentication first if force login is enabled
+                if AppEnvironment.forceLoginOnLaunch && !SupabaseService.shared.isAuthenticated {
+                    DebugLoginView()
+                        .environmentObject(SupabaseService.shared)
+                } else if shouldBypassPaywall || purchaseService.isSubscribed {
                     // Full app access for subscribers or development bypass
                     MainTabView()
                         .environment(\.managedObjectContext, coreDataManager.viewContext)
@@ -45,10 +50,24 @@ struct BananaClockApp: App {
                     PaywallView()
                         .environmentObject(purchaseService)
                 }
+                #else
+                // Production mode: Normal flow
+                if shouldBypassPaywall || purchaseService.isSubscribed {
+                    MainTabView()
+                        .environment(\.managedObjectContext, coreDataManager.viewContext)
+                        .environmentObject(coreDataManager)
+                        .environmentObject(appState)
+                        .environmentObject(liveActivityService)
+                } else {
+                    PaywallView()
+                        .environmentObject(purchaseService)
+                }
+                #endif
             }
             .preferredColorScheme(.dark)
             .environmentObject(secureKeyManager)
             .environmentObject(alarmKitService)
+            .environmentObject(SupabaseService.shared)
             .onAppear {
                 configureApp()
             }
@@ -64,6 +83,13 @@ struct BananaClockApp: App {
         // Development setup check
         #if DEBUG
         SecureKeyManager.setupDevelopmentEnvironment()
+        
+        // Clear debug environment if enabled
+        if AppEnvironment.forceLoginOnLaunch || AppEnvironment.forceSubscriptionFlow {
+            Task {
+                await clearDebugEnvironment()
+            }
+        }
         #endif
         
         // Configure Supabase (for AI features only)
@@ -95,6 +121,24 @@ struct BananaClockApp: App {
             await requestInitialPermissions()
         }
     }
+    
+    #if DEBUG
+    private func clearDebugEnvironment() async {
+        print("🧪 Clearing debug environment for testing...")
+        
+        // Clear authentication if force login is enabled
+        if AppEnvironment.forceLoginOnLaunch {
+            await SupabaseService.shared.clearDebugSession()
+        }
+        
+        // Clear subscription if force subscription is enabled
+        if AppEnvironment.forceSubscriptionFlow {
+            await purchaseService.clearDebugSubscription()
+        }
+        
+        print("✅ Debug environment cleared - ready for testing")
+    }
+    #endif
     
     private func configureAppearance() {
         // Navigation Bar

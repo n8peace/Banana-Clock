@@ -449,15 +449,48 @@ class AudioService: ObservableObject {
     }
     
     func getAIAudioURL(for date: Date, voice: String) async -> URL? {
-        // First try to get cached audio
+        // Legacy method for backward compatibility - delegates to new method with empty UUID
+        return await getAIAudioURL(for: UUID(), date: date, voice: voice)
+    }
+    
+    func getAIAudioURL(for alarmId: UUID, date: Date, voice: String) async -> URL? {
+        // 1. Check ContentCacheManager for personalized content
+        if alarmId != UUID() {  // Only check if we have a valid alarm ID
+            if let contentBlock = await ContentCacheManager.shared.getContentBlock(for: alarmId, date: date) {
+                if contentBlock.isReady && contentBlock.hasAudio {
+                    // Check if audio is downloaded locally
+                    if let localURL = AudioDownloadManager.shared.getCachedAudio(for: contentBlock.id) {
+                        print("✅ Using cached personalized AI audio for alarm \(alarmId)")
+                        return localURL
+                    }
+                    
+                    // Try to download if we have connectivity (30s timeout)
+                    if let audioUrl = contentBlock.audioUrl {
+                        do {
+                            print("🔄 Downloading personalized AI audio for alarm \(alarmId)")
+                            let localURL = try await AudioDownloadManager.shared.downloadAudio(
+                                for: contentBlock.id,
+                                audioUrl: audioUrl
+                            )
+                            print("✅ Downloaded personalized AI audio successfully")
+                            return localURL
+                        } catch {
+                            print("⚠️ Failed to download AI audio: \(error), falling back to generic")
+                        }
+                    }
+                }
+            }
+        }
+        
+        // 2. Fallback to date-based cached audio
         if let cachedURL = getCachedAudioURL(for: date, voice: voice) {
-            print("✅ Using cached AI audio for \(voice)")
+            print("✅ Using cached generic AI audio for \(voice)")
             return cachedURL
         }
         
-        // If no cached audio, try to get fallback audio
+        // 3. Fallback to bundled generic audio
         if let fallbackURL = getFallbackAIAudioURL(for: voice) {
-            print("🔄 Using fallback AI audio for \(voice)")
+            print("🔄 Using bundled fallback AI audio for \(voice)")
             return fallbackURL
         }
         

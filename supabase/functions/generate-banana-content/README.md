@@ -13,6 +13,14 @@ This function generates unique "banana content" - humorous morning wake-up scrip
 3. **Script Generation**: Uses GPT-4o to create a personalized, funny wake-up script
 4. **Content Storage**: Creates a content block with `script_generated` status
 
+## iOS Integration (Mobile-Initiated Generation)
+
+This function is now primarily called by iOS apps via the **ContentGenerationService** with staggered timing:
+- **Timing**: 1 hour before alarm with randomized offset (0-30 minutes based on user ID hash)
+- **Background Tasks**: iOS BGProcessingTask triggers content generation
+- **Caching**: Generated content is cached locally on device via **ContentCacheManager**
+- **Fallback**: 5-level fallback system ensures alarms work even if generation fails
+
 ## API Endpoint
 
 ```

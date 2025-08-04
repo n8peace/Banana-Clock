@@ -121,6 +121,34 @@ class SupabaseService: ObservableObject {
         isAuthenticated = false
     }
     
+    // MARK: - Debug Environment Support
+    
+    #if DEBUG
+    func clearDebugSession() async {
+        print("🧪 Clearing debug authentication session...")
+        
+        // Clear Supabase session
+        do {
+            try await signOut()
+            print("✅ Supabase session cleared")
+        } catch {
+            print("⚠️ Error clearing Supabase session: \(error.localizedDescription)")
+            // Force clear local state even if server signout fails
+            currentUser = nil
+            isAuthenticated = false
+        }
+        
+        // Clear UserDefaults auth-related data
+        let userDefaults = UserDefaults.standard
+        userDefaults.removeObject(forKey: "user_session")
+        userDefaults.removeObject(forKey: "last_auth_check")
+        userDefaults.removeObject(forKey: "cached_user_id")
+        userDefaults.removeObject(forKey: AppEnvironment.StorageKey.hasCompletedOnboarding)
+        
+        print("✅ Debug authentication state cleared")
+    }
+    #endif
+    
     func checkAuthenticationStatus() {
         guard let client = client else { return }
         

@@ -24,19 +24,20 @@ struct WakeUpEditView: View {
         self.onSave = onSave
         self.onDelete = onDelete
         
-        // Initialize state with explicit conditional logic and debug
+        // Initialize state with explicit conditional logic
         let defaultTime: Date
+        let initialSelectedDays: Set<Alarm.Weekday>
+        
         if let existingSchedule = schedule {
-            print("DEBUG: WakeUpEditView - Editing existing schedule, using time: \(existingSchedule.time)")
             defaultTime = existingSchedule.time
+            initialSelectedDays = existingSchedule.wakeUpDays ?? Set()
         } else {
-            let sevenAM = Self.defaultWakeUpTime()
-            print("DEBUG: WakeUpEditView - Creating new schedule, using default 7:00 AM: \(sevenAM)")
-            defaultTime = sevenAM
+            defaultTime = Self.defaultWakeUpTime()
+            initialSelectedDays = Set()
         }
         
         _time = State(initialValue: defaultTime)
-        _selectedDays = State(initialValue: schedule?.wakeUpDays ?? Set())
+        _selectedDays = State(initialValue: initialSelectedDays)
     }
     
     var body: some View {
@@ -116,13 +117,7 @@ struct WakeUpEditView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
-            .onAppear {
-                // Set navigation title color to white and unbolded
-                UINavigationBar.appearance().titleTextAttributes = [
-                    .foregroundColor: UIColor.white,
-                    .font: UIFont.systemFont(ofSize: 17, weight: .regular)
-                ]
-            }
+
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") {

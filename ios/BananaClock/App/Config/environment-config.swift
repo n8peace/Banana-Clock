@@ -72,7 +72,27 @@ enum AppEnvironment {
     }
     
     static var revenueCatAPIKey: String {
-        // Try secure key manager first
+        #if DEBUG
+        if useRevenueCatSandbox {
+            // Debug environment: Use sandbox key for testing
+            if let key = SecureKeyManager.shared.retrieveAPIKey(service: .revenueCatSandbox) {
+                return key
+            }
+            // Fallback to sandbox environment variable
+            if let key = ProcessInfo.processInfo.environment["REVENUECAT_SANDBOX_API_KEY"] {
+                return key
+            }
+            // TEMPORARY: Development sandbox fallback key (REMOVE BEFORE COMMIT)
+            return "appl_YGEFzvwuYvHFfzXQAJlQsdzMjyW" // Sandbox key
+        } else {
+            // Debug but using production keys for specific testing
+            if let key = SecureKeyManager.shared.retrieveAPIKey(service: .revenueCat) {
+                return key
+            }
+            return ProcessInfo.processInfo.environment["REVENUECAT_API_KEY"] ?? ""
+        }
+        #else
+        // Production environment: Use production keys
         if let key = SecureKeyManager.shared.retrieveAPIKey(service: .revenueCat) {
             return key
         }
@@ -80,11 +100,6 @@ enum AppEnvironment {
         if let key = ProcessInfo.processInfo.environment["REVENUECAT_API_KEY"] {
             return key
         }
-        
-        // TEMPORARY: Development fallback key (REMOVE BEFORE COMMIT)
-        #if DEBUG
-        return "appl_YGEFzvwuYvHFfzXQAJlQsdzMjyW"
-        #else
         // Finally fallback to Info.plist
         return Bundle.main.object(forInfoDictionaryKey: "REVENUECAT_API_KEY") as? String ?? ""
         #endif
@@ -103,6 +118,19 @@ enum AppEnvironment {
     static let bypassPaywallInDevelopment = true // Set to false to test paywall in dev
     #else
     static let bypassPaywallInDevelopment = false
+    #endif
+    
+    // MARK: - Debug Environment Strategy
+    #if DEBUG
+    static let isDebugEnvironment = true
+    static let forceLoginOnLaunch = true  // Forces login flow on every debug launch
+    static let forceSubscriptionFlow = true  // Forces subscription flow even if previously subscribed
+    static let useRevenueCatSandbox = true  // Use sandbox for testing
+    #else
+    static let isDebugEnvironment = false
+    static let forceLoginOnLaunch = false
+    static let forceSubscriptionFlow = false
+    static let useRevenueCatSandbox = false
     #endif
     
     // MARK: - API Endpoints

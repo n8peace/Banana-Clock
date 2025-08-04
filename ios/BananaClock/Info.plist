@@ -47,6 +47,11 @@
 		<string>audio</string>
 		<string>fetch</string>
 		<string>remote-notification</string>
+		<string>background-processing</string>
+	</array>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>bananaclock.content-generation</string>
 	</array>
 	<key>NSSupportsLiveActivities</key>
 	<true/>

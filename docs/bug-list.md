@@ -33,7 +33,7 @@ This document tracks bugs organized by page/feature for the Banana Clock iOS app
 ### Wake Up AI Settings
 | Bug ID | Description | Status | Priority | Assigned | Notes |
 |--------|-------------|--------|----------|----------|-------|
-| WAKEUP-001 | In AI wake up edit schedule, the scheduled days should show when editing that schedule (right now it doesn't show those already selected) | Open | Medium | Unassigned | Schedule edit view not displaying currently selected days |
+| WAKEUP-001 | In AI wake up edit schedule, the scheduled days should show when editing that schedule (right now it doesn't show those already selected) | Verified | Medium | Fixed | Fixed nested sheet presentation issue - replaced WakeUpManagementView sheet with NavigationLink |
 
 ### Alarm Management
 | Bug ID | Description | Status | Priority | Assigned | Notes |

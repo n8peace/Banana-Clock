@@ -126,12 +126,12 @@ class WeatherService: NSObject, ObservableObject {
     // MARK: - Weather Data (Future Implementation)
     
     /// Get current weather for a location
-    func getCurrentWeather(for location: CLLocation) async throws -> WeatherData {
+    func getCurrentWeather(for location: CLLocation) async throws -> WeatherKitData {
         print("🔍 WeatherService: Fetching weather for location...")
         
         let weather = try await weatherService.weather(for: location)
         
-        return WeatherData(
+        return WeatherKitData(
             temperature: weather.currentWeather.temperature.value,
             condition: weather.currentWeather.condition.description,
             humidity: weather.currentWeather.humidity * 100,
