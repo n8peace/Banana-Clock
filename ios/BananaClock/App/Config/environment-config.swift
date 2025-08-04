@@ -16,8 +16,9 @@ enum AppEnvironment {
     static let supabaseProjectRef = "epqiarnkhzabggxiltci"
     #else
     static let isDebug = false
-    static let supabaseURL = "https://yqbrfznixefqqhnvingu.supabase.co"
-    static let supabaseProjectRef = "yqbrfznixefqqhnvingu"
+    // For TestFlight, use development Supabase since we have those API keys
+    static let supabaseURL = bypassSubscriptionForTestFlight ? "https://epqiarnkhzabggxiltci.supabase.co" : "https://yqbrfznixefqqhnvingu.supabase.co"
+    static let supabaseProjectRef = bypassSubscriptionForTestFlight ? "epqiarnkhzabggxiltci" : "yqbrfznixefqqhnvingu"
     #endif
     
     // MARK: - API Keys (from secure storage)
@@ -82,49 +83,40 @@ enum AppEnvironment {
     }
     
     static var revenueCatAPIKey: String {
-        #if DEBUG
-        if useRevenueCatSandbox {
-            // Debug environment: Use sandbox key for testing
-            if let key = SecureKeyManager.shared.retrieveAPIKey(service: .revenueCatSandbox) {
-                return key
-            }
-            // Fallback to sandbox environment variable
-            if let key = ProcessInfo.processInfo.environment["REVENUECAT_SANDBOX_API_KEY"] {
-                return key
-            }
-            // Development: Provide helpful setup instructions
-            print("❌ No RevenueCat sandbox key found in secure storage or environment")
-            print("💡 For development setup, run in Xcode debug console:")
-            print("   try! SecureKeyManager.shared.storeAPIKey(\"your_sandbox_key\", service: .revenueCatSandbox)")
-            print("📖 Get your sandbox key from RevenueCat dashboard")
-            return ""
-        } else {
-            // Debug but using production keys for specific testing
-            if let key = SecureKeyManager.shared.retrieveAPIKey(service: .revenueCat) {
-                return key
-            }
-            if let key = ProcessInfo.processInfo.environment["REVENUECAT_API_KEY"] {
-                return key
-            }
-            print("❌ No RevenueCat production key found in debug mode")
-            print("💡 For development setup, run in Xcode debug console:")
-            print("   try! SecureKeyManager.shared.storeAPIKey(\"your_production_key\", service: .revenueCat)")
-            return ""
+        // RevenueCat automatically handles sandbox vs production based on Apple receipt environment
+        // So we can use the same API key for both debug and release builds
+        
+        // Try secure key manager first (preferred for development)
+        if let key = SecureKeyManager.shared.retrieveAPIKey(service: .revenueCatSandbox) {
+            return key
         }
-        #else
-        // Production environment: Use production keys
+        
+        // Try production key storage (for flexibility)
         if let key = SecureKeyManager.shared.retrieveAPIKey(service: .revenueCat) {
             return key
         }
-        // Fallback to environment variable (for CI/CD)
+        
+        // Fallback to environment variables (for CI/CD)
         if let key = ProcessInfo.processInfo.environment["REVENUECAT_API_KEY"] {
             return key
         }
+        if let key = ProcessInfo.processInfo.environment["REVENUECAT_SANDBOX_API_KEY"] {
+            return key
+        }
+        
         // Finally fallback to Info.plist
         if let key = Bundle.main.object(forInfoDictionaryKey: "REVENUECAT_API_KEY") as? String, !key.isEmpty {
             return key
         }
-        // Production: Fail safely if no key is available
+        
+        // No key found - provide helpful instructions
+        #if DEBUG
+        print("❌ No RevenueCat API key found")
+        print("💡 For development setup, run in Xcode debug console:")
+        print("   try! SecureKeyManager.shared.storeAPIKey(\"your_revenuecat_key\", service: .revenueCatSandbox)")
+        print("📖 RevenueCat automatically detects sandbox vs production from Apple receipts")
+        return ""
+        #else
         print("❌ CRITICAL: No RevenueCat API key found in production build")
         print("🔧 Configure environment variable: REVENUECAT_API_KEY")
         fatalError("Production build missing required RevenueCat API key")
@@ -142,8 +134,10 @@ enum AppEnvironment {
     // MARK: - Development Bypass
     #if DEBUG
     static let bypassPaywallInDevelopment = true // Set to false to test paywall in dev
+    static let bypassSubscriptionForTestFlight = true // Bypass subscriptions for TestFlight testing
     #else
     static let bypassPaywallInDevelopment = false
+    static let bypassSubscriptionForTestFlight = true // Enable for TestFlight release builds
     #endif
     
     // MARK: - Debug Environment Strategy

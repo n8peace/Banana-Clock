@@ -25,9 +25,9 @@ struct BananaClockApp: App {
     // MARK: - Development Bypass
     private var shouldBypassPaywall: Bool {
         #if DEBUG
-        return AppEnvironment.bypassPaywallInDevelopment
+        return AppEnvironment.bypassPaywallInDevelopment || AppEnvironment.bypassSubscriptionForTestFlight
         #else
-        return false
+        return AppEnvironment.bypassSubscriptionForTestFlight
         #endif
     }
     
@@ -91,6 +91,13 @@ struct BananaClockApp: App {
                 await clearDebugEnvironment()
             }
         }
+        #else
+        // Release mode: Create TestFlight user if bypassing subscriptions
+        if AppEnvironment.bypassSubscriptionForTestFlight {
+            Task {
+                await createTestFlightUser()
+            }
+        }
         #endif
         
         // Configure Supabase (for AI features only)
@@ -132,19 +139,53 @@ struct BananaClockApp: App {
             await supabaseService.clearDebugSession()
         }
         
-        // Clear subscription if force subscription is enabled
-        if AppEnvironment.forceSubscriptionFlow {
+        // Clear subscription if force subscription is enabled (but not if bypassing for TestFlight)
+        if AppEnvironment.forceSubscriptionFlow && !AppEnvironment.bypassSubscriptionForTestFlight {
             // Only clear if RevenueCat is configured
             if !AppEnvironment.revenueCatAPIKey.isEmpty {
                 await purchaseService.clearDebugSubscription()
             } else {
                 print("⚠️ Skipping subscription clearing - RevenueCat not configured")
             }
+        } else if AppEnvironment.bypassSubscriptionForTestFlight {
+            print("🧪 Skipping subscription clearing for TestFlight testing")
+            // Create a test user for AI functionality
+            await createTestFlightUser()
         }
         
         print("✅ Debug environment cleared - ready for testing")
     }
+    
     #endif
+    
+    private func createTestFlightUser() async {
+        print("🧪 Creating TestFlight test user for AI functionality...")
+        
+        // Generate consistent test user based on device
+        let deviceID = UIDevice.current.identifierForVendor?.uuidString ?? "test-device"
+        let testEmail = "testflight-\(deviceID)@bananaclock.dev"
+        let testPassword = "TestFlight123!"
+        
+        do {
+            // Try to sign in first (user might already exist)
+            do {
+                let _ = try await supabaseService.signIn(email: testEmail, password: testPassword)
+                print("✅ TestFlight user already exists and signed in")
+                return
+            } catch {
+                print("🔍 TestFlight user doesn't exist, creating new account...")
+            }
+            
+            // Create new test account
+            let _ = try await supabaseService.signUp(email: testEmail, password: testPassword)
+            print("✅ TestFlight test user created and signed in")
+            print("📧 Test email: \(testEmail)")
+            
+        } catch {
+            print("❌ Failed to create TestFlight test user: \(error.localizedDescription)")
+            print("⚠️ AI features may not work without authentication")
+        }
+    }
     
     private func configureAppearance() {
         // Navigation Bar

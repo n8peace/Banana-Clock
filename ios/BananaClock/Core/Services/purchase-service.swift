@@ -38,13 +38,9 @@ class PurchaseService: NSObject, ObservableObject {
         }
         
         #if DEBUG
-        if AppEnvironment.useRevenueCatSandbox {
-            print("🧪 RevenueCat SANDBOX Mode Enabled")
-            print("🔑 Using sandbox API key: \(String(apiKey.prefix(10)))...")
-        } else {
-            print("🚀 RevenueCat PRODUCTION Mode in Debug Build")
-            print("🔑 Using production API key: \(String(apiKey.prefix(10)))...")
-        }
+        print("🧪 RevenueCat DEBUG Mode")
+        print("🔑 Using API key: \(String(apiKey.prefix(10)))...")
+        print("📖 RevenueCat will automatically detect sandbox vs production from Apple receipts")
         #else
         print("🚀 RevenueCat PRODUCTION Mode")
         print("🔑 Using API key: \(String(apiKey.prefix(10)))...")
@@ -61,19 +57,14 @@ class PurchaseService: NSObject, ObservableObject {
             print("✅ RevenueCat API Key format looks correct")
         }
         
-        // Configure with sandbox mode support
-        let builder = Configuration.Builder(withAPIKey: apiKey)
-            .with(storeKitVersion: .storeKit2)
+        // Configure RevenueCat
+        Purchases.configure(
+            with: Configuration.Builder(withAPIKey: apiKey)
+                .with(storeKitVersion: .storeKit2)
+                .build()
+        )
         
-        #if DEBUG
-        if AppEnvironment.useRevenueCatSandbox {
-            // Enable sandbox testing features
-            builder.with(usesStoreKit2IfAvailable: true)
-            print("✅ RevenueCat configured for SANDBOX testing")
-        }
-        #endif
-        
-        Purchases.configure(with: builder.build())
+        print("✅ RevenueCat configured successfully")
         
         // Set up purchase listener
         Purchases.shared.delegate = self
@@ -158,8 +149,19 @@ class PurchaseService: NSObject, ObservableObject {
                 self.isLoading = false
             }
         } catch {
+            print("⚠️ RevenueCat offerings failed to load: \(error.localizedDescription)")
+            print("💡 This is expected for TestFlight builds without App Store Connect products configured")
             await MainActor.run {
+                // Don't set purchaseError for TestFlight - just log and continue
+                #if DEBUG
+                if AppEnvironment.bypassSubscriptionForTestFlight {
+                    print("🧪 Bypassing RevenueCat error for TestFlight testing")
+                } else {
+                    self.purchaseError = error
+                }
+                #else
                 self.purchaseError = error
+                #endif
                 self.isLoading = false
             }
         }
